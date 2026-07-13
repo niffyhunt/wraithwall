@@ -1,0 +1,78 @@
+dml_version: "0.2.0"
+platform: example-app
+namespace: production
+description: Sample DML document exercising several trigger and response types.
+author: niffy_hunt
+traps:
+  - id: admin-api-key-canary
+    name: Fake admin API key
+    namespace: production
+    severity: critical
+    mitre_tactic: credential_access
+    description: A planted API key that should never be used by legitimate clients.
+    tags: [canary, api_key]
+    trigger:
+      type: api_key_use
+      api_key_prefix: ak_admin_
+    response:
+      type: alert_only
+    alert:
+      channels: [discord, telegram]
+      include_ip: true
+      include_ua: true
+
+  - id: secret-admin-path
+    name: Hidden admin endpoint tripwire
+    namespace: production
+    severity: high
+    mitre_tactic: discovery
+    description: No legitimate user knows this path; any hit is a scanner.
+    tags: [honeypot, http]
+    trigger:
+      type: http_request
+      path: /internal/.env.backup
+      method: ANY
+    response:
+      type: fake_data
+      fake_data_template: "{\"db_password\": \"REDACTED\"}"
+      http_status: 200
+
+  - id: slow-login-probe
+    name: Timing-attack tarpit on login
+    namespace: production
+    severity: medium
+    mitre_tactic: credential_access
+    description: Delay responses to suspected credential-stuffing timing probes.
+    tags: [tarpit]
+    trigger:
+      type: timing_probe
+      timing_target_ms: 250
+    response:
+      type: delay_response
+      delay_ms: 4000
+
+  - id: canary-leak-mailbox
+    name: Canary email watcher
+    namespace: production
+    severity: high
+    mitre_tactic: collection
+    description: Mail sent to this address means a data leak was harvested.
+    tags: [canary, email]
+    trigger:
+      type: canary_email
+      email: alerts+canary@example.invalid
+    response:
+      type: log_only
+
+  - id: dns-beacon-watch
+    name: DNS exfil beacon detector
+    namespace: production
+    severity: high
+    mitre_tactic: exfiltration
+    description: Resolution of this host indicates DNS-tunnelling activity.
+    tags: [dns]
+    trigger:
+      type: dns_resolution
+      hostname: beacon.canary.example.invalid
+    response:
+      type: block_ip

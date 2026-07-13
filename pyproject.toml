@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wraithwall"
+version = "0.1.0"
+description = "Production deception-and-threat-intelligence platform"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Adewale Babalola", email = "contact@wraithwall.online" }]
+requires-python = ">=3.12"
+dependencies = [
+    "flask>=3,<4",
+    "flask-sqlalchemy>=3,<4",
+    "flask-bcrypt>=1,<2",
+    "flask-limiter>=3,<4",
+    "flask-talisman>=1,<2",
+    "flask-wtf>=1,<2",
+    "flask-cors>=4,<5",
+    "gunicorn>=21,<24",
+    "redis>=5,<6",
+    "requests>=2,<3",
+    "sqlalchemy>=2,<3",
+    "apscheduler>=3,<4",
+    "pyotp>=2,<3",
+    "python-jose>=3,<4",
+    "validators>=0.22",
+    "bleach>=6,<7",
+    "user-agents>=2,<3",
+    "cryptography>=42",
+    "argon2-cffi>=23",
+    "bcrypt>=4,<5",
+    "httpx>=0.27",
+    "typer>=0.12,<1",
+    "psycopg2-binary>=2.9,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov", "ruff"]
+all = ["wraithwall[dev]"]
+
+[project.scripts]
+wraithwall = "wraithwall.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wraithwall"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/wraithwall", "examples", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["docker", "examples", ".git", "packages"]

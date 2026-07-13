@@ -1,0 +1,51 @@
+WRAITHWALL PIP INSTALL FIX — SUMMARY
+Date: 2026-07-11
+
+OBJECTIVE
+Close Phase 0: no editable installs (pip install -e). Clone → ./install.sh → working CLIs.
+
+WHAT WAS FIXED (wraithwall-oss/)
+
+1. install.sh
+   - Uses: pip install packages/canary-kit, dml-spec, honeypot-mitre, ravenscan
+   - Then: pip install .[all] for main wraithwall package
+   - No -e anywhere
+
+2. wraithwall-oss/pyproject.toml
+   - hatchling build backend
+   - wraithwall CLI entrypoint: wraithwall.cli:app
+   - typer, psycopg2-binary added
+   - src-layout packages = ["src/wraithwall"]
+
+3. packages/ravenscan/pyproject.toml
+   - Removed hatch-vcs dynamic version (was breaking non-git pip install)
+   - Static version = 0.1.0
+   - hatchling wheel packages: src/raven, src/ravenscan
+
+4. README updates
+   - wraithwall-oss/README.md → pip install .
+   - open-source/README.md + package READMEs → pip install . (not -e)
+   - packages/ravenscan/README.md → pip install .
+
+5. Public APIs wired
+   - from wraithwall import Client
+   - from ravenscan import scan
+   - from canary_kit import create_canary
+
+VERIFIED (at Phase 0 close)
+  ./install.sh — succeeds
+  wraithwall check — 65 routes, 12 blueprints
+  pytest tests/ — 6 passed
+  pytest packages/canary-kit packages/ravenscan — 109 passed
+  CLIs: wraithwall, raven, canary-kit, honeypot-mitre, dml
+
+REMAINING STALE -e REFERENCES (docs only, not install path)
+  ravenscan/README.md (top-level copy) — still says pip install -e
+  PHASE2_AUDIT.md — historical audit text
+  open-source/docs/architecture.svg — diagram labels
+  conftest.py comments in honeypot-mitre
+
+BOTTOM LINE
+Yes — the actual install path is fixed correctly in wraithwall-oss/.
+Developers should: git clone → cd wraithwall-oss → ./install.sh
+No pip install -e required.

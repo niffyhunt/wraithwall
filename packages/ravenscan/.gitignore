@@ -1,0 +1,31 @@
+# Build artifacts
+__pycache__/
+*.pyc
+*.pyo
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# Distribution
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Raven output
+.raven/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

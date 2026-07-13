@@ -1,0 +1,434 @@
+# WraithWall Visual Design System
+**Version 1.0 — Identity Foundation**  
+*Creative Director + Product Design Lead*  
+*No artwork. No page redesigns. No implementation.*
+
+---
+
+## 0. Executive thesis
+
+WraithWall is not a hacker aesthetic. It is a **precision intelligence institution** that happens to run live deception infrastructure.
+
+The single universe everything grows from:
+
+## **The Orbital Archive**
+
+A believable place: a **global sensor lattice** observed from a **quiet engineering archive** — part observatory, part operations floor, part field-manual library. Operators do not work in chaos. They work in **calm, high-trust, paper-first clarity**, with live telemetry appearing through **controlled glass panels** (terminals, diagrams, feeds) — never as wallpaper behind prose.
+
+**One iconic signature (build everything around this):**
+
+> **The Sensor Lattice over Paper**  
+> A distant horizon + faint geodesic arc grid + sparse red telemetry nodes — always behind or beside readable engineering surfaces, never replacing them.
+
+When someone screenshots WraithWall, they should recognize: warm paper, red discipline, mono precision, and a lattice hinting at global watch — not neon, not hoodies, not matrix rain.
+
+---
+
+## 1. The WraithWall universe (physical place)
+
+### If WraithWall were a physical place
+
+It would be a **tiered facility** carved into quiet bedrock, topped by a **low-profile observatory ring**:
+
+| Level | Space | Product mapping |
+|-------|--------|-----------------|
+| **Surface ring** | Satellite monitoring gallery — curved glass, Earth limb at extreme distance, route arcs on glass | Landing hero, BGP, global feeds |
+| **Archive floor** | Engineering library — warm paper tables, blueprint drawers, validated diagrams | Docs, knowledge, architecture, blog |
+| **Vault corridor** | Deception laboratory — narrow, controlled, tripwire logic | Canary, gateway approach |
+| **Ops glass** | Dark panels embedded in paper walls — live feeds, not full dark rooms | HeroTerminal, consoles, diagrams on `#080c14` |
+
+**What it is NOT:** nightclub cyberpunk, server-farm cathedral, war room with 40 screaming screens, space opera command bridge.
+
+**What it IS:** ESA-meets-field-manual — **European Space Agency calm** meets **NIST document discipline**.
+
+### Narrative anchor sentence (use in all creative briefs)
+
+*"WraithWall is where global deception sensors meet engineering documentation — observed from orbit, recorded on paper, acted on with precision."*
+
+---
+
+## 2. Visual language
+
+### Lighting
+
+| Context | Light source | Quality |
+|---------|--------------|---------|
+| **Paper surfaces** | Warm overhead archival (4000–4500K) | Soft, even, no harsh hotspots |
+| **Glass panels / terminals** | Cool panel backlight (6500K) | Contained glow, never spills across paper |
+| **Hero environments** | Dual: warm floor bounce + cool horizon rim | Horizon brighter than foreground |
+| **Gateway / auth** | Single cool task light on grid | Low-key, airlock tension |
+| **Diagrams on dark** | Emissive UI light only | No ambient room render |
+
+**Rule:** Light always **explains hierarchy** — paper = think, glass = watch, horizon = context.
+
+### Color palette (canonical)
+
+**Already in product — codify, don't reinvent:**
+
+| Token | Hex | Role |
+|-------|-----|------|
+| **Paper** | `#FAFAF7` | Primary public background |
+| **Matte** | `#F5F5F2` | Secondary sections |
+| **Cream** | `#F0EEE9` | Tertiary / emphasis bands |
+| **Ink** | `#1A1A1A` | Primary text |
+| **Ink dim** | `#3D3D3D` / `#6B6B6B` | Secondary text |
+| **Signal red** | `#C41A1A` | Primary accent — alerts, CTAs, telemetry nodes |
+| **Signal dim** | `#9F1414` | Hover / pressed |
+| **Intel blue** | `#004DB3` | Informational only (links, info states) |
+| **Field green** | `#2D7A3E` | Success / verified |
+| **Caution amber** | `#8B5E00` | Warning, non-critical |
+| **Glass black** | `#08090B` – `#080C14` | Terminal panels, diagram embeds |
+| **Lattice line** | `rgba(196,26,26,0.08–0.18)` | Arc grid, sensor lines |
+| **Horizon haze** | `rgba(245,245,242,0.0–0.85)` | Scrim gradients |
+
+**Forbidden palette:** neon cyan, purple gradients, `#00FF00` matrix, hot pink, rainbow threat maps on marketing pages.
+
+### Camera angles
+
+| Angle | Use | Never use |
+|-------|-----|-----------|
+| **Eye-level archival** (5° downward) | Paper pages, knowledge, docs | — |
+| **Slight wide (24–35mm equiv.)** | Heroes, product landings | Fish-eye |
+| **Elevated observatory (15° up)** | Horizon/lattice environments | Dramatic low hero shots |
+| **Orthographic / flat** | Diagrams, flowcharts, architecture | Fake 3D isometric clutter |
+| **Straight-on glass** | Terminal components | Dutch angle |
+
+**Rule:** Camera feels **documentary**, not cinematic trailer.
+
+### Materials
+
+| Material | Meaning | Where |
+|----------|---------|-------|
+| **Paper** | Truth, readability, engineering record | All long-form, cards, forms |
+| **Matte metal** | Infrastructure, trust, permanence | Borders, icons, lattice nodes |
+| **Glass** | Live data, separation from reader | Terminals, feeds, diagram frames |
+| **Concrete (implied)** | Vault, gateway, weight | Gateway/auth texture only — never literal renders |
+| **Blueprint ink** | System design truth | Architecture section headers |
+
+### Typography integration
+
+| Role | Face | Treatment |
+|------|------|-----------|
+| **Headlines / brand** | Inter 700–800 | Tight tracking on display only |
+| **Body** | Inter 400–500 | Comfortable line-height 1.65–1.7 |
+| **System / telemetry / labels** | IBM Plex Mono 400–600 | ALL CAPS labels sparingly; letter-spacing 1–2.5px |
+| **Code / IOC / paths** | IBM Plex Mono | Never decorative |
+
+**Rule:** Mono = **instrumentation**. Sans = **human prose**. Never swap for effect.
+
+### Contrast & shadows
+
+- **Paper cards:** 1px border `rgba(0,0,0,0.07)`, shadow only on hover (`0 4px 24px rgba(0,0,0,0.06)`)
+- **Glass panels:** inner glow top edge `rgba(255,255,255,0.04)`, no drop shadow on paper
+- **Environment scrim:** minimum **70% paper/opaque overlay** before any text sits on illustration
+
+### Mood keywords
+
+`calm` · `precision` · `trust` · `engineering` · `intelligence` · `watchful` · `documented` · `live-but-controlled`
+
+**Anti-mood:** `chaotic` · `aggressive` · `anonymous` · `gamified` · `apocalyptic`
+
+---
+
+## 3. Environment library
+
+Each environment is a **room in the Orbital Archive**, not a different brand.
+
+| Page / surface | Room in universe | Why it fits | Emotional objective | Lighting | Motion | Complexity | Animation style |
+|--------------|------------------|-------------|---------------------|----------|--------|------------|-----------------|
+| **Landing** | Observatory gallery | Global product entry; live sensors | Awe without anxiety — "something real is running" | Cool horizon rim + warm floor | Low | Medium (hero only) | Slow parallax lattice; globe/terminal own motion |
+| **BGP** | Route monitoring glass | Routing is orbital-scale | Vigilance, geographic scope | Cool dominant, red arc accents | Low–medium | Medium hero | Arc propagation along lattice |
+| **Canary** | Vault corridor | Planted tokens, controlled tension | Alert readiness, not horror | Single cool strip, deep shadow | Minimal | Low hero | Single pulse down corridor line |
+| **Gateway** | Airlock threshold | Trust boundary | Focus, procedural calm | Low-key grid | Minimal | Low | Radar sweep SVG 3% opacity |
+| **Auth** | Same airlock (shared) | Continuity with gateway | Safety, clarity | Same as gateway | None | Minimal | Static grid only |
+| **Threat intel / feeds** | Glass wall in archive | Live data beside paper | Informed, not overwhelmed | Glass emit on paper wall | Medium in panel only | High in component, zero on page | Feed tick, counter roll — existing |
+| **Architecture** | Blueprint vault | Validated design corpus | Credibility, rigor | Warm archival | None–low | Low header | One-time line draw SVG |
+| **Playbooks** | Field manual desk | Operator procedures | Competence, checklist calm | Warm lamp vignette | None | Minimal | None |
+| **Knowledge** | Same desk | Long-form IR/detection | Teach, not impress | Warm | None | None | None |
+| **Incident response** | Glass + red accent strip | Active event | Urgency contained | Paper base + red edge | Low | Low | Pulse on accent bar only |
+| **Founder** | Archive reading nook | Human behind institution | Personal, credible | Warm | None | None | None |
+| **Blog index** | Observatory anteroom | Ideas from the field | Curiosity | Cool header wash → paper | None | Low header | Static gradient |
+| **Blog post** | Paper only | Deep reading | Respect reader time | Warm | None | None | None |
+| **Docs hub** | Card catalog | Navigation | Utility | Warm | None | None | None |
+| **Launch** | Briefing room wall | Phase narrative | Confidence | Warm + diagram contrast | None | Low | None |
+| **Security / Privacy** | Plain archive | Legal trust | Transparency | Flat even | None | None | None |
+| **Contact** | Plain archive | Form focus | Approachable | Flat | None | None | None |
+| **Public tools** | Instrument table | Utility | Speed | Flat | None | None | None |
+| **404** | Closed corridor | Dead end | Light dry wit | Dim cool | None | Low | Static red exit glow |
+| **Services / About** | Briefing foyer | Commercial context | Professional | Warm hero optional | Low hero | Low | Parallax lattice only |
+
+**Universal rule:** Body content = **paper**. Environment = **header band or hero only**, except gateway/auth (full viewport but minimal, form-centered).
+
+---
+
+## 4. Motion language
+
+### Motion philosophy
+
+Motion communicates **live systems**, not decoration. If it doesn't mean "something is being watched, routed, verified, or recorded" — it doesn't move.
+
+### Approved motion types
+
+| Type | Meaning | Max duration / speed |
+|------|---------|----------------------|
+| **Lattice drift** | Global watch | 120–180s full cycle, <2px amplitude |
+| **Route propagation** | BGP path update | 2–4s dash-offset along fixed arc |
+| **Radar sweep** | Gateway scan | 8–12s rotation, 5–8% opacity |
+| **Sensor pulse** | Telemetry node | 3s ease, single node, red |
+| **Feed tick** | Live event | Existing counter/feed behavior |
+| **Parallax (2-layer)** | Depth in hero | scroll-linked, 0.1–0.3 ratio |
+| **Line draw (once)** | Blueprint reveal | 600–900ms on load, then static |
+| **Counter roll** | Stat update | Existing — keep |
+
+### Forbidden motion
+
+- Matrix rain, particle storms, glitch shakes on forms
+- Parallax on article body text
+- Auto-playing video backgrounds
+- Infinite zoom / ken burns on heroes
+- Motion on privacy/legal/checkbox flows
+- **>3 simultaneous motion types** in one viewport
+
+### Technology map
+
+| Technique | When | When never |
+|-----------|------|------------|
+| **CSS** | Gradients, vignette, hover, reduced-motion fallbacks | Complex paths |
+| **SVG** | Lattice arcs, radar, blueprint lines, BGP routes | Full-scene illustration |
+| **Canvas** | AttackGlobe extension only | Static pages |
+| **Parallax CSS** | Hero bands | Forms, knowledge |
+| **AI still hero** | Landing, BGP, Canary, blog index, 404 | Body text areas |
+| **Video** | — | **Everywhere public** |
+| **WebGL** | Globe component only if already required | Marketing backgrounds |
+
+### Accessibility
+
+- `prefers-reduced-motion: reduce` → **all environmental motion off**; static hero still OK
+- No motion required to understand CTA or form state
+- Flashing pulses: **max 1 pulse / 3s**, never red full-screen
+
+---
+
+## 5. Hero system (reusable framework)
+
+Every hero shares the same anatomy:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  [Layer 0] Environment wash (lattice + horizon)  5–15% │
+│  [Layer 1] Depth mid (arcs / corridor / blueprint)      │
+│  [Layer 2] Scrim gradient → paper (70%+ opaque bottom)    │
+│  [Layer 3] Primary focal (terminal / glass / diagram)   │
+│  [Layer 4] Foreground content (H1, lede, CTA, stats)    │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Required elements
+
+| Element | Spec |
+|---------|------|
+| **Primary focal** | One object only: terminal, route glass, vault line, or blueprint frame |
+| **Foreground content** | Max width 720–1280px; left-aligned editorial default |
+| **Depth layers** | Max 2 behind scrim |
+| **Scrim** | Always paper-ward gradient bottom; never fade to pure black on public pages |
+| **Gradient** | `--hero-glow-center` → `--hero-glow-edge` (existing tokens) |
+| **Animation** | One motion type per hero (see §4) |
+| **Responsive** | Environment crops to **top 40vh** on mobile; focal becomes full-width terminal |
+| **Dark mode** | Paper tokens invert per existing `prefers-color-scheme`; lattice lines lighten to `rgba(229,72,77,0.12)`; scrim strengthens |
+
+### Hero variants (by narrative)
+
+| Variant | Focal object | Environment wash |
+|---------|--------------|------------------|
+| **H-OBS** (Observatory) | HeroTerminal / globe | Lattice + horizon |
+| **H-ROUTE** (BGP) | Arc glass panel | Route lattice |
+| **H-VAULT** (Canary) | Narrow corridor line | Vault perspective |
+| **H-PRINT** (Architecture) | Blueprint frame | Linework grid |
+| **H-AIR** (Gateway) | Form card only | Tactical grid |
+| **H-PLAIN** (Blog index) | Title only | Cool observatory wash |
+
+**Recognition test:** Cover the logo. If lattice + paper + glass focal isn't visible, it's not a WraithWall hero.
+
+---
+
+## 6. Illustration rules (future AI / human art)
+
+All commissioned art follows one brief template:
+
+### Perspective & lens
+- Eye-level or slight elevated (never worm's-eye hero)
+- 35mm equivalent, shallow depth **only** on environment — focal UI stays sharp
+- **Negative space:** 40–60% of frame is haze/paper/sky — text will live there
+
+### Composition
+- **Rule of thirds:** focal glass panel or horizon on lower third; lattice upper
+- **No faces, no hoodies, no hands on keyboards** — institution, not character drama
+- **No readable fake UI text** in illustrations — use abstract blocks/lines
+
+### Rendering style
+- **Soft photoreal environment + flat UI glass overlay** OR **pure vector-atmosphere**
+- Never: hyper-gloss cyberpunk, Unreal Engine neon, Midjourney "hacker room"
+
+### Color grading
+- Lift shadows (never crushed blacks on public heroes)
+- Warm highlights on paper paths; cool shadows on glass
+- Red accent **only** on nodes, arcs, alerts — never full-sky gradient
+
+### Texture & noise
+- Paper grain: `--grain-opacity: 0.015` (existing)
+- Illustration noise: **≤3%** fine grain overlay; match paper, don't add film grit
+
+### Art direction one-liner for any model prompt
+
+*"Calm orbital intelligence archive, distant Earth horizon, faint red geodesic sensor lattice, warm paper foreground, dark glass telemetry panel, documentary lighting, no neon, no people, no cliché cyberpunk, European space-agency aesthetic, generous negative space."*
+
+---
+
+## 7. Diagram language
+
+Diagrams are **evidence**, not decoration. One system for all:
+
+### Philosophy
+- **Dark canvas, light logic** — embeds on `#080C14`, never floating on paper without frame
+- **Red = active threat / signal**; **Blue = information**; **Green = verified**; **Gray = infrastructure**
+- **Typography:** IBM Plex Mono for node labels; Inter for titles outside diagram
+
+### Shared specs
+
+| Element | Rule |
+|---------|------|
+| **Spacing** | 8px grid; min 24px between nodes |
+| **Nodes** | Rounded rect 4px radius OR circle for endpoints; 1px border `rgba(255,255,255,0.12)` |
+| **Edges** | 1.5px orthogonal or 45° only; arrowhead 6px |
+| **Labels** | 11–12px mono, never inside nodes if <80px wide |
+| **Containers** | Dashed `rgba(255,255,255,0.08)` for trust boundaries |
+| **Redaction** | Blur/pixel blocks on public diagrams — **brand signature** for public corpus |
+
+### Diagram families
+
+| Family | Layout | Motion |
+|--------|--------|--------|
+| **Architecture** | Layered horizontal flow | None public; optional step-reveal in console |
+| **Threat graph** | Force-directed **only** in console; public = frozen layout | Pulse on active node edge |
+| **Attack chain** | Left-to-right chain | None |
+| **BGP** | Arc over horizon schematic | Dash propagation on path change |
+| **Canary deploy** | Plant → beacon → alert linear | Single pulse on beacon step |
+| **Playbook** | Vertical checklist flow | None |
+| **Flowchart** | ISO-style diamonds/rects | None |
+
+**Public vs operator:** Public diagrams are **redacted and static**. Motion is an **authenticated console privilege**.
+
+---
+
+## 8. Iconography
+
+### Principles
+- **Engineered, not cute** — icons read as instruments
+- **1.5px stroke** at 24px base (scale proportionally)
+- **Rounded joins, square caps** — precision without playfulness
+- **Outlined default**; filled **only** for active/selected states
+
+### Spec
+
+| Property | Value |
+|----------|-------|
+| Grid | 24×24, 2px padding |
+| Corner radius | 2px on rects |
+| Accent | Signal red on active only |
+| Inactive | `ink-3` on paper; `rgba(255,255,255,0.5)` on glass |
+| Interaction | 120ms stroke-width or fill swap — no bounce |
+
+### Families
+- **Navigation:** outline, mono-adjacent weight
+- **Threat/status:** diamond or hex node shapes — match diagram nodes
+- **Action:** rounded rect container 32px touch target
+
+**No:** skulls, generic shields with flames, lock-and-chain clipart.
+
+---
+
+## 9. Seasonal identity (atmosphere only)
+
+Subtle shifts in **environment wash only** — paper tokens, contrast, and form UX **never change**.
+
+| Season | Atmospheric shift | Lattice behavior |
+|--------|-------------------|------------------|
+| **Spring equinox** | Slightly warmer horizon haze | +10% node brightness |
+| **Summer solstice** | Brighter rim light on horizon | Standard pulse |
+| **Autumn equinox** | Warmer paper cream bias (+0.5% saturation) | Slower drift |
+| **Winter solstice** | Cooler horizon, softer red nodes | Aurora hint **optional** 2% opacity on hero only |
+| **Solar storm (rare)** | Amber caution tint on lattice **one week** | Slightly faster pulse — blog/landing hero only |
+| **High telemetry (launch weeks)** | Denser lattice lines | +1 node visible — not busier UI |
+
+---
+
+## 10. Time-of-day adaptation
+
+**Recommended: yes, but only for environment wash in heroes** — not global theme swaps.
+
+| Mode | Environment | Paper UI |
+|------|-------------|----------|
+| **Morning** | Soft warm rim, lattice faint | Unchanged |
+| **Afternoon** | Neutral — default | Unchanged |
+| **Night** | Cool horizon, slightly stronger lattice | Unchanged (no dark-mode force) |
+| **Maintenance** | Desaturated lattice, amber single banner | Standard + mono status strip |
+| **Incident** | Red edge glow on **authenticated** console only | Public site **unchanged** |
+
+**Rule:** Public marketing never flips to "alarm red site." Incident emotion lives in **console + notifications**, not landing page atmosphere.
+
+---
+
+## 11. Performance rules
+
+| Priority | Technique | Budget |
+|----------|-----------|--------|
+| 1 | CSS gradients, vignette | 0 KB JS |
+| 2 | Inline SVG lattice | <8 KB per hero |
+| 3 | CSS parallax (transform only) | GPU-friendly, 2 layers max |
+| 4 | Canvas (globe only) | Lazy load, pause offscreen |
+| 5 | AI hero WebP | <120 KB, 1920×1080 max, hero band crop |
+| **Avoid** | Video, WebGL scenes, Lottie >100KB, full-page backgrounds |
+
+**Lazy load:** Environment layers below fold or `loading="lazy"` on hero wash.  
+**Print/PDF:** Environment strips to paper white automatically.
+
+---
+
+## 12. The WraithWall signature (final)
+
+### Primary signature
+**Sensor Lattice over Paper** — geodesic arcs + sparse red nodes + distant horizon, always yielding to warm readable surfaces.
+
+### Secondary signatures (supporting, not competing)
+1. **Glass panel on paper** — dark terminal embedded in cream page (landing)
+2. **Redacted blueprint** — public architecture diagrams with intentional blur blocks
+3. **Mono instrumentation** — Plex Mono labels on live stats
+
+### Recognition checklist (screenshot test)
+- [ ] Warm paper background visible
+- [ ] Signal red used sparingly as **data**, not decoration
+- [ ] IBM Plex Mono on system labels
+- [ ] Dark glass panel **contained**, not full-bleed
+- [ ] Lattice or arc hint in hero/header only
+- [ ] No neon, no matrix, no hooded figure
+
+---
+
+## Contributor quick-reference card
+
+```
+UNIVERSE     Orbital Archive — observatory + engineering library + vault
+SIGNATURE    Sensor Lattice over Paper
+MOOD         Calm precision. Live data in glass. Truth on paper.
+COLOR        Paper #FAFAF7 · Ink #1A1A1A · Signal #C41A1A · Glass #080C14
+TYPE         Inter (prose) · IBM Plex Mono (instruments)
+HERO         Environment → Scrim → Glass focal → Content. Max 2 depth layers.
+MOTION       Means "watching/routing/scanning" — else static.
+NEVER        Neon cyberpunk · matrix rain · full-page dark · video backgrounds
+```
+
+---
+
+This is the foundation. Every future illustration, SVG, animation, diagram, and hero must cite **which room in the Orbital Archive** it lives in, and pass the **screenshot recognition test** without the logo visible.
+
+No artwork was generated. No pages were redesigned. This document is the contract for all visual work that follows.

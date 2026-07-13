@@ -1,0 +1,83 @@
+## TOP-LINE FINDING
+
+**Do not link the public website toward `wraithwall-oss/` as the OSS destination.** It is a local production cleanup tree with no public remote, incomplete packaging, and failing SDK tests. The three Phase 0 trees (`opensource/`, `open-source/`, `wraithwall-oss/`) all remain unresolved for public linking.
+
+---
+
+✓ **Phase 0 status: still open — all three**
+
+| Tree | Status | Open questions |
+|------|--------|----------------|
+| **`opensource/`** (no hyphen) | Staged, not published | README says "Not published. No public remote." References missing `internal/OPEN_SOURCE_GAPS.md`. Only contains `packages/ravenscan/`. |
+| **`open-source/`** (hyphen) | Toolkit source exists locally | Public home is `github.com/niffyhunt/wraithwall-toolkit` (verified live). **Not** in public `niffyhunt/wraithwall` monorepo (that repo is a README-only stub). |
+| **`wraithwall-oss/`** | Platform extraction in progress | Not public. `pip install -e .` partial; SDK tests fail; CLI not wired in `pyproject.toml`; ravenscan subpackage fails `pip install -e .` (hatch-vcs/git tag error). **Not safe as live public destination.** |
+
+---
+
+✓ **Links corrected:**
+- `templates/docs.html` — "In-repo OSS packages" `github.com/niffyhunt/wraithwall/tree/main/open-source` (404) → `github.com/niffyhunt/wraithwall-toolkit` with accurate label
+- `frontend-blog/src/content/posts.js` — same broken `open-source/` monorepo claim → `wraithwall-toolkit` (blog rebuild required for live site)
+
+---
+
+✓ **Documentation synchronized:**
+- Docs hub OSS section now points toolkit packages to the verified public repo (`wraithwall-toolkit`)
+- Blog OSS post source text aligned to same (pending frontend rebuild)
+
+---
+
+✓ **Package structure verified:**
+
+| Package | Independent install (`pip install -e .`) | Library import | CLI | PyPI (`pip install <name>`) | Platform-only |
+|---------|------------------------------------------|----------------|-----|-----------------------------|---------------|
+| **ravenscan** | Fails without git/VCS tags (hatch-vcs) in `ravenscan/` and `wraithwall-oss/packages/ravenscan/` | `from raven import Raven` (when installed) | `raven` entry in pyproject | **Not on PyPI** (404); README badges claim otherwise | No — standalone |
+| **canary-kit** | Works (`open-source/canary-kit/`) | `canary_kit` module | `canary-kit` script | **Not on PyPI** | No — standalone |
+| **honeypot-mitre** | Works | `honeypot_mitre` module | `honeypot-mitre` script | **Not on PyPI**; README says `pip install honeypot-mitre` | No — standalone |
+| **dml-spec** | Works | `dml` module | `dml` script | **Not on PyPI** | No — standalone |
+| **wraithwall** (platform) | Partial — `create_app` tests pass | `from wraithwall import create_app` | README claims `wraithwall` CLI but **no `[project.scripts]`**, no `typer` dep | **Not on PyPI** | Yes — Flask monolith |
+| **sdk** | **Not packaged** — `from sdk import WraithWallClient` fails after `pip install -e .` | Exists in `sdk/__init__.py` only | N/A | N/A | Consumed only via manual path, not install |
+
+**Public repos verified live:** `wraithwall-toolkit` (3 packages), `BGP-monitor` (bgp-monitor). **Not live:** `niffyhunt/wraithwall` (stub README only), `niffyhunt/ravenscan` (404), `ravenscan/ravenscan` (404).
+
+---
+
+✓ **Found but not auto-fixed (per Mission 6 boundary):**
+
+**Website `/docs` hub — broken GitHub deep-links** (no verified public replacement; `niffyhunt/wraithwall` is stub-only):
+- `LAUNCH.md`, `CHANGELOG.md`, `ROADMAP.md`
+- `docs/architecture.md`, `docs/deployment.md`, `docs/api.md`, `docs/METRICS_METHODOLOGY.md`
+- `SECURITY.md`, `incidents/2026-05-31-outlaw-mdrfckr.md`
+- `docs/knowledge-pipeline/articles`
+
+**Website OSS gaps** (need confirmed public target, not one-line URL swap):
+- No link to **ravenscan** anywhere on `/docs` (blog links `github.com/niffyhunt/ravenscan` → **404**)
+- Launch page says "four toolkit packages" including bgp-monitor but docs OSS section lists only toolkit + bgp-monitor separately (narrative inconsistency, not a URL)
+
+**Install instruction mismatches** (can't pick winner without publishing decision):
+- Multiple READMEs say `pip install ravenscan` / `canary-kit` / `honeypot-mitre` / `wraithwall` — **none on PyPI**
+- `honeypot-mitre` README: PyPI install vs reality is `pip install -e .` only
+- `wraithwall-oss` README: `wraithwall check|serve|routes` — CLI not registered in pyproject
+- `wraithwall-oss` README: `from sdk import WraithWallClient` — SDK not in package
+- Main `README.md` still maps OSS to `open-source/` + top-level `ravenscan/` (not `wraithwall-oss/packages/*` or `opensource/`)
+
+**Mission 5 — Public Python API (report only):**
+- Documented: `from sdk import WraithWallClient` with `.health()`, `.scan_url()`, `.public_stats()`, `.detonate()`
+- Missing: `sdk` not included in `pyproject.toml` packages; no `from wraithwall import Client`; no published API docs on website; HTTP API index points to broken GitHub `docs/api.md`
+- `create_app()` factory exists and is importable — that's the real public Python surface today
+
+**Layout references obsolete vs intended monorepo:**
+- Website/blog referenced `wraithwall/tree/main/open-source` (fixed in source)
+- Blog still links broken `niffyhunt/ravenscan`
+- No public docs reference `wraithwall-oss/packages/{ravenscan,canary-kit,dml-spec,honeypot-mitre}` layout
+- `opensource/packages/ravenscan` is the staged Raven distribution — not linked publicly
+
+---
+
+✓ **Remaining blockers:**
+
+1. **`wraithwall-oss/` not publishable** — no public git remote; SDK unpackaged; CLI unwired; ravenscan subpackage won't install without VCS fix; 2/4 pytest failures on SDK
+2. **`ravenscan` has no public GitHub home** — `niffyhunt/ravenscan` and `ravenscan/ravenscan` both 404; `opensource/` explicitly not published
+3. **`niffyhunt/wraithwall` public repo is a placeholder** — ~12 docs-hub GitHub links 404 until code is pushed or links retargeted
+4. **No PyPI packages** — all `pip install <name>` claims in READMEs are currently false
+5. **Blog rebuild needed** — `posts.js` fix won't appear on live site until `frontend-blog` is rebuilt and deployed
+6. **`internal/OPEN_SOURCE_GAPS.md` referenced by `opensource/README` but missing**

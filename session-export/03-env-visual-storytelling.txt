@@ -1,0 +1,281 @@
+# Environmental Visual Storytelling Review — WraithWall Public Surface
+
+**Scope:** Public, unauthenticated pages on `wraithwall.online`  
+**Constraint:** Foreground always wins. Current brand is *premium editorial paper* (warm cream, `#FAFAF7`) with a *dark ops terminal* as the hero focal point — not generic neon cyber.
+
+**Global principle:** Use environmental backgrounds sparingly and *by narrative tier*. WraithWall already has cinematic identity in the HeroTerminal + AttackGlobe. Full-page environments should extend that story, not compete with it.
+
+---
+
+## Tier system (apply everywhere)
+
+| Tier | Treatment | Where |
+|------|-----------|-------|
+| **A — Cinematic hero only** | Environment behind hero band; 60–75% scrim into paper below | Landing, product landings |
+| **B — Atmospheric wash** | 5–12% opacity, fixed or slow parallax, never behind body text | Marketing shells, launch |
+| **C — Texture only** | Grain, vignette, blueprint linework (already in theme) | Docs, blog, knowledge |
+| **D — Tactical minimal** | Grid, scanline, no scenery | Gateway, auth |
+| **E — None** | Pure paper | Tools, legal, forms |
+
+---
+
+## 1. Landing `/` (Vue SSG)
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **Yes — hero only** |
+| **Why?** | This is the brand moment. You already have a dark terminal + globe; the environment should *frame* that as a window into live operations, not wallpaper the whole page. |
+| **Best environment** | **Orbital intelligence command** — Earth curvature at extreme distance, faint satellite arcs, soft red telemetry dots matching `#C41A1A`. Feels like watching sensors from above, not a movie spaceship interior. |
+| **Static or animated?** | **Subtle animation** — slow orbital drift (2–3px/min parallax), occasional blink on arc nodes. Globe/feed stay the motion hero. |
+| **Emotion vs distraction?** | **Improves emotion** if confined to hero. Full-page would fight readability and the paper editorial system. |
+| **Implementation** | **Layered parallax** (2 layers: distant Earth haze + arc SVG) behind hero; **lightweight Canvas** only if arcs tie to existing AttackGlobe coordinates. **No video loop** (perf + mobile). **No AI full-bleed** behind stat cards. |
+
+**Below-the-fold sections** (capabilities, feeds, architecture gallery): **Tier C only** — keep paper; diagrams already provide visual weight.
+
+---
+
+## 2. Launch `/launch`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **Optional — B tier, very restrained** |
+| **Why?** | Long-form narrative; embedded architecture PNGs are already dark and cinematic. Environment should not compete with diagrams. |
+| **Best environment** | **Global monitoring facility** — abstract horizon line + faint grid, as if reading a field report from an ops floor. |
+| **Static or animated?** | **Static** |
+| **Emotion vs distraction?** | Neutral; animation would distract from diagrams and copy. |
+| **Implementation** | **No background** OR **animated SVG** horizon at 6% opacity in page header only. Not AI hero art. |
+
+---
+
+## 3. Documentation hub `/docs`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No — Tier C/E** |
+| **Why?** | Index/hub page; users are navigating to GitHub, blog, knowledge. Needs clarity and trust, not spectacle. |
+| **Best environment** | N/A — keep editorial paper + card grid. |
+| **Implementation** | **No background at all.** Existing card panels are the visual structure. |
+
+---
+
+## 4. Knowledge articles `/docs/knowledge/*`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No full environment — Tier C texture only** |
+| **Why?** | 18–22 min reads, code blocks, tables. These are *field manuals*, not product marketing. |
+| **Best environment** | **Intelligence bunker *as texture*** — not a room render; subtle warm desk-lamp vignette top-left, barely perceptible. Reinforces “operator handbook” without darkening the page. |
+| **Static or animated?** | **Static** |
+| **Emotion vs distraction?** | Texture **improves focus**; scenery **would distract**. |
+| **Implementation** | **CSS gradient vignette only** (already aligned with `--vignette-color`). **No parallax, no video, no AI art.** |
+
+---
+
+## 5. Technical blog `/blog`, `/blog/<slug>`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **Hero band only on index; none on posts** |
+| **Why?** | Blog index = discovery; posts = deep technical reading (audit, Cowrie pipeline, OSS). |
+| **Best environment (index)** | **Cyber observatory** — night-sky deep blue-black *only in blog header band*, fading to paper before post list. Suggests “looking out at the threat landscape.” |
+| **Posts** | **No environment** — diagrams and code are the visuals. |
+| **Static or animated?** | Index: **static** gradient wash. Posts: none. |
+| **Implementation** | **CSS gradient** on blog index header. **No canvas/video.** Optional **AI-generated hero** for index banner only (single asset, heavy scrim). |
+
+---
+
+## 6. Architecture `/architecture` + landing `/#architecture`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **Yes — B tier, blueprint metaphor** |
+| **Why?** | Page purpose is *validated system design*. Environment should feel like an engineering archive, not a server room. |
+| **Best environment** | **High-tech research environment / blueprint vault** — faint technical drawing grid, measurement ticks, desaturated. |
+| **Static or animated?** | **Static**; optional **animated SVG** — slow drafting-line reveal on hero only (one-time on load). |
+| **Emotion vs distraction?** | **Improves credibility** if subtle. Heavy grid behind diagrams = clutter. |
+| **Implementation** | **Animated SVG** linework at 4–8% opacity behind page title. Diagram embeds stay on `#080c14` panels (already correct). **No parallax behind gallery.** |
+
+---
+
+## 7. Security `/security`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No** |
+| **Why?** | Disclosure/trust page; must read like a policy, not a trailer. |
+| **Implementation** | **No background at all.** |
+
+---
+
+## 8. Roadmap `/roadmap`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No** |
+| **Why?** | Timeline/phase content; environment adds no narrative value. |
+| **Implementation** | **No background.** Optional single **AI hero strip** (future-looking horizon) at 10% height — low priority. |
+
+---
+
+## 9. Marketing pages — About, Contact, Privacy, Services (`frontend-marketing`)
+
+| Page | Background? | Environment | Motion | Implementation |
+|------|---------------|-------------|--------|----------------|
+| **About** | Optional B | **Secure underground SOC** — abstract, no people; concrete + soft uplighting suggestion | Static | CSS gradient header wash only |
+| **Contact** | **No** | — | — | Forms need zero visual noise |
+| **Privacy** | **No** | — | — | Legal readability |
+| **Services** | Optional A | **Deception operations floor** — wide shallow depth, monitors as soft bokeh (not readable screens) | Subtle parallax on hero | **AI hero artwork** in hero band only + paper below |
+
+---
+
+## 10. Product landings — Canary `/canary`, BGP `/bgp` (marketing)
+
+| Page | Background? | Environment | Why |
+|------|---------------|-------------|-----|
+| **Canary landing** | **Yes — hero A** | **Tripwire corridor / secure vault aisle** — narrow perspective, tension, not horror. Reinforces “planted token, unknown environment.” | Product is supply-chain deception |
+| **BGP landing** | **Yes — hero A** | **Satellite control room + route horizon** — curved Earth edge, faint AS-path arcs. Distinct from landing globe (more *network routing*, less *attack feed*). | BGP is global routing intelligence |
+
+| Motion | **Subtle animation** — slow arc pulse on BGP; static or single light sweep on Canary |
+| Implementation | **Layered parallax** (2 layers) + **animated SVG** arcs. **No video.** |
+| Emotion | **Improves** product story if hero-only; **distracts** if behind feature lists |
+
+---
+
+## 11. Founder `/niffy`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No — or minimal B** |
+| **Why?** | Personal/portfolio terminal aesthetic already present. Environment risks feeling like a game UI. |
+| **If any** | **Moon operations center** — extremely subtle, distant, poetic (solo-builder narrative). 5% opacity max. |
+| **Implementation** | **No background** preferred. If used: static CSS gradient only. |
+
+---
+
+## 12. Gateway `/gateway` + `/gateway/blocked`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **Yes — Tier D tactical** (already partially there) |
+| **Why?** | Identity verification gate; should feel like entering a secure airlock, not browsing marketing. |
+| **Best environment** | **Intelligence bunker / dark operations room** — not literal; grid + depth haze + red accent spill. |
+| **Static or animated?** | **Subtle animation** — existing scanline is correct; add slow **animated SVG** radar sweep at 3% opacity. |
+| **Emotion vs distraction?** | **Improves tension** without hurting form UX (centered card, max-width 520px). |
+| **Implementation** | Extend current grid + scanline. **Animated SVG** only. **No AI art, no video, no parallax** (motion sickness on challenge UI). |
+
+---
+
+## 13. Auth journey — Login, Signup, Forgot/Reset, Verify (`frontend-auth`)
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **Minimal Tier D — same family as gateway** |
+| **Why?** | Security-sensitive forms; readability and accessibility are mandatory. |
+| **Best environment** | **Secure underground SOC** — shared visual language with gateway (user is crossing trust boundary). |
+| **Static or animated?** | **Static** grid/wash only |
+| **Implementation** | **CSS only** (shared auth shell). **No canvas, no video, no AI backgrounds.** |
+
+---
+
+## 14. Public security tools — Hash generator, Password tools, File scanner, Verify link
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No — Tier E** |
+| **Why?** | Utility pages; users run scans and copy output. Any scenery is noise. |
+| **Implementation** | **No background at all.** Optional tool-specific **icon/illustration in hero strip** (not environment). |
+
+---
+
+## 15. Confirmation / thank-you pages
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No** |
+| **Why?** | Single-message clarity; user needs confirmation, not atmosphere. |
+| **Implementation** | **No background.** |
+
+---
+
+## 16. Newsletter `/newsletter`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **No** |
+| **Implementation** | **No background.** |
+
+---
+
+## 17. 404 `/404`
+
+| Question | Answer |
+|----------|--------|
+| **Environmental background?** | **Optional — one branded moment** |
+| **Best environment** | **Deception dead-end corridor** — abstract, faint red exit sign glow (on-brand accent). |
+| **Static or animated?** | Static |
+| **Implementation** | **AI-generated hero** (single illustration) OR **CSS gradient**. Keep copy large and readable. |
+
+---
+
+## 18. Legacy fallback `index.html` (if landing build missing)
+
+Treat same as **Landing `/`** — but prioritize shipping SSG landing; environment strategy applies to Vue build only.
+
+---
+
+# Cross-cutting recommendations
+
+## Where environments help most (priority order)
+
+1. **Landing hero** — orbital command framing existing globe/terminal  
+2. **BGP + Canary product landings** — distinct product stories  
+3. **Gateway/auth shell** — shared tactical language  
+4. **Architecture page header** — blueprint vault texture  
+5. **Blog index header** — observatory wash  
+
+## Where environments hurt most (avoid)
+
+- Knowledge articles, blog posts, docs hub, privacy, contact, tools, thank-you pages  
+- Any full-page dark environment on light-theme reading pages  
+- Video loops anywhere (mobile, accessibility, brand restraint)  
+- Generic “matrix rain,” neon cityscapes, hooded hackers — off-brand for WraithWall’s editorial + live-sensor identity  
+
+## WraithWall-specific visual language (not generic cyber)
+
+| Motif | Use for |
+|-------|---------|
+| Orbital sensor lattice | Landing, global monitoring narrative |
+| Route arcs / AS paths | BGP only |
+| Tripwire / vault corridor | Canary only |
+| Blueprint linework | Architecture, launch diagrams context |
+| Paper grain + warm vignette | All long-form reading (already in theme) |
+| Dark terminal window | Hero focal object — not replaced by background art |
+
+## Technical implementation hierarchy
+
+| Method | Best for | Avoid for |
+|--------|----------|-----------|
+| **CSS gradient + vignette** | Knowledge, blog posts, auth | — |
+| **Animated SVG** | Gateway radar, BGP arcs, architecture grid | Long-form body |
+| **Layered parallax (CSS)** | Landing hero, product landings | Forms, articles |
+| **Lightweight Canvas** | Extending AttackGlobe only | Static pages |
+| **AI-generated hero artwork** | Landing hero, blog index, 404, product landings (hero band) | Full page, text columns |
+| **Video loop** | — | Everywhere on public site |
+| **No background** | Docs, knowledge body, tools, legal, contact | — |
+
+## Readability safeguards (non-negotiable)
+
+- Minimum **70% opaque scrim** between environment and any text block  
+- Environment never behind paragraphs — only behind hero bands or page headers  
+- Cards/panels stay `#FFFFFF` / paper with existing borders  
+- Respect `prefers-reduced-motion`: static fallback for all animated environments  
+- Dark environments only in **gateway, auth, terminal components** — public marketing stays paper-first  
+
+---
+
+## Summary verdict
+
+WraithWall should **not** become an “environment-first” site. It should become a **paper-first intelligence publication** with **surgical cinematic environments** at trust boundaries (gateway/auth), **product identity** (canary/bgp), and **the hero moment** (landing). That matches what you already built: live terminal as the window, cream as the reading room.
+
+**Highest ROI, lowest risk:** Landing hero parallax + gateway SVG depth + architecture blueprint header.  
+**Highest risk:** Full-page AI environments on docs, blog, or knowledge articles — would break the premium editorial identity and hurt readability.

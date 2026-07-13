@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dml-spec"
+version = "0.1.0"
+description = "Deception Markup Language (DML) — a versioned, HMAC-signed schema for declaring honeypots, canaries and tripwires as portable documents."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Niffy_hunt" }]
+keywords = ["deception", "honeypot", "canary", "security", "dml", "hmac"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Security",
+]
+dependencies = ["PyYAML>=6"]
+
+[project.urls]
+Homepage = "https://wraithwall.online"
+Repository = "https://github.com/niffyhunt"
+
+[project.scripts]
+dml = "dml.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dml*"]

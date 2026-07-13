@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ravenscan"
+version = "0.1.0"
+description = "Open-source engineering intelligence agent — learns a software project over time, detects architectural and security change, and produces evidence-backed intelligence reports."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Raven Contributors" }]
+keywords = ["security", "architecture", "intelligence", "sast", "engineering"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = [
+    "typer>=0.12,<1",
+    "rich>=13,<14",
+    "pydantic>=2,<3",
+    "pyyaml>=6,<7",
+    "sqlalchemy>=2,<3",
+]
+
+[project.optional-dependencies]
+viz = ["graphviz>=0.20,<1"]
+all = ["ravenscan[viz]"]
+
+[project.scripts]
+raven = "raven.cli.main:app"
+
+[project.urls]
+Homepage = "https://github.com/niffyhunt/ravenscan"
+"Bug Tracker" = "https://github.com/niffyhunt/ravenscan/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/raven", "src/ravenscan"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [".github", "tests", "docs", ".raven"]

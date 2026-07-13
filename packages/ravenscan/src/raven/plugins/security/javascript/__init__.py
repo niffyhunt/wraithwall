@@ -1,0 +1,1 @@
+from raven.plugins.security.javascript.analyzer import JavaScriptSecurityAnalyzer
