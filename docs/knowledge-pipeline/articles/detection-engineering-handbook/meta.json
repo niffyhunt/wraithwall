@@ -1,0 +1,55 @@
+{
+  "id": "PUBLISH-002",
+  "slug": "detection-engineering-handbook",
+  "title": "Detection Engineering Handbook: From Raw Logs to Deployable Rules",
+  "subtitle": "Sigma, YARA, Suricata, and SIEM-native detections with explicit false-positive budgets",
+  "category": "Detection Engineering",
+  "version": "1.1",
+  "updated": "2026-07-09",
+  "reading_time_minutes": 22,
+  "word_count": 2518,
+  "license": "CC BY 4.0",
+  "status": "PUBLISHED",
+  "approved_by": "operator",
+  "published_at": "2026-07-09",
+  "pair_guide": "linux-incident-response-checklist",
+  "canonical": "https://wraithwall.online/docs/knowledge/detection-engineering-handbook",
+  "og_image": "https://wraithwall.online/static/img/knowledge/detection-handbook-banner.png",
+  "og_image_alt": "WraithWall Knowledge — Detection Engineering Handbook",
+  "seo": {
+    "title": "Detection Engineering Handbook | WraithWall Knowledge",
+    "description": "Turn Linux telemetry into tested Sigma, YARA, Suricata, and SIEM rules. Lifecycle, validation, canary rollout, and MITRE-aligned baselines.",
+    "keywords": [
+      "detection engineering",
+      "sigma rules",
+      "yara linux",
+      "suricata rules",
+      "siem detection",
+      "auditd detection",
+      "false positive budget",
+      "MITRE ATT&CK"
+    ],
+    "robots": "index, follow"
+  },
+  "medium": {
+    "title": "Detection Engineering Handbook: From Raw Logs to Deployable Rules",
+    "subtitle": "How to build alerts that survive production — with explicit false-positive budgets",
+    "tags": ["Cybersecurity", "Detection Engineering", "Sigma", "SIEM", "Linux"]
+  },
+  "pastebin": {
+    "title": "Detection Engineering — From Raw Logs to Deployable Rules v1.1",
+    "expiry": "never",
+    "exposure": "unlisted"
+  },
+  "mitre_techniques": [
+    "T1059.004", "T1078", "T1021", "T1053.003", "T1505.003",
+    "T1071.001",
+    "T1048.003"
+  ],
+  "formats": {
+    "source": "source.md",
+    "website": "website.md",
+    "medium": "medium.md",
+    "pastebin": "pastebin.txt"
+  }
+}

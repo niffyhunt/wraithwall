@@ -67,6 +67,17 @@ dml validate traps.yaml
 
 All secrets and infrastructure endpoints come from environment variables (see `.env.example`). Nothing is hardcoded to a specific deployment.
 
+## Documentation
+
+- **[LAUNCH.md](LAUNCH.md)** — Field guide and platform tour
+- **[docs/architecture.md](docs/architecture.md)** — Architecture overview
+- **[docs/deployment.md](docs/deployment.md)** — Deployment guide
+- **[docs/api.md](docs/api.md)** — API surface
+- **[ROADMAP.md](ROADMAP.md)** — Direction and priorities
+- **[CHANGELOG.md](CHANGELOG.md)** — Version history
+- **[docs/COMMUNITY_ROADMAP.md](docs/COMMUNITY_ROADMAP.md)** — Community roadmap
+- **[docs/knowledge-pipeline/](docs/knowledge-pipeline/)** — Technical knowledge articles
+
 ## Contributing
 
-Install the full stack with `./install.sh`, run `pytest`, then open a PR. Each package under `packages/` has its own README and examples.
+Install the full stack with `./install.sh`, run `pytest`, then open a PR. Each package under `packages/` has its own README and examples. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.

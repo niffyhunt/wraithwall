@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="980" viewBox="0 0 1440 980" font-family="'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace">
+  <defs>
+    <!-- arrowheads -->
+    <marker id="ahRed" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3.2 L0,6.4 Z" fill="#E5484D"/>
+    </marker>
+    <marker id="ahGrey" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3.2 L0,6.4 Z" fill="#5C5C57"/>
+    </marker>
+    <marker id="ahGreen" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#3DD68C"/>
+    </marker>
+    <linearGradient id="campGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1416"/>
+      <stop offset="1" stop-color="#120d0e"/>
+    </linearGradient>
+    <radialGradient id="clusterGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#E5484D" stop-opacity="0.35"/>
+      <stop offset="0.6" stop-color="#E5484D" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#E5484D" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0 L0 0 0 34" fill="none" stroke="#ffffff" stroke-opacity="0.022" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- canvas -->
+  <rect width="1440" height="980" fill="#0A0A0B"/>
+  <rect width="1440" height="980" fill="url(#grid)"/>
+
+  <!-- ============ TITLE BAR ============ -->
+  <g>
+    <circle cx="40" cy="44" r="6" fill="#E5484D"/>
+    <circle cx="40" cy="44" r="11" fill="none" stroke="#E5484D" stroke-opacity="0.4"/>
+    <text x="62" y="40" fill="#F4F4F2" font-size="20" letter-spacing="1.5" font-weight="600">WRAITHWALL · CAMPAIGN CORRELATOR</text>
+    <text x="62" y="62" fill="#8A8A84" font-size="13" letter-spacing="0.5">Two SSH sessions from different IPs converging into a single campaign cluster</text>
+    <text x="1400" y="36" text-anchor="end" fill="#5C5C57" font-size="12" letter-spacing="0.5">behavioral-fingerprint · simhash/hamming · weighted-similarity</text>
+    <text x="1400" y="58" text-anchor="end" fill="#5C5C57" font-size="12" letter-spacing="0.5">thresholds: Σ ≥ 0.60 (match) · conf ≥ 0.85 (high)</text>
+  </g>
+  <line x1="40" y1="84" x2="1400" y2="84" stroke="#23262B" stroke-width="1"/>
+
+  <!-- zone headers -->
+  <text x="40"   y="118" fill="#5C5C57" font-size="12" letter-spacing="2">01 · INGEST — SSH SESSIONS</text>
+  <text x="470"  y="118" fill="#5C5C57" font-size="12" letter-spacing="2">02 · CORRELATION SIGNALS</text>
+  <text x="1095" y="118" fill="#5C5C57" font-size="12" letter-spacing="2">03 · CAMPAIGN CLUSTER</text>
+
+  <!-- ============ ZONE 1 : SESSION CARDS ============ -->
+  <!-- Session A -->
+  <g>
+    <rect x="40" y="150" width="370" height="200" rx="8" fill="#101214" stroke="#23262B"/>
+    <rect x="40" y="150" width="370" height="30" rx="8" fill="#16191D"/>
+    <rect x="40" y="168" width="370" height="12" fill="#16191D"/>
+    <circle cx="60" cy="165" r="4" fill="#4C8DFF"/>
+    <text x="74" y="170" fill="#C7C7C2" font-size="12.5" letter-spacing="1">SESSION A · sshd · cowrie-sensor-01</text>
+    <text x="394" y="170" text-anchor="end" fill="#5C5C57" font-size="11">12:04:18Z</text>
+
+    <text x="60" y="205" fill="#8A8A84" font-size="12">src_ip</text>
+    <text x="394" y="205" text-anchor="end" fill="#F4F4F2" font-size="13" font-weight="600">185.220.101.44</text>
+    <text x="60" y="226" fill="#8A8A84" font-size="12">asn / geo</text>
+    <text x="394" y="226" text-anchor="end" fill="#C7C7C2" font-size="12">AS208294 · NL</text>
+    <line x1="60" y1="240" x2="390" y2="240" stroke="#23262B" stroke-dasharray="3 4"/>
+    <text x="60" y="262" fill="#8A8A84" font-size="12">authorized_keys write</text>
+    <text x="394" y="262" text-anchor="end" fill="#3DD68C" font-size="11.5">SHA256:Hk9..q3 ✓</text>
+    <text x="60" y="284" fill="#8A8A84" font-size="12">pubkey payload</text>
+    <text x="394" y="284" text-anchor="end" fill="#C7C7C2" font-size="11.5">ed25519 AAAAC3..mZ</text>
+    <text x="60" y="306" fill="#8A8A84" font-size="12">cmd simhash</text>
+    <text x="394" y="306" text-anchor="end" fill="#F5A524" font-size="11.5">9f3a c41b 7e02 d5a1</text>
+    <text x="60" y="332" fill="#5C5C57" font-size="11">uname-a · wget·hxxp · chmod+x · ./x86</text>
+  </g>
+
+  <!-- Session B -->
+  <g>
+    <rect x="40" y="400" width="370" height="200" rx="8" fill="#101214" stroke="#23262B"/>
+    <rect x="40" y="400" width="370" height="30" rx="8" fill="#16191D"/>
+    <rect x="40" y="418" width="370" height="12" fill="#16191D"/>
+    <circle cx="60" cy="415" r="4" fill="#F5A524"/>
+    <text x="74" y="420" fill="#C7C7C2" font-size="12.5" letter-spacing="1">SESSION B · sshd · cowrie-sensor-03</text>
+    <text x="394" y="420" text-anchor="end" fill="#5C5C57" font-size="11">12:51:02Z</text>
+
+    <text x="60" y="455" fill="#8A8A84" font-size="12">src_ip</text>
+    <text x="394" y="455" text-anchor="end" fill="#F4F4F2" font-size="13" font-weight="600">91.92.250.7</text>
+    <text x="60" y="476" fill="#8A8A84" font-size="12">asn / geo</text>
+    <text x="394" y="476" text-anchor="end" fill="#C7C7C2" font-size="12">AS401116 · BG</text>
+    <line x1="60" y1="490" x2="390" y2="490" stroke="#23262B" stroke-dasharray="3 4"/>
+    <text x="60" y="512" fill="#8A8A84" font-size="12">authorized_keys write</text>
+    <text x="394" y="512" text-anchor="end" fill="#3DD68C" font-size="11.5">SHA256:Hk9..q3 ✓</text>
+    <text x="60" y="534" fill="#8A8A84" font-size="12">pubkey payload</text>
+    <text x="394" y="534" text-anchor="end" fill="#C7C7C2" font-size="11.5">ed25519 AAAAC3..mZ</text>
+    <text x="60" y="556" fill="#8A8A84" font-size="12">cmd simhash</text>
+    <text x="394" y="556" text-anchor="end" fill="#F5A524" font-size="11.5">9f2b c41a 7e02 d5a1</text>
+    <text x="60" y="582" fill="#5C5C57" font-size="11">uname-a · curl·hxxp · chmod+x · ./x86</text>
+  </g>
+
+  <!-- convergence connectors A,B -> engine -->
+  <path d="M410,250 C448,250 448,332 470,360" fill="none" stroke="#5C5C57" stroke-width="1.6" marker-end="url(#ahGrey)"/>
+  <path d="M410,500 C448,500 448,420 470,392" fill="none" stroke="#5C5C57" stroke-width="1.6" marker-end="url(#ahGrey)"/>
+  <text x="430" y="368" fill="#5C5C57" font-size="10" text-anchor="middle">⋈</text>
+
+  <!-- ============ ZONE 2 : CORRELATION ENGINE ============ -->
+  <rect x="470" y="150" width="560" height="700" rx="10" fill="#0E0F11" stroke="#23262B"/>
+  <text x="492" y="180" fill="#C7C7C2" font-size="13" letter-spacing="1">SimilarityEngine.compute(fp_A, fp_B)</text>
+  <text x="1008" y="180" text-anchor="end" fill="#5C5C57" font-size="11">pairwise · per-dimension</text>
+  <line x1="492" y1="194" x2="1008" y2="194" stroke="#23262B"/>
+
+  <!-- signal 1: authorized_keys persistence -->
+  <g>
+    <rect x="492" y="210" width="516" height="118" rx="7" fill="#101214" stroke="#23262B"/>
+    <rect x="492" y="210" width="4" height="118" rx="2" fill="#3DD68C"/>
+    <text x="512" y="234" fill="#3DD68C" font-size="12.5" letter-spacing="1">① SHARED authorized_keys PERSISTENCE</text>
+    <text x="996" y="234" text-anchor="end" fill="#3DD68C" font-size="12">IDENTICAL ✓</text>
+    <text x="512" y="262" fill="#C7C7C2" font-size="11.5">echo "ssh-ed25519 AAAAC3..mZ attacker@bot" \</text>
+    <text x="524" y="282" fill="#C7C7C2" font-size="11.5">&gt;&gt; /root/.ssh/authorized_keys   (chmod 600)</text>
+    <text x="512" y="312" fill="#8A8A84" font-size="11">same backdoor line planted on both sensors → operator-level persistence</text>
+  </g>
+
+  <!-- signal 2: identical pubkey payload -->
+  <g>
+    <rect x="492" y="344" width="516" height="118" rx="7" fill="#101214" stroke="#23262B"/>
+    <rect x="492" y="344" width="4" height="118" rx="2" fill="#3DD68C"/>
+    <text x="512" y="368" fill="#3DD68C" font-size="12.5" letter-spacing="1">② IDENTICAL PUBLIC-KEY PAYLOAD</text>
+    <text x="996" y="368" text-anchor="end" fill="#3DD68C" font-size="12">hash-match ✓</text>
+    <text x="512" y="396" fill="#8A8A84" font-size="11.5">ssh-keygen -lf  pubkey_A</text>
+    <text x="996" y="396" text-anchor="end" fill="#C7C7C2" font-size="11.5">SHA256:Hk9..q3</text>
+    <text x="512" y="418" fill="#8A8A84" font-size="11.5">ssh-keygen -lf  pubkey_B</text>
+    <text x="996" y="418" text-anchor="end" fill="#C7C7C2" font-size="11.5">SHA256:Hk9..q3</text>
+    <text x="512" y="446" fill="#8A8A84" font-size="11">byte-for-byte equal → shared key material, single operator</text>
+  </g>
+
+  <!-- signal 3: simhash correlation -->
+  <g>
+    <rect x="492" y="478" width="516" height="142" rx="7" fill="#101214" stroke="#23262B"/>
+    <rect x="492" y="478" width="4" height="142" rx="2" fill="#F5A524"/>
+    <text x="512" y="502" fill="#F5A524" font-size="12.5" letter-spacing="1">③ SimHash CORRELATION (64-bit · Hamming)</text>
+    <text x="996" y="502" text-anchor="end" fill="#3DD68C" font-size="12">sim 0.953 ✓</text>
+    <!-- bit lanes -->
+    <text x="512" y="530" fill="#8A8A84" font-size="11">fp_A</text>
+    <text x="512" y="550" fill="#8A8A84" font-size="11">fp_B</text>
+    <g font-size="12" font-family="ui-monospace, monospace" letter-spacing="3">
+      <text x="556" y="530" fill="#C7C7C2">10011111 00111010 11000100 00011011</text>
+      <text x="556" y="550" fill="#C7C7C2">10011111 001<tspan fill="#E5484D">0</tspan>101<tspan fill="#E5484D">1</tspan> 11000100 0001101<tspan fill="#E5484D">0</tspan></text>
+    </g>
+    <line x1="512" y1="566" x2="988" y2="566" stroke="#23262B" stroke-dasharray="3 4"/>
+    <text x="512" y="590" fill="#8A8A84" font-size="11.5">hamming_distance = 3 / 64</text>
+    <text x="996" y="590" text-anchor="end" fill="#C7C7C2" font-size="11.5">command_sequence = 1 − 3/64 = 0.953</text>
+    <text x="512" y="608" fill="#5C5C57" font-size="10.5">near-identical command tokens despite curl↔wget swap (normalized fingerprint)</text>
+  </g>
+
+  <!-- signal 4: weighted similarity -->
+  <g>
+    <rect x="492" y="636" width="516" height="200" rx="7" fill="#120d0e" stroke="#3a2326"/>
+    <rect x="492" y="636" width="4" height="200" rx="2" fill="#E5484D"/>
+    <text x="512" y="660" fill="#FF6B6F" font-size="12.5" letter-spacing="1">④ WEIGHTED MULTI-DIMENSIONAL SCORE</text>
+    <text x="996" y="660" text-anchor="end" fill="#5C5C57" font-size="11">Σ wᵢ·sᵢ  ·  9 dims</text>
+    <g font-size="11.5">
+      <text x="512" y="682" fill="#8A8A84">command_sequence</text>   <text x="700" y="682" text-anchor="end" fill="#C7C7C2">0.953 × .20</text>
+      <text x="730" y="682" fill="#8A8A84">tool_overlap</text>         <text x="996" y="682" text-anchor="end" fill="#C7C7C2">1.000 × .20</text>
+      <text x="512" y="700" fill="#8A8A84">ngram_jaccard</text>      <text x="700" y="700" text-anchor="end" fill="#C7C7C2">0.871 × .15</text>
+      <text x="730" y="700" fill="#8A8A84">credential_sim</text>      <text x="996" y="700" text-anchor="end" fill="#C7C7C2">0.900 × .15</text>
+      <text x="512" y="718" fill="#8A8A84">feature_cosine</text>     <text x="700" y="718" text-anchor="end" fill="#C7C7C2">0.964 × .10</text>
+      <text x="730" y="718" fill="#8A8A84">behavioral_rhythm</text>   <text x="996" y="718" text-anchor="end" fill="#C7C7C2">0.812 × .10</text>
+      <text x="512" y="736" fill="#8A8A84">typing_signature</text>   <text x="700" y="736" text-anchor="end" fill="#C7C7C2">1.000 × .05</text>
+      <text x="730" y="736" fill="#8A8A84">operator_consistency</text><text x="996" y="736" text-anchor="end" fill="#C7C7C2">0.980 × .03</text>
+      <text x="512" y="754" fill="#8A8A84">pacing_consistency</text> <text x="700" y="754" text-anchor="end" fill="#C7C7C2">0.300 × .02</text>
+      <text x="730" y="754" fill="#5C5C57">Σ wᵢ = 1.00</text>
+    </g>
+    <line x1="512" y1="768" x2="996" y2="768" stroke="#3a2326"/>
+    <text x="512" y="792" fill="#F4F4F2" font-size="14" font-weight="700">Σ = 0.919</text>
+    <text x="700" y="792" fill="#3DD68C" font-size="12">≥ 0.60 (MIN)</text>
+    <text x="800" y="792" fill="#3DD68C" font-size="12">conf 0.89 ≥ 0.85</text>
+    <rect x="512" y="802" width="484" height="28" rx="6" fill="#1b1416" stroke="#E5484D" stroke-opacity="0.5"/>
+    <text x="528" y="821" fill="#FF6B6F" font-size="12.5" font-weight="700" letter-spacing="1">is_match = TRUE → merge into campaign</text>
+    <text x="980" y="821" text-anchor="end" fill="#E5484D" font-size="14">⟶</text>
+  </g>
+
+  <!-- engine -> campaign connector -->
+  <path d="M1030,734 C1056,734 1056,500 1080,470" fill="none" stroke="#E5484D" stroke-width="2" marker-end="url(#ahRed)"/>
+
+  <!-- ============ ZONE 3 : CAMPAIGN CLUSTER ============ -->
+  <circle cx="1255" cy="300" r="120" fill="url(#clusterGlow)" filter="url(#soft)"/>
+  <rect x="1080" y="150" width="320" height="560" rx="10" fill="url(#campGrad)" stroke="#3a2326"/>
+
+  <!-- cluster nodes visual -->
+  <g>
+    <line x1="1200" y1="250" x2="1255" y2="300" stroke="#E5484D" stroke-opacity="0.6" stroke-width="1.5"/>
+    <line x1="1310" y1="252" x2="1255" y2="300" stroke="#E5484D" stroke-opacity="0.6" stroke-width="1.5"/>
+    <circle cx="1255" cy="300" r="34" fill="#1b1416" stroke="#E5484D" stroke-width="2"/>
+    <text x="1255" y="296" text-anchor="middle" fill="#FF6B6F" font-size="11" letter-spacing="1">CAMPAIGN</text>
+    <text x="1255" y="312" text-anchor="middle" fill="#F4F4F2" font-size="12" font-weight="700">a17f…3e</text>
+    <!-- session A node -->
+    <circle cx="1200" cy="250" r="14" fill="#101214" stroke="#4C8DFF" stroke-width="1.8"/>
+    <text x="1200" y="254" text-anchor="middle" fill="#4C8DFF" font-size="11" font-weight="700">A</text>
+    <!-- session B node -->
+    <circle cx="1310" cy="252" r="14" fill="#101214" stroke="#F5A524" stroke-width="1.8"/>
+    <text x="1310" y="256" text-anchor="middle" fill="#F5A524" font-size="11" font-weight="700">B</text>
+  </g>
+
+  <line x1="1104" y1="400" x2="1376" y2="400" stroke="#3a2326" stroke-dasharray="3 4"/>
+  <g font-size="12.5">
+    <text x="1104" y="436" fill="#8A8A84">campaign_id</text>     <text x="1376" y="436" text-anchor="end" fill="#F4F4F2">a17f…3e91</text>
+    <text x="1104" y="464" fill="#8A8A84">session_count</text>   <text x="1376" y="464" text-anchor="end" fill="#F4F4F2">2</text>
+    <text x="1104" y="492" fill="#8A8A84">unique_ips</text>      <text x="1376" y="492" text-anchor="end" fill="#F4F4F2">2  ·  NL, BG</text>
+    <text x="1104" y="520" fill="#8A8A84">sensors_hit</text>     <text x="1376" y="520" text-anchor="end" fill="#F4F4F2">2  (s01, s03)</text>
+    <text x="1104" y="548" fill="#8A8A84">human_confidence</text><text x="1376" y="548" text-anchor="end" fill="#C7C7C2">0.81</text>
+    <text x="1104" y="576" fill="#8A8A84">tool_signatures</text> <text x="1376" y="576" text-anchor="end" fill="#C7C7C2">dropper, recon</text>
+  </g>
+  <rect x="1104" y="600" width="272" height="34" rx="6" fill="#1b1416" stroke="#E5484D"/>
+  <text x="1120" y="622" fill="#8A8A84" font-size="12">threat_level</text>
+  <text x="1360" y="622" text-anchor="end" fill="#FF6B6F" font-size="13" font-weight="700" letter-spacing="1">HIGH</text>
+  <text x="1104" y="666" fill="#5C5C57" font-size="10.5">two source IPs · one operator · single tracked campaign</text>
+  <text x="1104" y="686" fill="#5C5C57" font-size="10.5">redis: campaign:{id} · active_campaigns · TTL-backed</text>
+
+  <!-- ============ LEGEND / FOOTER ============ -->
+  <line x1="40" y1="892" x2="1400" y2="892" stroke="#23262B"/>
+  <g font-size="11.5">
+    <circle cx="48" cy="918" r="4" fill="#3DD68C"/>      <text x="60" y="922" fill="#8A8A84">deterministic match (key / payload / hash)</text>
+    <circle cx="360" cy="918" r="4" fill="#F5A524"/>     <text x="372" y="922" fill="#8A8A84">fuzzy correlation (simhash / behavioral)</text>
+    <circle cx="660" cy="918" r="4" fill="#E5484D"/>     <text x="672" y="922" fill="#8A8A84">campaign decision / persistence vector</text>
+    <text x="1400" y="922" text-anchor="end" fill="#5C5C57">illustrative values · WraithWall campaign_correlator</text>
+  </g>
+</svg>

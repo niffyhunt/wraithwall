@@ -1,0 +1,55 @@
+{
+  "id": "PUBLISH-001",
+  "slug": "linux-incident-response-checklist",
+  "title": "Practical Linux Incident Response Checklist",
+  "subtitle": "Field reference for Ubuntu/Debian and RHEL-family responders",
+  "category": "Incident Response",
+  "version": "1.1",
+  "updated": "2026-07-09",
+  "reading_time_minutes": 18,
+  "word_count": 2513,
+  "license": "CC BY 4.0",
+  "status": "PUBLISHED",
+  "approved_by": "operator",
+  "published_at": "2026-07-09",
+  "pair_guide": "detection-engineering-handbook",
+  "canonical": "https://wraithwall.online/docs/knowledge/linux-incident-response-checklist",
+  "og_image": "https://wraithwall.online/static/img/knowledge/linux-ir-banner.png",
+  "og_image_alt": "WraithWall Knowledge — Practical Linux Incident Response Checklist",
+  "seo": {
+    "title": "Linux Incident Response Checklist | WraithWall Knowledge",
+    "description": "Preserve evidence, contain blast radius, and produce analyst-ready artifacts on Ubuntu, Debian, and RHEL. Phased runbook with MITRE mappings and safe commands.",
+    "keywords": [
+      "linux incident response",
+      "ubuntu incident response",
+      "debian forensics",
+      "ir checklist",
+      "auditd",
+      "evidence collection",
+      "MITRE ATT&CK",
+      "systemd persistence"
+    ],
+    "robots": "index, follow"
+  },
+  "medium": {
+    "title": "Practical Linux Incident Response Checklist",
+    "subtitle": "A field reference for responders who need ordered actions that preserve evidence and contain damage",
+    "tags": ["Cybersecurity", "Incident Response", "Linux", "DevOps", "MITRE ATT&CK"]
+  },
+  "pastebin": {
+    "title": "Incident Response — Practical Linux Incident Response Checklist v1.1",
+    "expiry": "never",
+    "exposure": "unlisted"
+  },
+  "mitre_techniques": [
+    "T1078", "T1110", "T1059.004", "T1543.002", "T1505.003",
+    "T1053.003", "T1546", "T1098.004", "T1071.001", "T1105",
+    "T1610", "T1611"
+  ],
+  "formats": {
+    "source": "source.md",
+    "website": "website.md",
+    "medium": "medium.md",
+    "pastebin": "pastebin.txt"
+  }
+}

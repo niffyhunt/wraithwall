@@ -1,0 +1,60 @@
+{
+  "pipeline": "wraithwall-knowledge",
+  "version": "1.1",
+  "updated": "2026-07-09",
+  "separate_from": "credential_propagation",
+  "preview": "PUBLICATION_PREVIEW.md",
+  "publications": [
+    {
+      "id": "PUBLISH-001",
+      "slug": "linux-incident-response-checklist",
+      "title": "Practical Linux Incident Response Checklist",
+      "category": "Incident Response",
+      "source": "articles/linux-incident-response-checklist/source.md",
+      "version": "1.1",
+      "reading_time_minutes": 18,
+      "word_count": 2513,
+      "status": "PUBLISHED",
+      "pair_guide": "detection-engineering-handbook",
+      "formats": {
+        "website": "articles/linux-incident-response-checklist/website.md",
+        "medium": "articles/linux-incident-response-checklist/medium.md",
+        "pastebin": "articles/linux-incident-response-checklist/pastebin.txt"
+      },
+      "canonical": "https://wraithwall.online/docs/knowledge/linux-incident-response-checklist",
+      "og_image": "/static/img/knowledge/linux-ir-banner.png",
+      "pastebin_url": null,
+      "approved_by": "operator",
+      "published_at": "2026-07-09"
+    },
+    {
+      "id": "PUBLISH-002",
+      "slug": "detection-engineering-handbook",
+      "title": "Detection Engineering Handbook: From Raw Logs to Deployable Rules",
+      "category": "Detection Engineering",
+      "source": "articles/detection-engineering-handbook/source.md",
+      "version": "1.1",
+      "reading_time_minutes": 22,
+      "word_count": 2518,
+      "status": "PUBLISHED",
+      "pair_guide": "linux-incident-response-checklist",
+      "formats": {
+        "website": "articles/detection-engineering-handbook/website.md",
+        "medium": "articles/detection-engineering-handbook/medium.md",
+        "pastebin": "articles/detection-engineering-handbook/pastebin.txt"
+      },
+      "canonical": "https://wraithwall.online/docs/knowledge/detection-engineering-handbook",
+      "og_image": "/static/img/knowledge/detection-handbook-banner.png",
+      "pastebin_url": null,
+      "approved_by": "operator",
+      "published_at": "2026-07-09"
+    }
+  ],
+  "audit": {
+    "date": "2026-07-09",
+    "knowledge_publications_live": 2,
+    "editorial_review_complete": 2,
+    "deception_lures_live": 4,
+    "report": "PASTEBIN_AUDIT.md"
+  }
+}
