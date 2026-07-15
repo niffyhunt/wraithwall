@@ -1,4 +1,4 @@
-# WraithWall OSS
+# WraithWall
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 [![Donate](https://img.shields.io/badge/Support-Open%20Collective-7FADF2?style=flat-square&logo=opencollective&logoColor=white)](https://opencollective.com/wraithwall)
@@ -10,9 +10,9 @@ Production deception-and-threat-intelligence platform and companion packages.
 | Package | Install | Purpose |
 |---------|---------|---------|
 | **wraithwall** | `pip install .` | Flask platform — gateway, link intel, cowrie, BGP, canaries |
-| **ravenscan** | `pip install packages/ravenscan` | Engineering intelligence CLI (`raven`) and library |
-| **canary-kit** | `pip install packages/canary-kit` | Supply-chain canary token minting and detection |
-| **honeypot-mitre** | `pip install packages/honeypot-mitre` | Cowrie logs → MITRE ATT&CK scoring |
+| **ravenscan** | `pip install ravenscan` | Engineering intelligence CLI (`raven`) and library |
+| **canary-kit** | `pip install canary-kit` | Supply-chain canary token minting and detection |
+| **honeypot-mitre** | `pip install honeypot-mitre` | Cowrie logs → MITRE ATT&CK scoring |
 | **dml-spec** | `pip install packages/dml-spec` | Signed deception markup language validator |
 
 Packages are independent — none imports another.
