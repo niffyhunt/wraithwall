@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="WraithWall documentation — architecture, deployment, API index, launch guide, and engineering blog."/>
+  <title>Documentation | WraithWall (Phase 9 refreshed)</title>
+  <link rel="canonical" href="https://wraithwall.online/docs"/>
+  <meta property="og:title" content="Documentation | WraithWall"/>
+  <meta property="og:url" content="https://wraithwall.online/docs"/>
+  <meta property="og:image" content="https://wraithwall.online/static/img/og-image.png"/>
+  <meta name="robots" content="index, follow"/>
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/wraithwall-design-system.css">
+  <style>
+    :root{--bg:var(--ww-paper,#FAFAF8);--panel:#FFF;--ink:var(--ww-ink,#1A1A18);--ink2:var(--ww-ink-dim,#5C5C58);--ink3:var(--ww-ink-muted,#8A8A84);--accent:var(--ww-signal,#C41A1A);--bdr:#E8E6E0;--mono:'IBM Plex Mono',monospace;--sans:'Inter',system-ui,sans-serif}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.65}
+    a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+    .wrap{max-width:960px;margin:0 auto;padding:2rem 1.25rem 4rem}
+    .nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 0 2rem;border-bottom:1px solid var(--bdr);margin-bottom:2.5rem}
+    .brand{font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--ink)}
+    .brand span{color:var(--accent)}
+    .nav-links{font-family:var(--mono);font-size:.65rem;letter-spacing:1px;display:flex;gap:1.2rem;flex-wrap:wrap}
+    .nav-links a{color:var(--ink3)}
+    .eyebrow{font-family:var(--mono);font-size:.62rem;letter-spacing:2px;color:var(--accent);margin-bottom:.5rem}
+    h1{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:800;letter-spacing:-.02em;margin-bottom:.75rem}
+    .lede{color:var(--ink2);max-width:58ch;margin-bottom:2rem}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+    .card{background:var(--panel);border:1px solid var(--bdr);border-radius:8px;padding:1.25rem}
+    .card h2{font-size:.95rem;font-weight:700;margin-bottom:.35rem}
+    .card p{font-size:.85rem;color:var(--ink2);margin-bottom:.75rem}
+    .card ul{list-style:none;font-size:.82rem;color:var(--ink2)}
+    .card li{padding:.2rem 0}
+    .card li::before{content:'→ ';color:var(--accent);font-family:var(--mono);font-size:.7rem}
+    .fig{margin:2rem 0;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;background:#080c14}
+    .fig img{display:block;width:100%;height:auto}
+    .fig-cap{font-family:var(--mono);font-size:.58rem;letter-spacing:1px;color:var(--ink3);padding:.6rem 1rem;border-top:1px solid var(--bdr);background:var(--panel)}
+    footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--bdr);font-size:.75rem;color:var(--ink3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+    @media (max-width: 640px) {
+      .nav{flex-direction:column;align-items:flex-start;gap:.75rem}
+      .nav-links{gap:.65rem}
+      .wrap{padding:1.25rem 1rem 3rem}
+      .grid{grid-template-columns:1fr}
+      .fig img{max-height:55vh;object-fit:contain}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav" aria-label="Docs navigation">
+      <a class="brand" href="/">Wraith<span>Wall</span></a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/docs">Architecture</a>
+        <a href="/blog">Blog</a>
+        <a href="/launch">Launch</a>
+        <a href="https://github.com/niffyhunt/wraithwall">GitHub</a>
+      </div>
+    </nav>
+
+    <div class="ww-hero-static" data-environment="archive" style="margin:0 -1.25rem 2rem;padding:2rem 1.25rem 2.5rem;border-radius:8px">
+      <div class="ww-hero-static__env" aria-hidden="true"></div>
+      <div class="ww-hero-static__scrim" aria-hidden="true"></div>
+      <div class="ww-hero-static__content">
+        <div class="eyebrow">ENGINEERING DOCUMENTATION</div>
+        <h1>WraithWall docs hub</h1>
+        <p class="lede">Public entry point for architecture, deployment, API surface, launch materials, and the technical blog. Operator-only corpus and interactive graph views require portal login.</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Launch &amp; field guide</h2>
+        <p>What the platform does in production — deception, correlation, BGP, canaries.</p>
+        <ul>
+          <li><a href="/launch">Launch overview</a></li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/LAUNCH.md">LAUNCH.md</a> (GitHub)</li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/CHANGELOG.md">CHANGELOG</a></li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/ROADMAP.md">ROADMAP</a></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Architecture</h2>
+        <p>Four public redacted diagrams on the landing page; full 15-view corpus in the operator console.</p>
+        <ul>
+          <li><a href="/docs">Public blueprint gallery</a></li>
+          <li><a href="/console#/architecture">Interactive console (login)</a></li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/docs/architecture.md">Architecture index</a></li>
+          <li><a href="/static/img/architecture/manifest.json">Diagram manifest (JSON)</a></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Operations</h2>
+        <p>Deploy, integrate, and measure subsystems without guessing metrics semantics.</p>
+        <ul>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/docs/deployment.md">Deployment</a></li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/docs/api.md">API index</a></li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/docs/METRICS_METHODOLOGY.md">Metrics methodology</a></li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/blob/main/SECURITY.md">Security disclosure</a></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Technical blog</h2>
+        <p>Long-form engineering posts — deception audits, correlation, OSS releases, runtime viz.</p>
+        <ul>
+          <li><a href="/blog">All posts</a></li>
+          <li><a href="/blog/solo-deception-platform-audit">Production audit</a></li>
+          <li><a href="/blog/runtime-visualization-live-telemetry">Runtime visualization</a></li>
+          <li><a href="/blog/cowrie-pipeline-campaign-intelligence">Cowrie → campaigns</a></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Open source</h2>
+        <p>MIT-licensed modules extracted from the monolith.</p>
+        <ul>
+          <li><a href="https://github.com/niffyhunt/wraithwall-toolkit">wraithwall-toolkit</a></li>
+          <li><a href="https://github.com/niffyhunt/bgp-monitor">bgp-monitor</a></li>
+          <li><a href="https://github.com/niffyhunt/wraithwall-toolkit">Toolkit packages (canary-kit, honeypot-mitre, dml-spec)</a></li>
+        </ul>
+      </section>
+
+      <section class="card" id="knowledge-base">
+        <h2>Knowledge base</h2>
+        <p>Field handbooks for incident response and detection engineering — CC BY 4.0, public, no login required.</p>
+        <ul>
+          <li><a href="/docs/knowledge/linux-incident-response-checklist">Linux Incident Response Checklist</a> (~18 min)</li>
+          <li><a href="/docs/knowledge/detection-engineering-handbook">Detection Engineering Handbook</a> (~22 min)</li>
+          <li><a href="https://github.com/niffyhunt/wraithwall/tree/main/docs/knowledge-pipeline/articles">Source &amp; Pastebin/Medium exports (GitHub)</a></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Incidents &amp; research</h2>
+        <p>Real attacker behaviour documented from production sensors.</p>
+        <ul>
+          <li><a href="https://github.com/niffyhunt/wraithwall-toolkit/blob/main/incidents/2026-05-31-outlaw-mdrfckr.md">Outlaw / mdrfckr worm</a></li>
+          <li><a href="/blog/two-ips-one-ssh-key">Two IPs, one SSH key</a></li>
+        </ul>
+      </section>
+    </div>
+
+    <figure class="fig">
+      <img src="/static/img/architecture/public/01-complete-system-architecture.png" alt="WraithWall complete system architecture — public redacted overview" width="1920" height="1080" loading="lazy"/>
+      <figcaption class="fig-cap">Public overview · hosts and internals redacted · <a href="/docs">full gallery</a></figcaption>
+    </figure>
+
+    <footer>
+      <span>© 2026 WraithWall · <a href="/privacy">Privacy</a> · <a href="/contact">Contact</a></span>
+      <span class="mono">wraithwall.online/docs</span>
+    </footer>
+  </div>
+</body>
+</html>
