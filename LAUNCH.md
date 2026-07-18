@@ -136,7 +136,7 @@ dependency/runtime/event graphs, trust boundaries, live telemetry contracts.
 
 **Public blueprints.** Four redacted engineering overviews (system, runtime, threat-intel
 pipeline, notifications) ship on the landing page at
-[/#architecture](https://wraithwall.online/#architecture). Hosts, deception internals,
+[/console#/architecture](https://wraithwall.online/console#/architecture). Hosts, deception internals,
 and operator paths are redacted for safe public indexing.
 
 **Operator console.** Authenticated users access the full diagram corpus and interactive
