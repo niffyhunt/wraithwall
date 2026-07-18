@@ -1,0 +1,46 @@
+WraithWall OSS — voiceover edit guide
+AI voice used: en-NG-AbeoNeural (swap with your own recording)
+
+OPTION A — CapCut (easiest)
+1. Download wraithwall-oss-launch-silent.mp4 (no voice, ambient only)
+2. Import into CapCut → mute if needed → add your voice track
+3. Use the timestamps below to align each line with the on-screen page
+4. Export 1280×720 MP4
+
+OPTION B — Record line-by-line (best sync)
+1. Read each numbered line below into your phone mic (quiet room)
+2. Leave ~0.2s pause between lines
+3. In CapCut/DaVinci: place each clip at the START time shown
+
+OPTION C — Full freestyle
+1. Play the silent video and record one continuous take while watching
+2. Re-sync in editor by sliding the audio clip
+
+TIMELINE (start → end | screenshot shown | say this):
+────────────────────────────────────────────────────────────────────────
+01. 00:00 → 00:02  | landing-hero.png       | Introducing WraithWall.
+02. 00:02 → 00:05  | landing-hero.png       | Deception infrastructure that fights back.
+03. 00:05 → 00:11  | architecture.png       | Built for security operators who need active defense, not another dashboard demo.
+04. 00:11 → 00:15  | landing-terminal.png   | Live Cowrie honeypots capture real attacker sessions.
+05. 00:15 → 00:19  | launch.png             | Canary tokens detect supply-chain intrusions before they spread.
+06. 00:19 → 00:23  | bgp-monitor.png        | BGP monitors watch route hijacks in real time.
+07. 00:23 → 00:27  | landing-terminal.png   | Campaign intelligence clusters attacks across your deception mesh.
+08. 00:27 → 00:30  | docs.png               | Today we are open-sourcing the toolkit.
+09. 00:30 → 00:34  | docs.png               | Canary Kit plants and detects canary tokens.
+10. 00:34 → 00:39  | security.png           | Honeypot MITRE maps attacker behavior to the ATT and CK framework.
+11. 00:39 → 00:43  | docs.png               | DML Spec defines deception markup for your traps.
+12. 00:43 → 00:48  | architecture.png       | RavenScan audits your repositories before attackers do.
+13. 00:48 → 00:53  | oss-diagram.png        | Two repositories: WraithWall toolkit and WraithWall platform.
+14. 00:53 → 00:58  | launch.png             | MIT licensed, version zero point one zero.
+15. 00:58 → 01:02  | landing-hero.png       | Star us on GitHub. Visit wraithwall dot online.
+────────────────────────────────────────────────────────────────────────
+
+Assets:
+  real-screens/          — PNG screenshots per scene
+  voiceover-beats/       — individual AI clips (reference pacing)
+  wraithwall-oss-launch-silent.mp4 — dub over this
+
+Swap voice in code: TTS_VOICE in render_oss_video.py
+  en-NG-AbeoNeural     Nigerian English male
+  en-KE-ChilembaNeural Kenyan English male
+  en-ZA-LukeNeural     South African English male

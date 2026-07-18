@@ -1,0 +1,15 @@
+01. Introducing WraithWall.
+02. Deception infrastructure that fights back.
+03. Built for security operators who need active defense, not another dashboard demo.
+04. Live Cowrie honeypots capture real attacker sessions.
+05. Canary tokens detect supply-chain intrusions before they spread.
+06. BGP monitors watch route hijacks in real time.
+07. Campaign intelligence clusters attacks across your deception mesh.
+08. Today we are open-sourcing the toolkit.
+09. Canary Kit plants and detects canary tokens.
+10. Honeypot MITRE maps attacker behavior to the ATT and CK framework.
+11. DML Spec defines deception markup for your traps.
+12. RavenScan audits your repositories before attackers do.
+13. Two repositories: WraithWall toolkit and WraithWall platform.
+14. MIT licensed, version zero point one zero.
+15. Star us on GitHub. Visit wraithwall dot online.

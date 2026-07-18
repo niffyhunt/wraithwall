@@ -1,0 +1,66 @@
+dml_version: "0.3.0"
+platform: wraithwall-deception
+namespace: production
+description: Unified deception traps + WraithMesh sensor nodes for TIE corroboration.
+author: niffy_hunt
+
+mesh_policy:
+  tie_min_corroboration: 2
+  canary_weight: 2.0
+  cowrie_weight: 1.0
+  forbid_raw_commands: true
+  forbid_src_ip: true
+
+sensors:
+  - id: cowrie-east-1
+    name: Cowrie honeypot observer (east)
+    sensor_class: cowrie
+    aggregator_url: http://127.0.0.1:8787
+    signing_key_env: WRAITHMESH_KEY
+    state_dir: .wraithmesh/cowrie-east
+    cowrie_log_path: /var/log/cowrie/cowrie.json
+    thresholds:
+      uplink_cooldown_seconds: 86400
+      min_local_count: 1
+      novel_only: false
+
+  - id: canary-supply-1
+    name: Supply-chain canary inbox observer
+    sensor_class: canary
+    aggregator_url: http://127.0.0.1:8787
+    signing_key_env: WRAITHMESH_KEY
+    state_dir: .wraithmesh/canary-supply
+    beacon_inbox_path: ./beacons.jsonl
+    thresholds:
+      uplink_cooldown_seconds: 0
+      min_local_count: 1
+
+traps:
+  - id: worm-campaign-uplink
+    name: Cowrie worm equivalence uplink
+    namespace: production
+    severity: high
+    mitre_tactic: execution
+    description: When a known worm multiset is seen locally, uplink to TIE.
+    tags: [wraithmesh, cowrie]
+    trigger:
+      type: cowrie_session
+      equivalence_key: "905830e685fbbb20"
+    response:
+      type: mesh_uplink
+      aggregator_url: http://127.0.0.1:8787
+
+  - id: sdk-canary-fired
+    name: Internal SDK canary beacon
+    namespace: production
+    severity: critical
+    mitre_tactic: initial_access
+    description: Canary kit runtime token fired — always uplink.
+    tags: [canary, supply_chain]
+    trigger:
+      type: canary_beacon
+      package_name: internal-sdk
+      package_version: "2.4.1"
+    response:
+      type: corroborate_alert
+      aggregator_url: http://127.0.0.1:8787

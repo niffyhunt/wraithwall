@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" font-family="'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace">
+  <defs>
+    <marker id="ahGrey" markerWidth="10" markerHeight="10" refX="7" refY="3.2" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3.2 L0,6.4 Z" fill="#5C5C57"/>
+    </marker>
+    <marker id="ahGreen" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#3DD68C"/>
+    </marker>
+    <radialGradient id="liftGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#3DD68C" stop-opacity="0.20"/>
+      <stop offset="0.6" stop-color="#3DD68C" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#3DD68C" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0 L0 0 0 34" fill="none" stroke="#ffffff" stroke-opacity="0.022" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1440" height="820" fill="#0A0A0B"/>
+  <rect width="1440" height="820" fill="url(#grid)"/>
+
+  <!-- ============ TITLE BAR ============ -->
+  <g>
+    <circle cx="40" cy="44" r="6" fill="#3DD68C"/>
+    <circle cx="40" cy="44" r="11" fill="none" stroke="#3DD68C" stroke-opacity="0.4"/>
+    <text x="62" y="40" fill="#F4F4F2" font-size="20" letter-spacing="1.5" font-weight="600">WRAITHWALL · OPEN-SOURCE TOOLKIT</text>
+    <text x="62" y="62" fill="#8A8A84" font-size="13" letter-spacing="0.5">Three deception-engineering tools, lifted out of a production platform, decoupled, and released under MIT</text>
+    <text x="1400" y="36" text-anchor="end" fill="#5C5C57" font-size="12" letter-spacing="0.5">no Flask · no database · no secrets</text>
+    <text x="1400" y="58" text-anchor="end" fill="#5C5C57" font-size="12" letter-spacing="0.5">each one pip install-able on its own</text>
+  </g>
+  <line x1="40" y1="84" x2="1400" y2="84" stroke="#23262B" stroke-width="1"/>
+
+  <!-- ============ SOURCE PLATFORM ============ -->
+  <text x="40" y="120" fill="#5C5C57" font-size="12" letter-spacing="2">SOURCE · A SOLO-BUILT DECEPTION PLATFORM TAKING LIVE INTERNET TRAFFIC</text>
+  <g>
+    <rect x="40" y="138" width="1360" height="92" rx="8" fill="#101214" stroke="#23262B"/>
+    <rect x="40" y="138" width="1360" height="30" rx="8" fill="#16191D"/>
+    <rect x="40" y="156" width="1360" height="12" fill="#16191D"/>
+    <circle cx="60" cy="153" r="4" fill="#4C8DFF"/>
+    <text x="74" y="158" fill="#C7C7C2" font-size="12.5" letter-spacing="1">wraithwall.online · Flask monolith + subsystem blueprints · Postgres · Redis · honeypot sensors</text>
+    <g font-size="10.5" fill="#8A8A84">
+      <text x="74" y="196">supply-chain canaries · Cowrie intelligence · DML deception engine · campaign correlation · BGP monitor · ASN intel · LLM honeypot</text>
+      <text x="74" y="216" fill="#5C5C57">the toolkit below is the subset that is genuinely reusable on its own, with every product / secret coupling stripped out</text>
+    </g>
+  </g>
+
+  <!-- lift arrows -->
+  <ellipse cx="720" cy="270" rx="360" ry="34" fill="url(#liftGlow)"/>
+  <text x="720" y="266" text-anchor="middle" fill="#3DD68C" font-size="12" letter-spacing="2">EXTRACT · DECOUPLE · TEST · DOCUMENT</text>
+  <path d="M300,232 L300,258 L300,300" fill="none" stroke="#3DD68C" stroke-width="1.6" marker-end="url(#ahGreen)"/>
+  <path d="M720,232 L720,300" fill="none" stroke="#3DD68C" stroke-width="1.6" marker-end="url(#ahGreen)"/>
+  <path d="M1140,232 L1140,258 L1140,300" fill="none" stroke="#3DD68C" stroke-width="1.6" marker-end="url(#ahGreen)"/>
+
+  <!-- ============ THE THREE TOOLS ============ -->
+  <text x="40" y="324" fill="#5C5C57" font-size="12" letter-spacing="2">THE TOOLKIT · THREE STANDALONE MIT PACKAGES</text>
+
+  <!-- canary-kit -->
+  <g>
+    <rect x="40" y="340" width="420" height="300" rx="8" fill="#101214" stroke="#23262B"/>
+    <rect x="40" y="340" width="420" height="34" rx="8" fill="#16191D"/>
+    <rect x="40" y="360" width="420" height="14" fill="#16191D"/>
+    <circle cx="62" cy="357" r="5" fill="#3DD68C"/>
+    <text x="80" y="362" fill="#F4F4F2" font-size="14" letter-spacing="1">canary-kit</text>
+    <text x="440" y="362" text-anchor="end" fill="#5C5C57" font-size="11">pip install canary-kit</text>
+
+    <text x="62" y="404" fill="#C7C7C2" font-size="11.5">Supply-chain canary tokens</text>
+    <g font-size="10.5" fill="#8A8A84">
+      <text x="62" y="430">Mint a token, plant it in a package or repo,</text>
+      <text x="62" y="450">match an incoming beacon straight back to it.</text>
+    </g>
+    <line x1="62" y1="474" x2="438" y2="474" stroke="#23262B"/>
+    <g font-size="10.5">
+      <text x="62" y="502" fill="#5C5C57">flow</text>
+      <text x="62" y="524" fill="#8A8A84">mint(name,ver) → <tspan fill="#3DD68C">token</tspan></text>
+      <text x="62" y="546" fill="#8A8A84">plant in the wild → beacon home</text>
+      <text x="62" y="568" fill="#8A8A84">detect(beacon) → <tspan fill="#3DD68C">which token, where</tspan></text>
+    </g>
+    <text x="62" y="610" fill="#5C5C57" font-size="10">pluggable storage · optional Redis · CLI + library</text>
+  </g>
+
+  <!-- honeypot-mitre -->
+  <g>
+    <rect x="510" y="340" width="420" height="300" rx="8" fill="#101214" stroke="#23262B"/>
+    <rect x="510" y="340" width="420" height="34" rx="8" fill="#16191D"/>
+    <rect x="510" y="360" width="420" height="14" fill="#16191D"/>
+    <circle cx="532" cy="357" r="5" fill="#F5A524"/>
+    <text x="550" y="362" fill="#F4F4F2" font-size="14" letter-spacing="1">honeypot-mitre</text>
+    <text x="910" y="362" text-anchor="end" fill="#5C5C57" font-size="11">pip install honeypot-mitre</text>
+
+    <text x="532" y="404" fill="#C7C7C2" font-size="11.5">Cowrie logs → MITRE ATT&amp;CK</text>
+    <g font-size="10.5" fill="#8A8A84">
+      <text x="532" y="430">Raw SSH-honeypot JSON into structured</text>
+      <text x="532" y="450">techniques, a deterministic score, replay dedup.</text>
+    </g>
+    <line x1="532" y1="474" x2="908" y2="474" stroke="#23262B"/>
+    <g font-size="10.5">
+      <text x="532" y="502" fill="#5C5C57">flow</text>
+      <text x="532" y="524" fill="#8A8A84">parse_sessions(cowrie.json)</text>
+      <text x="532" y="546" fill="#8A8A84">analyze → <tspan fill="#F5A524">techniques + score</tspan></text>
+      <text x="532" y="568" fill="#8A8A84">dedup key → collapse botnet replays</text>
+    </g>
+    <text x="532" y="610" fill="#5C5C57" font-size="10">pure stdlib · no DB · no LLM required (optional extra)</text>
+  </g>
+
+  <!-- dml-spec -->
+  <g>
+    <rect x="980" y="340" width="420" height="300" rx="8" fill="#101214" stroke="#23262B"/>
+    <rect x="980" y="340" width="420" height="34" rx="8" fill="#16191D"/>
+    <rect x="980" y="360" width="420" height="14" fill="#16191D"/>
+    <circle cx="1002" cy="357" r="5" fill="#4C8DFF"/>
+    <text x="1020" y="362" fill="#F4F4F2" font-size="14" letter-spacing="1">dml-spec</text>
+    <text x="1380" y="362" text-anchor="end" fill="#5C5C57" font-size="11">pip install dml-spec</text>
+
+    <text x="1002" y="404" fill="#C7C7C2" font-size="11.5">Deception Markup Language</text>
+    <g font-size="10.5" fill="#8A8A84">
+      <text x="1002" y="430">A versioned, HMAC-signed spec for trap and</text>
+      <text x="1002" y="450">canary config. Deception you can diff like code.</text>
+    </g>
+    <line x1="1002" y1="474" x2="1378" y2="474" stroke="#23262B"/>
+    <g font-size="10.5">
+      <text x="1002" y="502" fill="#5C5C57">flow</text>
+      <text x="1002" y="524" fill="#8A8A84">validate(traps.yaml)</text>
+      <text x="1002" y="546" fill="#8A8A84">sign(key) → <tspan fill="#4C8DFF">tamper-evident doc</tspan></text>
+      <text x="1002" y="568" fill="#8A8A84">verify(key) → trust or reject</text>
+    </g>
+    <text x="1002" y="610" fill="#5C5C57" font-size="10">per-trap + per-document SHA-256 · MITRE-tagged</text>
+  </g>
+
+  <!-- footer principles -->
+  <line x1="40" y1="676" x2="1400" y2="676" stroke="#23262B" stroke-width="1"/>
+  <text x="40" y="712" fill="#5C5C57" font-size="12" letter-spacing="2">SHARED PRINCIPLES</text>
+  <g font-size="11.5" fill="#8A8A84">
+    <text x="40" y="744"><tspan fill="#3DD68C">▸</tspan> Deterministic core. Scores, mappings, signatures are transparent arithmetic and standard crypto you can audit line by line.</text>
+    <text x="40" y="768"><tspan fill="#3DD68C">▸</tspan> No hidden coupling. Each package runs with zero dependency on the parent platform. External services are always optional.</text>
+    <text x="40" y="792"><tspan fill="#3DD68C">▸</tspan> Real, not a demo. Every tool is a working piece of a platform that takes live traffic, with its own tests, examples, and CLI.</text>
+  </g>
+  <text x="1400" y="792" text-anchor="end" fill="#3DD68C" font-size="12" letter-spacing="1">github.com/niffyhunt/wraithwall-toolkit</text>
+</svg>

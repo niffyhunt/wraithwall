@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wraithwall.online/schema/wraithmesh/observation-0.1.json",
+  "title": "WraithMesh Observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observation_id",
+    "equivalence_key",
+    "technique_set",
+    "sensor_class",
+    "confidence",
+    "seen_count_bucket",
+    "first_seen",
+    "last_seen",
+    "node_id",
+    "epoch",
+    "signature"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "0.1" },
+    "observation_id": { "type": "string", "minLength": 8, "maxLength": 64 },
+    "equivalence_key": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "technique_set": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "sensor_class": {
+      "type": "string",
+      "enum": ["cowrie", "gateway", "canary", "fingerprint"]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "seen_count_bucket": {
+      "type": "string",
+      "enum": ["1", "2-10", "11-100", "100+"]
+    },
+    "first_seen": { "type": "string", "minLength": 10 },
+    "last_seen": { "type": "string", "minLength": 10 },
+    "node_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "signature": { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+  }
+}

