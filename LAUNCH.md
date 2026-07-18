@@ -22,7 +22,7 @@ sessions that actually ran commands get scored and archived.
 transparent formula — base points for the furthest kill-chain stage reached, plus
 bonuses for command volume and technique diversity, capped at a ceiling — so you can
 explain exactly why something lit up. Commands map to MITRE techniques by a
-case-insensitive substring table (`authorized_keys` → T1098.004, `chmod +s` → T1222.002,
+case-insensitive substring table (`authorized_keys` → T1098, `chmod +s` → T1068,
 `uname`/`whoami` → T1082, …). An optional LLM pass adds narrative analysis, but the
 deterministic core stands alone. *(→ open-sourced, see below)*
 
