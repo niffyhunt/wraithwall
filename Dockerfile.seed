@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1
+#
+# WraithWall Local Secure Sandbox — synthetic telemetry seed (Phase 4).
+#
+# Runs the fixed-seed corpus generator (sandbox_kit/seed/) as a one-shot
+# container: writes synthetic.jsonl + binary tty logs into the shared sandbox
+# volume, self-verifies byte determinism, exercises the app's HMAC ship
+# protocol, and exits 0 with a receipt. The application's own watcher (already
+# running with COWRIE_LOG_PATH pointed at the shared file) ingests the corpus
+# through the UNCHANGED production pipeline.
+#
+# Container contract (unchanged from Phase 3): one-shot, non-root, no
+# published ports, telemetry plane + shared state volume, ephemeral, zero
+# external network access.
+#
+# Hardening: H3 (non-root uid 1000), H4 (read-only rootfs: /tmp tmpfs only,
+# nothing written outside the mounted state volume), H6 (compose caps), H12
+# (no .env, no host env), H10 (digest-pinned base). Standard library only —
+# this image installs nothing and stays tiny.
+#
+# Base image digest is recorded in `sandbox_kit/images.py`.
+
+FROM python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    WRAITHWALL_SANDBOX=1
+
+WORKDIR /app
+
+COPY sandbox_kit/seed/ ./seed/
+
+RUN useradd --uid 1000 --create-home --shell /usr/sbin/nologin seed \
+    && chown -R 1000:1000 /app
+
+USER 1000:1000
+
+CMD ["python", "-m", "seed"]

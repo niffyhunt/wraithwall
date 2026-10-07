@@ -27,7 +27,7 @@ Requires Python >= 3.10. The core has **zero third-party dependencies**.
 ## Quickstart
 
 ```python
-from canary_kit import CanaryRegistry, InMemoryStore, create_canary
+from canary_kit import CanaryRegistry, InMemoryStore
 
 registry = CanaryRegistry(store=InMemoryStore())
 
@@ -138,10 +138,43 @@ script `canary-kit` is equivalent to `python -m canary_kit`.
 Because issued tokens are random and never used in legitimate traffic, a match
 is an inherently high-signal indicator of a leaked or tampered package.
 
+## Limitations
+
+- **Token entropy.** The minted token is 24 hex characters (96 bits) from SHA-256.
+  This is sufficient for anyone who cannot brute-force the token space, but a
+  token leaked in source control or a CI log is game-over — rotate the salt and
+  re-mint.
+- **No network dependency.** Canary Kit does not listen, poll, or ship data
+  anywhere. Beacon detection is a registry lookup you call from your own
+  telemetry pipeline — you must build the ingestion path.
+- **Deterministic derivation.** Passing an explicit `salt` makes the token
+  reproducible, which is useful for testing but means anyone who knows the
+  inputs can precompute the token. Use the random-salt default for production.
+- **Zero-width watermarking.** `encode_watermark` / `decode_watermark` embeds
+  the first 8 hex characters of a token as zero-width Unicode characters
+  (U+200B, U+200C, U+200D, U+FEFF). This survives copy-paste but not
+  re-encoding (e.g., minification, OCR, or charset conversion that strips
+  zero-width codepoints).
+- **Storage choice is yours.** The library ships with an `InMemoryStore` and a
+  `RedisStore` adapter, but you can provide any store implementing the
+  `CanaryStore` protocol. There is no built-in persistence to disk or cloud.
+
+## Development
+
+```bash
+git clone https://github.com/niffyhunt/wraithwall-toolkit
+cd wraithwall-toolkit/canary-kit
+pip install -e ".[test]"
+pytest
+```
+
+Contributions are welcome. The core is deliberately dependency-free; any
+proposed addition that introduces a runtime dependency should justify it.
+
 ## License
 
-MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Niffy_hunt.
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Niffyhunt.
 
 ---
 
-Part of the WraithWall project — https://wraithwall.online · by Niffy_hunt
+Part of the WraithWall project — https://wraithwall.online · by Niffyhunt

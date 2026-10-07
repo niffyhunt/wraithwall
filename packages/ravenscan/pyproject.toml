@@ -9,7 +9,7 @@ description = "Open-source engineering intelligence agent — learns a software 
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
-authors = [{ name = "Raven Contributors" }]
+authors = [{ name = "Niffyhunt" }]
 keywords = ["security", "architecture", "intelligence", "sast", "engineering"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -40,8 +40,8 @@ all = ["ravenscan[viz]"]
 raven = "raven.cli.main:app"
 
 [project.urls]
-Homepage = "https://github.com/niffyhunt/ravenscan"
-"Bug Tracker" = "https://github.com/niffyhunt/ravenscan/issues"
+Homepage = "https://github.com/niffyhunt/wraithwall/tree/main/packages/ravenscan"
+"Bug Tracker" = "https://github.com/niffyhunt/wraithwall/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/raven", "src/ravenscan"]

@@ -21,6 +21,24 @@ def init_app(app):
 
     app.extensions.setdefault("wraithwall", {})
     app.extensions["wraithwall"]["db"] = db
+    app.extensions["wraithwall"]["app"] = app
+
+
+def get_app():
+    """The Flask app built by :func:`wraithwall.create_app`, if one exists.
+
+    Needed by code that runs outside a request (background worker threads)
+    and therefore has no application context to borrow.
+    """
+    try:
+        app = current_app.extensions.get("wraithwall", {}).get("app")
+        if app is not None:
+            return app
+    except Exception:
+        pass
+    from wraithwall import get_app as _package_app
+
+    return _package_app()
 
 
 def get_redis():
@@ -33,14 +51,19 @@ def get_redis():
 
 
 def send_telegram_alert_bg(message, **kwargs):
-    """Background Telegram alert stub that real modules import from main.
-    In the OSS workspace, Telegram is optional — logs the alert instead."""
-    logger.info("telegram_alert_bg: %s", message[:200] if message else "")
+    """Background Telegram alert stub that production modules import from main.
+    In the OSS package, Telegram is optional — the intent is recorded locally
+    instead of being sent anywhere."""
+    from wraithwall import sandbox_mode
+
+    sandbox_mode.stub_transport("telegram", (message or "")[:100])
 
 
 def send_discord_alert_bg(payload):
-    """Background Discord alert stub."""
-    logger.info("discord_alert_bg: %s", str(payload)[:200])
+    """Background Discord alert stub — recorded locally, never sent."""
+    from wraithwall import sandbox_mode
+
+    sandbox_mode.stub_transport("discord", str(payload)[:100])
 
 
 def write_immutable_log(**kwargs):

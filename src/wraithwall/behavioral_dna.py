@@ -18,6 +18,7 @@ import logging
 import os
 import time
 from collections import Counter
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -48,13 +49,54 @@ def _get_db_session():
     except Exception:
         return None
 
+
+@contextmanager
+def _app_context():
+    """Flask app context for DB work outside a request (Cowrie watcher thread).
+
+    SQLAlchemy's Flask session is app-context-scoped; the watcher runs in a
+    plain thread, so DB writes there need an explicit context or they raise
+    'Working outside of application context'.
+    """
+    try:
+        from flask import has_app_context
+    except Exception:
+        yield
+        return
+    if has_app_context():
+        yield
+        return
+    try:
+        from wraithwall import shared as _shared
+
+        _flask_app = _shared.get_app()
+    except Exception:
+        yield
+        return
+    if _flask_app is None:
+        yield
+        return
+    with _flask_app.app_context():
+        yield
+
 # ── Postgres models ─────────────────────────────────────────────
 
 def init_dna_models(db) -> None:
     """Declare BehavioralActor and MergeLog models on the given SQLAlchemy db instance.
-    Called at app startup — idempotent via create_all."""
+    Called at app startup — idempotent via create_all.
+
+    The class definitions are cached on the db instance itself so repeated
+    calls (or a second import of this module, e.g. the wraithwall mirror)
+    reuse the same classes instead of re-declaring the tables and tripping
+    'Table ... is already defined for this MetaData instance'.
+    """
+    cached = getattr(db, "_dna_models_cache", None)
+    if cached is not None:
+        return cached
+
     class BehavioralActor(db.Model):
         __tablename__ = "behavioral_actor"
+        __table_args__ = {"extend_existing": True}
         id: int = db.Column(db.Integer, primary_key=True)
         actor_uuid: str = db.Column(db.String(36), unique=True, nullable=False, index=True)
         fingerprint_hash: str = db.Column(db.String(64), nullable=False)
@@ -69,6 +111,7 @@ def init_dna_models(db) -> None:
 
     class MergeLog(db.Model):
         __tablename__ = "behavioral_merge_log"
+        __table_args__ = {"extend_existing": True}
         id: int = db.Column(db.Integer, primary_key=True)
         source_actor_uuid: str = db.Column(db.String(36), nullable=False, index=True)
         target_actor_uuid: str = db.Column(db.String(36), nullable=False, index=True)
@@ -82,6 +125,7 @@ def init_dna_models(db) -> None:
 
     db.BehavioralActor = BehavioralActor
     db.MergeLog = MergeLog
+    db._dna_models_cache = (BehavioralActor, MergeLog)
     return BehavioralActor, MergeLog
 
 # ── Behavioral fingerprint computation ──────────────────────────
@@ -219,6 +263,12 @@ class BehavioralDNAEngine:
         Returns:
             actor_uuid if assigned, None if insufficient data for fingerprinting.
         """
+        # Runs from the Cowrie watcher thread (no request context) — DB access
+        # below needs an explicit Flask app context.
+        with _app_context():
+            return self._process_session_inner(session)
+
+    def _process_session_inner(self, session: Dict) -> Optional[str]:
         self._ensure_models()
 
         commands = session.get("commands", [])

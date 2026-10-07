@@ -1,0 +1,37 @@
+# Dockerfile.egress — T2 research-sandbox egress proxy image (Phase 11).
+#
+# The base is digest-pinned (see sandbox_kit/images.py PINNED_IMAGES, H10).
+# The image ships exactly two things: the deny-policy module (single source of
+# truth, shared with the static gate and the tests) and the mitmproxy addon
+# that enforces allowlist + policy layers. Both are copied from the prepared
+# build-context allowlist — nothing else is visible to the build.
+#
+# Runs as uid 1000 (mitmproxy's built-in user maps to uid 1000) under the same
+# hardening anchor as every other sandbox service: cap-drop ALL, no
+# no-new-privileges waiver, read-only rootfs, tmpfs scratch only.
+
+FROM mitmproxy/mitmproxy@sha256:e188f884db90a15259f3a76d27d9a958e88f5781021361281f926e6cc8229882
+
+WORKDIR /egress
+
+COPY sandbox_kit/egress_policy.py /egress/egress_policy.py
+COPY sandbox_kit/egress_proxy.py /egress/egress_proxy.py
+COPY sandbox_kit/policy_selftest.py /egress/policy_selftest.py
+
+# mitmproxy's image already provides a non-root user (uid 1000).
+USER 1000:1000
+
+# The launcher passes the per-session allowlist via env and the addon enforces
+# it. `--set` flags keep the proxy quiet and headless (mitmdump, regular mode).
+# confdir lives on the container's tmpfs: mitmproxy's tlsconfig addon always
+# initialises a cert store at startup even though this proxy never terminates
+# TLS. The throwaway key is never used, never leaves the container, and dies
+# with it — no interception authority exists.
+# ignore_hosts=.* is the tunnel-only switch: every TLS session is gated at
+# CONNECT/SNI by the addon, then relayed byte-for-byte (real upstream
+# certificate end to end). Plain HTTP still goes through the request hook.
+ENTRYPOINT ["mitmdump", "-s", "/egress/egress_proxy.py", "--mode", "regular", \
+            "--listen-host", "0.0.0.0", "--listen-port", "8080", \
+            "--set", "confdir=/tmp/mitm", \
+            "--set", "ignore_hosts=.*", \
+            "--set", "consoleloglevel=warn", "--set", "flow_detail=1"]

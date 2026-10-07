@@ -14,6 +14,7 @@ functionality when off. It reuses existing engines rather than reinventing them:
   - main.send_telegram_alert_bg / Discord → Alerting Pipeline
   - main.write_immutable_log            → tamper-evident Audit Logging
   - main.verify_api_signature / has_permission → API-key auth (scope ai:threat)
+    (bound by the host app through wraithwall.host_auth)
   - asn_intelligence.IPEnrichmentEngine → Threat Intelligence (deep path only)
 
 The 12 modules in the spec map to functions/sections below:
@@ -86,15 +87,24 @@ def _as_text(v, limit=MAX_INPUT_LEN):
     return v[:limit]
 
 # ────────────────────────────────────────────────────────────
-# auth — mirrors main.require_permission('ai:threat') but callable inline
-# (blueprints here import from main lazily to avoid the circular import)
+# auth — mirrors the monolith's require_permission('ai:threat'), callable inline.
+#
+# The session model, User/APIKeyUsage tables, verify_api_signature(),
+# has_permission() and log_audit() are NOT part of the published package: they
+# live in the host application and are bound through wraithwall.host_auth.
+# This module is not registered by wraithwall.create_app(); reading an unbound
+# symbol raises host_auth.AUTH_RUNTIME_ERROR rather than degrading silently.
 # ────────────────────────────────────────────────────────────
+
+
 def _auth_customer():
     """Authenticate a customer API call. Allows a logged-in session OR a valid
     API key carrying the ai:threat scope. Returns (ctx, err_response).
     ctx = {'user_id': int, 'api_key_id': int|None}."""
-
-                      log_audit, db, APIKeyUsage)
+    from wraithwall.host_auth import (  # noqa: F401 — raises when unbound
+        APIKeyUsage, User, db, has_permission, is_logged_in, log_audit,
+        verify_api_signature,
+    )
     # session path (dashboard "try it" / first-party)
     if is_logged_in():
         user = User.query.filter_by(email=session.get('user_email')).first()
@@ -162,7 +172,7 @@ def db_rollback():
 def _client_ip():
     """The API caller's IP (the customer's server), via the trusted proxy."""
     try:
-
+        from wraithwall.shared import get_real_ip
         return get_real_ip()
     except Exception:
         return (request.remote_addr or 'unknown')
@@ -435,7 +445,7 @@ def _enrich_ip(ip):
     if not ip:
         return None
     try:
-        from asn_intelligence import get_service
+        from wraithwall.asn_intelligence import get_service
         svc = get_service()
         intel = svc.enrich(ip) if svc else None
         if intel is None:

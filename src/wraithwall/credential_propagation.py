@@ -581,7 +581,7 @@ class CredentialPropagationNetwork:
             exposure_hours = (datetime.utcnow() - planted_at).total_seconds() / 3600
             logger.warning(f"Lure {lure_id} triggered by {src_ip} — exposure: {exposure_hours:.1f}h")
             try:
-                from deception_event_bus import publish_deception_event
+                from wraithwall.deception_event_bus import publish_deception_event
                 publish_deception_event(
                     'credential_propagation', 'C-06', 'credential_lure',
                     trigger_data.get('type', 'credential_use'), src_ip,

@@ -1,0 +1,510 @@
+# compose.sandbox.yml — WraithWall Local Secure Sandbox (Phase 3)
+#
+# Sibling to the production `docker-compose.yml`, which is NOT modified. The two
+# files are never loaded together: this one is only ever invoked by the sandbox
+# launcher (`./sandbox.sh`, `python -m sandbox_kit`) with an explicit project
+# name.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# WHY THERE ARE NO `ports:` ENTRIES IN THIS FILE
+# ─────────────────────────────────────────────────────────────────────────────
+# Both networks below are `internal: true`. That is what makes "no egress by
+# construction" true for every container, and it is also why nothing here can
+# publish a port: Docker silently refuses to publish from a container whose only
+# attachment is an internal network (`docker port` lists nothing and the host
+# connection is refused even while the service listens inside — verified
+# empirically, see docs/sandbox/network.md).
+#
+# The approved topology asked for both "internal planes" and a loopback-published
+# UI port. Those two requirements are mutually exclusive on Docker. This file
+# chooses the security property (no egress) and leaves the UI exposure to the
+# launcher, which binds 127.0.0.1 on the host and forwards to the app container's
+# address on the internal bridge. The host is a member of that bridge, so the
+# management plane can reach the container while the container still has no route
+# out. Nothing is published to the LAN or the internet, and no port exists until
+# the developer asks for one.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# HARDENING (Stage 2 H1–H13) — applied to every service
+# ─────────────────────────────────────────────────────────────────────────────
+#   H1  cap_drop: ALL on every service, no cap_add anywhere
+#   H2  no-new-privileges on every service
+#   H3  non-root numeric uid 1000 (images declare a matching USER)
+#   H4  read-only root filesystem; tmpfs scratch only
+#   H5  default seccomp profile (Docker default; nothing weakened)
+#   H6  mem_limit / cpus / pids_limit + json-file log rotation on every service
+#   H7  no docker.sock, no privileged, no network_mode: host, no host binds
+#   H8  nothing published (strictly tighter than "loopback only")
+#   H9  named per-project bridges; both planes `internal: true`
+#   H10 every image digest-pinned (see sandbox_kit/images.py)
+#   H11 healthcheck per long-running service; the launcher treats unhealthy as
+#       a failed start
+#   H12 explicit environment allowlist; no env_file, no host-env inheritance
+#   H13 named in-project volume only; reset/destroy remove it with the project
+#   H14 runtime: runsc (gVisor) — the workload runs on a userspace kernel, so a
+#       syscall-based escape must defeat the Sentry, not just the host kernel
+#
+# PROJECT NAME IS INTENTIONALLY ABSENT. The launcher passes `-p ww-sb-<name>` so
+# two sandboxes get distinct projects, distinct networks and a distinct volume
+# prefix (G11). Running this file by hand needs the same flag:
+#     docker compose -f compose.sandbox.yml -p ww-sb-manual up
+
+x-hardening: &hardening
+  restart: "no"
+  # H14: run every sandbox service on the gVisor userspace kernel (runsc) instead
+  # of runc/host kernel. Requires the `runsc` Docker runtime to be registered
+  # (/etc/docker/daemon.json); no KVM needed on x86_64 (systrap platform).
+  runtime: "runsc"
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  read_only: true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+
+  # ── telemetry bus ──────────────────────────────────────────────────────────
+  sb-redis:
+    image: redis@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
+    user: "1000:1000"
+    <<: *hardening
+    networks:
+      - ww-telemetry-net
+    # Intentionally non-persistent: a disposable sandbox should not accumulate
+    # state on the host. `--save ""` and `--appendonly no` stop redis writing at
+    # all; the tmpfs is scratch headroom, not a datastore. `--protected-mode no`
+    # is required because the app connects from a different container — the
+    # network is internal-only, so there is no exposure to compensate for.
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --bind
+      - 0.0.0.0
+      - --protected-mode
+      - "no"
+    tmpfs:
+      - /data:size=64M,mode=1777,nosuid,nodev
+    mem_limit: "256m"
+    cpus: "1.0"
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+
+  # ── the application ────────────────────────────────────────────────────────
+  sb-app:
+    # Built by the launcher from an explicit allowlist context; see
+    # sandbox_kit/compose.py. Deliberately no `build:` section here so a stray
+    # `docker compose build` cannot stream the whole ~5 GB repository.
+    image: wraithwall-sandbox-app:local
+    user: "1000:1000"
+    <<: *hardening
+    networks:
+      - ww-app-net
+      - ww-telemetry-net
+      # Phase 5: the app is a member of the uplink network too (this is what
+      # makes the optional proxy work: same-subnet L2, no host forwarding —
+      # which default-deny firewalls block). The interface is constrained
+      # (masquerade off, DNS blackholed) and the in-app egress canary runs on
+      # every boot because of it.
+      - ww-uplink-net
+    depends_on:
+      sb-redis:
+        condition: service_healthy
+    volumes:
+      - ww_sb_app_data:/state
+    tmpfs:
+      - /tmp:size=128M,nosuid,nodev
+      # wraithwall.gateway writes an immutable audit log to the path in
+      # GATEWAY_AUDIT_LOG (set below). On a read-only rootfs that path must be a
+      # writable mount; a tmpfs keeps the log ephemeral and off the host
+      # (H4/G3). mode=1777 so the non-root uid can write into the mount, which
+      # Docker creates root-owned by default.
+      - /var/log/wraithwall:size=64M,mode=1777,nosuid,nodev
+    environment:
+      # ── sandbox behaviour (Phase 1 contract) ──
+      # WRAITHWALL_SANDBOX=1 turns off keep-alive pings, the scheduler job
+      # subset, the host-PTY route and every outbound alert transport.
+      WRAITHWALL_SANDBOX: "1"
+      FLASK_ENV: "development"
+      # TESTING is deliberately NOT set. "0" would be a truthy string in Python
+      # and would silently disable the engines this sandbox exists to exercise.
+      # ── local state (named volume, removed with the project) ──
+      DATABASE_URL: "sqlite:////state/sandbox.db"
+      REDIS_URL: "redis://sb-redis:6379/0"
+      # ── ephemeral audit log (tmpfs mounted above) ──
+      # Without this the gateway's audit logger falls back to stdout; pointing
+      # it into the tmpfs exercises the real file-backed audit path while
+      # keeping the log off the host entirely.
+      GATEWAY_AUDIT_LOG: "/var/log/wraithwall/gateway_audit.log"
+      # A placeholder, not a secret. The launcher injects a generated value via
+      # WRAITHWALL_SANDBOX_SECRET_KEY (Phase 4); G9 refuses to ship this file if
+      # a real-looking secret ever appears in it.
+      SECRET_KEY: "${WRAITHWALL_SANDBOX_SECRET_KEY:-SANDBOX_PLACEHOLDER_SECRET_NOT_FOR_PRODUCTION}"
+      # ── loopback-only UI ──
+      CORS_ORIGINS: "http://127.0.0.1"
+      # ── synthetic telemetry (Phase 4) ──
+      # The app's OWN watcher (already running in sandbox mode) tails the
+      # corpus written by sb-seed into the shared in-project volume, so the
+      # production pipeline runs unchanged. TTY replay reads the seed's binary
+      # tty logs from the same volume. Both files are sandbox-local data that
+      # disappears with the project volume.
+      COWRIE_LOG_PATH: "/state/synthetic/synthetic.jsonl"
+      TTYLOG_BASE_PATH: "/state/synthetic/tty"
+      # HMAC key for /api/v1/cowrie/ship (wire-protocol exercise). Same value
+      # is given to sb-seed below; it guards nothing beyond this sandbox's
+      # internal networks and is clearly not a production credential. The
+      # launcher may override both sides via WRAITHWALL_SANDBOX_SHIP_KEY.
+      COWRIE_SHIP_KEY: "${WRAITHWALL_SANDBOX_SHIP_KEY:-sandbox-dev-ship-key-not-secret}"
+
+      # ── provider credentials: DELIBERATELY ABSENT, NOT EMPTY ──
+      #
+      # No provider key is listed here. That is the secure state *and* the
+      # correct one: compose does not inherit host environment for keys it does
+      # not mention (there is no `env_file:` and no `${VAR}` interpolation for
+      # any credential), so a key that is absent here is absent in the
+      # container.
+      #
+      # An earlier revision pinned each key to "" to make the allowlist
+      # explicit. That was actively harmful: an empty string is not the same as
+      # unset, and libraries treat it as a misconfiguration rather than an
+      # absence — boto3 raised `ValueError: Invalid endpoint:` from an empty
+      # R2_ENDPOINT_URL during import and the app exited 3. The same trap
+      # applies to `TESTING` and `AUTO_ABUSE_REPORT`, where the string "0" is
+      # truthy in Python.
+      #
+      # G9 is satisfied by *absence*: an operator who wants to confirm it can
+      # run `docker exec <app> env` and see no credential-shaped names at all.
+    mem_limit: "1g"
+    cpus: "2.0"
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  # ── synthetic telemetry producer (Phase 4) ─────────────────────────────────
+  # One-shot fixed-seed generator: writes the deterministic LOCAL-marked
+  # corpus (synthetic.jsonl + binary tty logs) into the SHARED IN-PROJECT
+  # volume the app already mounts at /state, then exercises the app's HMAC
+  # ship protocol over the telemetry plane. No docker socket, no host bind —
+  # the volume is sandbox-local and removed with the project (H7/G3/H13).
+  sb-seed:
+    image: wraithwall-sandbox-seed:local
+    user: "1000:1000"
+    <<: *hardening
+    networks:
+      - ww-telemetry-net
+    depends_on:
+      sb-redis:
+        condition: service_healthy
+      sb-app:
+        condition: service_healthy
+    volumes:
+      - ww_sb_app_data:/state
+    tmpfs:
+      - /tmp:size=32M,nosuid,nodev
+    environment:
+      WRAITHWALL_SANDBOX: "1"
+      SANDBOX_STATE_DIR: "/state/synthetic"
+      SANDBOX_SEED_RECEIPT: "/state/synthetic/seed_receipt.json"
+      SANDBOX_SHIP_URL: "http://sb-app:8000/api/v1/cowrie/ship"
+      SANDBOX_SHIP_KEY: "${WRAITHWALL_SANDBOX_SHIP_KEY:-sandbox-dev-ship-key-not-secret}"
+    mem_limit: "256m"
+    cpus: "1.0"
+    pids_limit: 64
+
+  # ── Phase 5 loopback UI uplink (optional compose profile) ───────────────
+  # OFF by default: the launcher starts this only with WRAITHWALL_SANDBOX_UPLINK=1
+  # in the environment, in a second phase after sb-app is healthy (so the
+  # app's bridge IP is known and passed in explicitly — no DNS dependency).
+  # The proxy is a ~20-line asyncio TCP forwarder from the seed image (stdlib
+  # only). Publishes on the HOST loopback only. The uplink network is
+  # non-internal but masquerade-disabled; sb-app keeps its DNS blackhole and
+  # the in-app egress canary re-runs against its full network set on every
+  # such start. This is a convenience, not an isolation boundary — the two
+  # internal planes and their canaries remain the security story.
+  sb-uplink:
+    image: wraithwall-sandbox-seed:local
+    user: "1000:1000"
+    <<: *hardening
+    profiles: ["uplink"]
+    networks:
+      - ww-uplink-net
+    dns:
+      - 127.0.0.1
+    ports:
+      - "127.0.0.1:${WRAITHWALL_SANDBOX_UI_PORT:-8180}:8000"
+    healthcheck:
+      # END-TO-END: fetch /api/health THROUGH the proxy. A self-connect
+      # healthcheck would stay green even if the forwarder could not reach
+      # the app — exactly the failure the live suite caught.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)"]
+      interval: 5s
+      timeout: 6s
+      retries: 6
+      start_period: 10s
+    command: ["python", "-m", "seed.uplink_proxy"]
+    environment:
+      # Set by the launcher in the second up phase; no default — the proxy
+      # refuses to start blind.
+      WRAITHWALL_SANDBOX_APP_ADDR: "${WRAITHWALL_SANDBOX_APP_ADDR}"
+    mem_limit: "64m"
+    cpus: "0.25"
+    pids_limit: 32
+
+  # ── egress-deny self-check (G7 dynamic) ──────────────────────────────────
+  # Runs on every start. Exits non-zero if any egress path exists from the
+  # application plane, which is the "must never happen" case (E202).
+  sb-busybox:
+    image: busybox@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
+    user: "1000:1000"
+    <<: *hardening
+    networks:
+      - ww-app-net
+    tmpfs:
+      - /tmp:size=16M,nosuid,nodev
+    mem_limit: "64m"
+    cpus: "0.5"
+    pids_limit: 32
+    # NOTE: no shell variables in this command. Compose interpolates `$name`,
+    # so a `$fail` flag here was silently replaced with an empty string and the
+    # canary passed unconditionally — a false pass caught by the live suite.
+    # Keep this script variable-free.
+    command:
+      - sh
+      - -c
+      - |
+        if wget -T 3 -q -O- http://1.1.1.1 >/dev/null 2>&1 \
+           || wget -T 3 -q -O- http://example.com >/dev/null 2>&1 \
+           || nslookup example.com >/dev/null 2>&1 \
+           || ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; then
+          echo "EGRESS_PROBE_FAILED: an egress path exists from this plane"
+          exit 1
+        fi
+        echo "EGRESS_DENY_OK: no internet or DNS path from this plane"
+
+  # ── egress-deny self-check, telemetry plane (G7 dynamic) ─────────────────
+  # Same canary as above, attached to the telemetry plane: the plane that
+  # carries seed traffic and the bus must be equally unable to reach the
+  # internet. Runs on every start; exits non-zero on any egress path.
+  sb-busybox-t:
+    image: busybox@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
+    user: "1000:1000"
+    <<: *hardening
+    networks:
+      - ww-telemetry-net
+    tmpfs:
+      - /tmp:size=16M,nosuid,nodev
+    mem_limit: "64m"
+    cpus: "0.5"
+    pids_limit: 32
+    command:
+      - sh
+      - -c
+      - |
+        if wget -T 3 -q -O- http://1.1.1.1 >/dev/null 2>&1 \
+           || wget -T 3 -q -O- http://example.com >/dev/null 2>&1 \
+           || nslookup example.com >/dev/null 2>&1 \
+           || ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; then
+          echo "EGRESS_PROBE_FAILED: an egress path exists from this plane"
+          exit 1
+        fi
+        echo "EGRESS_DENY_OK: no internet or DNS path from this plane"
+
+  # ── T2 research-sandbox: enforcing egress proxy (Phase 11, profile `research`) ──
+  # The ONLY route between the detonation container and anything else. Two
+  # enforcement layers, both fail-closed: (1) the per-session allowlist passed
+  # via WRAITHWALL_SANDBOX_ALLOWED_HOSTS (empty => deny everything), (2) the
+  # shared deny policy (sandbox_kit/egress_policy.py — RFC1918/loopback/link-
+  # local/CGNAT/metadata hosts, IPv6 closure, DoH/DoT closure) applied even to
+  # allowlisted hosts. Every decision is logged EGRESS_ALLOW/EGRESS_DENY.
+  # The allowlist default is deliberately empty: a research sandbox started
+  # without --allow-host has NO egress at all.
+  sb-egress:
+    image: wraithwall-sandbox-egress:local
+    user: "1000:1000"
+    <<: *hardening
+    profiles: ["research"]
+    networks:
+      - ww-egress-net
+    environment:
+      WRAITHWALL_SANDBOX: "1"
+      # Set by the launcher from `up --allow-host` (E210: research refuses to
+      # start with an empty list... the PROXY still denies all when empty, so
+      # a missing var fails closed rather than open).
+      WRAITHWALL_SANDBOX_ALLOWED_HOSTS: "${WRAITHWALL_SANDBOX_ALLOWED_HOSTS:-}"
+    tmpfs:
+      - /tmp:size=32M,nosuid,nodev
+      - /home/mitmproxy:size=32M,nosuid,nodev,uid=1000,gid=1000
+    mem_limit: "256m"
+    cpus: "1.0"
+    pids_limit: 128
+    healthcheck:
+      # The policy self-test: the proxy is only "healthy" when its own deny
+      # rules classify correctly (canonical metadata/internal/IPv6/DoH cases).
+      test: ["CMD", "python", "/egress/policy_selftest.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── T2 research-sandbox: detonation harness (profile `research`) ────────────
+  # Reuses the existing detonate_sandbox harness [VERIFIED] under the same
+  # hardening anchor as every other service. One-shot per developer URL:
+  # DETONATE_URL is passed by the launcher's `detonate` verb; without it the
+  # container exits after the policy self-check (never idles). NO direct DNS:
+  # dns: 127.0.0.1 blackholes the embedded resolver so Chromium cannot resolve
+  # around the proxy; resolution for allowlisted hosts happens in sb-egress.
+  sb-detonate:
+    image: wraithwall-sandbox-detonate:local
+    user: "1000:1000"
+    <<: *hardening
+    profiles: ["research"]
+    networks:
+      - ww-egress-net
+    dns:
+      - 127.0.0.1
+    environment:
+      WRAITHWALL_SANDBOX: "1"
+      DETONATE_URL: "${DETONATE_URL:-}"
+      DETONATE_TIMEOUT_MS: "${DETONATE_TIMEOUT_MS:-30000}"
+      # All browser traffic is forced through the enforcing proxy.
+      HTTP_PROXY: "http://sb-egress:8080"
+      HTTPS_PROXY: "http://sb-egress:8080"
+      NO_PROXY: "localhost,127.0.0.1"
+    volumes:
+      - ww_research_data:/research
+    tmpfs:
+      - /tmp:size=128M,nosuid,nodev
+      - /home/ubuntu:size=64M,nosuid,nodev,uid=1000,gid=1000
+    depends_on:
+      sb-egress:
+        condition: service_healthy
+    mem_limit: "1g"
+    cpus: "1.0"
+    pids_limit: 256
+
+  # ── T2 self-check: policy classification (profile `research`) ─────────────
+  # One-shot: every canonical deny case must classify DENIED inside the egress
+  # image itself, or the plane is refused (E212). Pure computation.
+  sb-policy-selftest:
+    image: wraithwall-sandbox-egress:local
+    user: "1000:1000"
+    <<: *hardening
+    profiles: ["research"]
+    networks:
+      - ww-egress-net
+    entrypoint: ["python", "/egress/policy_selftest.py"]
+    restart: "no"
+    tmpfs:
+      - /tmp:size=16M,nosuid,nodev
+    mem_limit: "64m"
+    cpus: "0.5"
+    pids_limit: 32
+
+  # ── T2 self-check: egress closure of the DETONATION container (profile `research`) ─
+  # The detonation container must have NO route out except through the proxy.
+  # Direct IP egress and DNS are probed from INSIDE the detonation image: any
+  # success is E202. (Proxy-mediated traffic to allowlisted hosts is the only
+  # sanctioned path and is exercised by the `detonate` verb, not here.)
+  sb-research-canary:
+    image: wraithwall-sandbox-detonate:local
+    user: "1000:1000"
+    <<: *hardening
+    profiles: ["research"]
+    networks:
+      - ww-egress-net
+    dns:
+      - 127.0.0.1
+    entrypoint:
+      - python
+      - -c
+      - |
+        import socket, sys
+        try:
+            s = socket.create_connection(("1.1.1.1", 80), timeout=4)
+            s.close()
+            print("EGRESS_PROBE_FAILED: direct IP egress exists from the research plane")
+            sys.exit(1)
+        except OSError:
+            pass
+        try:
+            socket.getaddrinfo("example.com", 80)
+            print("EGRESS_PROBE_FAILED: DNS resolution exists from the research plane")
+            sys.exit(1)
+        except OSError:
+            pass
+        print("EGRESS_DENY_OK: research plane has no direct egress or DNS")
+    restart: "no"
+    tmpfs:
+      - /tmp:size=16M,nosuid,nodev
+      - /home/sandbox:size=16M,nosuid,nodev,uid=1000,gid=1000
+    mem_limit: "64m"
+    cpus: "0.5"
+    pids_limit: 32
+
+networks:
+  # No hardcoded subnets: compose allocates per project, which is what keeps two
+  # concurrent sandboxes on distinct address space (G11).
+  ww-app-net:
+    driver: bridge
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+  ww-telemetry-net:
+    driver: bridge
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+  # Phase 5 uplink: NON-internal by necessity (a loopback publish needs a DNAT
+  # path), but constrained so "non-internal" does not mean "internet": IP
+  # masquerade is disabled (no NAT out) and anything attached must blackhole
+  # DNS (dns: [127.0.0.1]) so Docker's embedded DNS cannot forward lookups
+  # outward. The sb-app egress canary re-runs against this network on every
+  # up with the uplink attached (verify_egress_denied_all). Residual risk is
+  # documented in docs/sandbox/network.md#the-uplink.
+  ww-uplink-net:
+    driver: bridge
+    internal: false
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+      # ICC stays ENABLED on purpose: the optional proxy must reach the app
+      # over this same subnet (cross-bridge host forwarding is blocked by
+      # default-deny host firewalls — measured). Exactly two first-party
+      # containers ever attach (sb-app + optional sb-uplink), and the in-app
+      # egress canary verifies on every boot that this interface reaches
+      # nothing beyond them.
+  # Phase 11 research egress: the ONLY non-internal plane besides the uplink,
+  # and the only one that carries developer-directed fetches. Masquerade stays
+  # ENABLED (return traffic for allowlisted hosts needs NAT) — the compensating
+  # controls are the deny-by-default allowlist + the policy layer inside the
+  # proxy, the DNS blackhole on the detonation container, no publishes, and
+  # the two T2 self-checks on every start. The static gate G7-T2 pins this
+  # exact shape: only sb-egress/sb-detonate/sb-policy-selftest/sb-research-canary
+  # may attach, and only under the `research` profile.
+  ww-egress-net:
+    driver: bridge
+    internal: false
+
+volumes:
+  # Prefixed with the compose project name, so each sandbox instance owns its
+  # own state and `reset`/`destroy` can remove exactly one sandbox's data.
+  ww_sb_app_data:
+  # Phase 11: detonation report scratch. Sandbox-local, removed with the
+  # project (H13); never a host bind. (TLS is tunnel-only — no per-session CA
+  # exists, so nothing CA-related is ever written here.)
+  ww_research_data:

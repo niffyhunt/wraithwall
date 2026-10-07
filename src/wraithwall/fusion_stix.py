@@ -27,8 +27,14 @@ _THREAT_ACTOR_FORBIDDEN_MSG: str = (
 )
 
 _INDICATOR_NAMESPACE: uuid.UUID = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-_ATTACK_PATTERN_NAMESPACE: uuid.UUID = uuid.UUID("9d3e1a7b-2f4c-4e5d-a8b9-c0d1e2f3a4b5")
-_CAMPAIGN_NAMESPACE: uuid.UUID = uuid.UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+_ATTACK_PATTERN_NAMESPACE: uuid.UUID = uuid.UUID(os.environ.get(
+    "WRAITHWALL_STIX_ATTACK_PATTERN_UUID",
+    "0335ad6c-52f3-4dbe-805a-4cc8841c3f9f",
+))
+_CAMPAIGN_NAMESPACE: uuid.UUID = uuid.UUID(os.environ.get(
+    "WRAITHWALL_STIX_CAMPAIGN_UUID",
+    "21bd9fe6-1f69-479c-b1a5-aaec933993b6",
+))
 
 _STIX_PATTERN_TEMPLATES: Dict[str, str] = {
     "ipv4": "[ipv4-addr:value = '{value}']",

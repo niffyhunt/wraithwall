@@ -16,10 +16,10 @@ def test_validator_accepts_sample() -> None:
     assert validator.is_valid(doc) is True
 
 
-def test_validator_rejects_missing_traps() -> None:
-    doc = {"dml_version": "0.2.0", "traps": []}
+def test_validator_rejects_empty_document() -> None:
+    doc = {"dml_version": "0.3.0", "traps": [], "sensors": []}
     errors = DMLValidator().validate_document(doc)
-    assert any("at least one trap" in e for e in errors)
+    assert any("trap or sensor" in e for e in errors)
 
 
 def test_validator_rejects_wrong_version() -> None:

@@ -251,7 +251,7 @@ class DMLSigner:
 # ────────────────────────────────────────────────────────────
 
 class DMLGenerator:
-    """Convert‍​​‌‌‌​‌​​‌​​​‌​‌​‌‌​​‌​‌‌​​‌​​​​‍ EZMCyber DB objects to DML format."""
+    """Convert‍​​‌‌‌​‌​​‌​​​‌​‌​‌‌​​‌​‌‌​​‌​​​​‍ WraithWall DB objects to DML format."""
 
     def from_honey_token(self, token) -> dict:
         trigger_type = "http_request"
@@ -329,10 +329,10 @@ class DMLGenerator:
             traps.append(self.from_canary_record(canary))
         return {
             "dml_version": DML_VERSION,
-            "platform": "ezmcyber",
+            "platform": "wraithwall",
             "namespace": "production",
-            "description": "EZMCyber deception trap configuration",
-            "author": "EZMCyber Platform",
+            "description": "WraithWall deception trap configuration",
+            "author": "WraithWall Platform",
             "created_at": datetime.utcnow().isoformat(),
             "traps": traps
         }
@@ -342,7 +342,7 @@ class DMLGenerator:
 # ────────────────────────────────────────────────────────────
 
 class DMLDeployer:
-    """Read DML documents and deploy traps to EZMCyber."""
+    """Read DML documents and deploy traps to WraithWall."""
 
     def __init__(self, app_context=None):
         self.app = app_context
@@ -436,7 +436,7 @@ class DMLDeployer:
                 return {"ok": True, "type": "registered", "note": "manual deployment required"}
 
         except ImportError:
-            return {"ok": False, "error": "Not running inside EZMCyber app context"}
+            return {"ok": False, "error": "Not running inside WraithWall app context"}
 
     def _record_deployment(self, trap: dict):
         if not self._redis:

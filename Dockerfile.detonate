@@ -1,0 +1,40 @@
+# Dockerfile.detonate — T2 research-sandbox detonation image (Phase 11).
+#
+# Reuses the existing detonation harness (detonate_sandbox/, [VERIFIED] as the
+# repository's URL-detonation stack) instead of inventing a second one, but
+# does NOT inherit that stack's rootful defaults: the research plane demands
+# the same hardening anchor as every sandbox service (cap-drop ALL, uid 1000,
+# read-only rootfs, no caps added back).
+#
+# Base is digest-pinned (H10 discipline — no floating tags anywhere in the
+# sandbox). The pin is on the Playwright image the existing harness expects;
+# bumping it is a reviewable one-line change here plus the PROVENANCE entry
+# in sandbox_kit/images.py.
+#
+# The harness is copied from the prepared build-context allowlist
+# (BUILD_CONTEXT_ALLOWLIST ships detonate_sandbox/) — nothing else is visible
+# to the build. /research is provided by compose as a named volume (report
+# scratch only; the report of record goes to stdout and is captured by the
+# launcher).
+
+FROM mcr.microsoft.com/playwright/python@sha256:a1d2b48b65f41f34e5e1d7690f385f1376397b7208691cba359e4078edbf86cb
+
+WORKDIR /sandbox
+
+RUN pip install --no-cache-dir playwright==1.52.0
+
+# Harness content: read-only at runtime (compose sets read_only: true); this
+# chown keeps the build honest about ownership without granting write access.
+COPY detonate_sandbox/entrypoint.sh detonate_sandbox/detonate.py /sandbox/
+RUN chmod 0555 /sandbox/entrypoint.sh && chown root:root /sandbox/detonate.py
+
+# Dedicated non-root execution: the Noble-based Playwright image already
+# ships a uid/gid 1000 account (a groupadd at 1000 collides — exit 4 — so we
+# adopt the existing account). Compose tmpfs-mounts this account's HOME for
+# the browser profile; /sandbox stays read-only content.
+RUN chown -R 1000:1000 /sandbox
+
+USER 1000:1000
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+ENTRYPOINT ["/sandbox/entrypoint.sh"]

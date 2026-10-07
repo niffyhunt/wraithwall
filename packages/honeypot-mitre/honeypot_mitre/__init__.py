@@ -15,7 +15,7 @@ enrichment step is available behind the :class:`Analyzer` protocol (install the
 ``[llm]`` extra). Nothing here imports a web framework, Redis, or ``anthropic``
 at import time.
 
-Part of the WraithWall project — https://wraithwall.online · by Niffy_hunt
+Part of the WraithWall project — https://wraithwall.online · by Niffyhunt
 """
 
 from __future__ import annotations

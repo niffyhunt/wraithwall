@@ -51,7 +51,7 @@ def _get_redis():
 def _cowrie_batch(r):
     out = {'events': [], 'metrics': {}}
     try:
-        from cowrie_intelligence import get_pipeline
+        from wraithwall.cowrie_intelligence import get_pipeline
         pipe = get_pipeline()
         out['metrics'] = {
             'queue_size': pipe.event_queue.qsize(),
@@ -98,7 +98,7 @@ def _deception_batch(r):
     if not r:
         return out
     try:
-        from deception_event_bus import get_recent_events
+        from wraithwall.deception_event_bus import get_recent_events
         out['events'] = get_recent_events(10)
         out['total'] = r.llen('deception:events')
     except Exception as e:

@@ -11,6 +11,7 @@ from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
+from wraithwall import tor_egress
 from flask import Blueprint, request, jsonify, g, Response, stream_with_context
  
 logger = logging.getLogger(__name__)
@@ -245,8 +246,9 @@ def scan_virustotal(value: str, input_type: str) -> dict:
         if input_type in ('url', 'domain'):
             # Step 1: Submit URL for scanning
             url_id = _vt_url_id(value)
-            submit_resp = requests.post(
+            submit_resp = tor_egress.post(
                 f"{VT_BASE}/urls",
+                vendor="virustotal",
                 headers={**_vt_headers(), "Content-Type": "application/x-www-form-urlencoded"},
                 data=f"url={quote(value, safe='')}",
                 timeout=15
@@ -257,8 +259,9 @@ def scan_virustotal(value: str, input_type: str) -> dict:
             analysis_id = submit_resp.json().get("data", {}).get("id", "")
             if not analysis_id:
                 # Try GET by URL ID instead
-                get_resp = requests.get(
+                get_resp = tor_egress.get(
                     f"{VT_BASE}/urls/{url_id}",
+                    vendor="virustotal",
                     headers=_vt_headers(), timeout=15
                 )
                 if not get_resp.ok:
@@ -269,8 +272,9 @@ def scan_virustotal(value: str, input_type: str) -> dict:
                 raw = None
                 for attempt in range(3):
                     time.sleep(1.5 * (attempt + 1))
-                    ar = requests.get(
+                    ar = tor_egress.get(
                         f"{VT_BASE}/analyses/{analysis_id}",
+                        vendor="virustotal",
                         headers=_vt_headers(), timeout=15
                     )
                     if ar.ok:
@@ -278,8 +282,9 @@ def scan_virustotal(value: str, input_type: str) -> dict:
                         status = ar_data.get("data", {}).get("attributes", {}).get("status")
                         if status == "completed":
                             # Now get the full URL report
-                            gr = requests.get(
+                            gr = tor_egress.get(
                                 f"{VT_BASE}/urls/{url_id}",
+                                vendor="virustotal",
                                 headers=_vt_headers(), timeout=15
                             )
                             if gr.ok:
@@ -290,8 +295,9 @@ def scan_virustotal(value: str, input_type: str) -> dict:
                     raw = ar.json() if ar.ok else {}
  
         elif input_type == 'hash':
-            resp = requests.get(
+            resp = tor_egress.get(
                 f"{VT_BASE}/files/{value}",
+                vendor="virustotal",
                 headers=_vt_headers(), timeout=15
             )
             if not resp.ok:
@@ -299,8 +305,9 @@ def scan_virustotal(value: str, input_type: str) -> dict:
             raw = resp.json()
  
         elif input_type == 'ip':
-            resp = requests.get(
+            resp = tor_egress.get(
                 f"{VT_BASE}/ip_addresses/{value}",
+                vendor="virustotal",
                 headers=_vt_headers(), timeout=15
             )
             if not resp.ok:
@@ -422,7 +429,7 @@ def scan_urlscan(url: str) -> dict:
  
     try:
         # Submit
-        sub = requests.post(
+        sub = tor_egress.post(
             f"{URLSCAN_BASE}/scan/",
             headers={
                 "API-Key": URLSCAN_KEY,
@@ -451,7 +458,7 @@ def scan_urlscan(url: str) -> dict:
         for attempt in range(8):
             time.sleep(2.5)
             try:
-                r = requests.get(
+                r = tor_egress.get(
                     f"{URLSCAN_BASE}/result/{scan_uuid}/",
                     headers={"API-Key": URLSCAN_KEY},
                     timeout=10
@@ -552,7 +559,7 @@ def scan_ipqs_url(url: str) -> Optional[dict]:
  
     try:
         encoded = quote(url, safe='')
-        resp = requests.get(
+        resp = tor_egress.get(
             f"https://www.ipqualityscore.com/api/json/url/{IPQS_KEY}/{encoded}",
             timeout=10
         )
@@ -599,14 +606,14 @@ _PHISH_KEYWORDS = ('login', 'verify', 'secure', 'account', 'update', 'bank',
                    'wallet', 'confirm', 'signin', 'password', 'webscr')
 
 def _resolve_ip(host: str) -> str:
-    """Best-effort DNS resolution. Returns '' on failure."""
+    """Resolve a hostname to an IP through Tor (remote DNS). '' on failure.
+
+    Deliberately NOT socket.gethostbyname: a local lookup would tell the
+    machine's resolver exactly which hostnames anonymous visitors are scanning.
+    """
     if not host:
         return ''
-    try:
-        import socket
-        return socket.gethostbyname(host)
-    except Exception:
-        return ''
+    return tor_egress.resolve(host)
 
 def scan_abuseipdb(ip: str) -> Optional[dict]:
     """IP abuse confidence (AbuseIPDB). Needs a resolved public IP."""
@@ -618,7 +625,7 @@ def scan_abuseipdb(ip: str) -> Optional[dict]:
         cached["cached"] = True
         return cached
     try:
-        resp = requests.get(
+        resp = tor_egress.get(
             "https://api.abuseipdb.com/api/v2/check",
             headers={"Key": ABUSEIPDB_KEY, "Accept": "application/json"},
             params={"ipAddress": ip, "maxAgeInDays": 90},
@@ -650,7 +657,7 @@ def scan_urlhaus(host: str) -> Optional[dict]:
         headers = {}
         if URLHAUS_KEY:
             headers["Auth-Key"] = URLHAUS_KEY
-        resp = requests.post(
+        resp = tor_egress.post(
             "https://urlhaus-api.abuse.ch/v1/host/",
             data={"host": host}, headers=headers, timeout=6
         )
@@ -691,7 +698,7 @@ def scan_domain_age(host: str) -> Optional[dict]:
         cached["cached"] = True
         return cached
     try:
-        resp = requests.get(
+        resp = tor_egress.get(
             "https://www.whoisxmlapi.com/whoisserver/WhoisService",
             params={"apiKey": WHOIS_KEY, "domainName": host, "outputFormat": "JSON"},
             timeout=8

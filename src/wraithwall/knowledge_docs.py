@@ -53,6 +53,12 @@ def _enrich_callouts(html: str) -> str:
         )
     return html
 
+@knowledge_bp.route('/docs/knowledge', strict_slashes=False)
+def knowledge_index():
+    """Render the docs hub for the public knowledge namespace index."""
+    return render_template('docs.html')
+
+
 @knowledge_bp.route('/docs/knowledge/<slug>')
 def knowledge_article(slug: str):
     published = _published_slugs()

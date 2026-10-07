@@ -55,7 +55,7 @@ PUBLIC_BASE = os.environ.get('CANARY_PUBLIC_BASE', 'https://wraithwall.online')
 # nothing real is ever hardcoded in the repo; when no automated processor is
 # configured, the UI shows a manual contact/address fallback instead of a fake
 # checkout.
-CANARY_PRICE        = os.environ.get('CANARY_PRICE', '$9')          # display only
+CANARY_PRICE        = os.environ.get('CANARY_PRICE', 'Free')          # display only
 CANARY_LN_ADDRESS   = os.environ.get('CANARY_LN_ADDRESS', '').strip()   # Lightning address, e.g. you@walletofsatoshi.com
 CANARY_BTC_ADDRESS  = os.environ.get('CANARY_BTC_ADDRESS', '').strip()  # on-chain BTC, e.g. bc1q...
 PAYMENT_CONTACT     = os.environ.get('CANARY_PAYMENT_CONTACT', 'contact@wraithwall.online').strip()
@@ -342,7 +342,7 @@ def _enrich_attacker(ip):
 
     # 1. ASN / attacker profile via asn_intelligence
     try:
-        from asn_intelligence import get_service
+        from wraithwall.asn_intelligence import get_service
         intel = get_service().enrich_and_track(ip)
         if intel and not getattr(intel, 'private', False):
             risk = getattr(intel, 'risk_level', None)
@@ -369,7 +369,7 @@ def _enrich_attacker(ip):
 
     # 3. Is this IP part of an active coordinated campaign?
     try:
-        from campaign_correlator import get_correlator
+        from wraithwall.campaign_correlator import get_correlator
         for c in (get_correlator().get_active_campaigns() or []):
             if ip in (c.get('unique_ips') or []):
                 out['campaign'] = {
@@ -1644,7 +1644,7 @@ def canary_trap(token):
             db.session.commit()
 
             try:
-                from deception_event_bus import publish_deception_event
+                from wraithwall.deception_event_bus import publish_deception_event
                 publish_deception_event(
                     'canary_service', f'CS-{tok.public_id[:8]}', 'beacon',
                     'http_request', ip,

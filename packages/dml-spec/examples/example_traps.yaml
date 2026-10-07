@@ -1,8 +1,8 @@
-dml_version: "0.2.0"
+dml_version: "0.3.0"
 platform: example-app
 namespace: production
 description: Sample DML document exercising several trigger and response types.
-author: niffy_hunt
+author: Niffyhunt
 traps:
   - id: admin-api-key-canary
     name: Fake admin API key

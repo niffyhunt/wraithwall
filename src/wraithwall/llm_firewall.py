@@ -51,7 +51,7 @@ ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
 CLAUDE_MODEL = os.environ.get('LLMFW_CLAUDE_MODEL', 'claude-sonnet-4-20250514')
-GROQ_MODEL = os.environ.get('LLMFW_GROQ_MODEL', 'llama-3.1-70b-versatile')
+GROQ_MODEL = os.environ.get('LLMFW_GROQ_MODEL', 'openai/gpt-oss-120b')
 
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', '')

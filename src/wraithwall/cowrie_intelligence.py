@@ -521,7 +521,7 @@ def call_llm(messages, system_prompt):
         r = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}"},
-            json={"model": "llama-3.3-70b-versatile",
+            json={"model": "openai/gpt-oss-120b",
                   "messages": [{"role": "system", "content": system_prompt}] + messages},
             timeout=10
         )
@@ -749,7 +749,7 @@ Respond ONLY in valid JSON:
 
         def _call_claude():
             completion = self.claude.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="openai/gpt-oss-120b",
                 max_tokens=800,
                 temperature=0.3,
                 messages=[{"role": "user", "content": prompt}]
@@ -1001,7 +1001,7 @@ Respond ONLY in valid JSON:
         self._session_append(f"cowrie_session:{sid}", 'commands', command)
 
         try:
-            from deception_event_bus import detect_honeyfs_command, publish_deception_event
+            from wraithwall.deception_event_bus import detect_honeyfs_command, publish_deception_event
             hit = detect_honeyfs_command(command)
             if hit:
                 bait_id, bait_type, layer, path = hit
@@ -1114,7 +1114,7 @@ Respond ONLY in valid JSON:
 
                 if not aggregated:
                     try:
-                        from spectra_ioc import extract_iocs_from_session, store_iocs, get_session_ioc_count, get_session_ioc_diversity
+                        from wraithwall.spectra_ioc import extract_iocs_from_session, store_iocs, get_session_ioc_count, get_session_ioc_diversity
                         extracted = extract_iocs_from_session(session)
                         cmd_text = ' '.join(commands)[:500] if commands else ''
                         stored = store_iocs(sid, extracted, cmd_text)
@@ -1146,7 +1146,7 @@ Respond ONLY in valid JSON:
                 self.redis.ltrim('cowrie_sessions:recent', 0, 999)
                 self.redis.incr('cowrie_sessions:total')
                 try:
-                    from deception_event_bus import publish_deception_event
+                    from wraithwall.deception_event_bus import publish_deception_event
                     publish_deception_event(
                         'cowrie_intelligence', 'W-10', 'session', 'session_closed',
                         session.get('src_ip', ''),
@@ -1187,7 +1187,7 @@ Respond ONLY in valid JSON:
             return
 
         try:
-            from campaign_correlator import get_correlator
+            from wraithwall.campaign_correlator import get_correlator
             threading.Thread(
                 target=lambda: get_correlator().ingest_session(session),
                 daemon=True
@@ -1196,7 +1196,7 @@ Respond ONLY in valid JSON:
             pass
 
         try:
-            from behavioral_dna import get_dna_engine
+            from wraithwall.behavioral_dna import get_dna_engine
             dna = get_dna_engine()
             actor_uuid = dna.process_session(session)
             if actor_uuid:
@@ -1208,7 +1208,7 @@ Respond ONLY in valid JSON:
 
         asn_intel = None
         try:
-            from asn_intelligence import get_service
+            from wraithwall.asn_intelligence import get_service
             svc = get_service()
             asn_intel = svc.enrich_and_track(src_ip)
         except ImportError:
@@ -1272,7 +1272,7 @@ Respond ONLY in valid JSON:
         hassh = session.get('hassh', '')
         if hassh:
             try:
-                from fingerprint_corpus import store_hassh_entry, lookup_hassh_internal
+                from wraithwall.fingerprint_corpus import store_hassh_entry, lookup_hassh_internal
                 sid = session.get('session_id', '')
                 hassh_result = lookup_hassh_internal(hassh)
                 if hassh_result.get('hassh_match'):
@@ -1323,7 +1323,7 @@ Respond ONLY in valid JSON:
             pass
 
         try:
-            from unison_score import compute_unison_score
+            from wraithwall.unison_score import compute_unison_score
             unison = compute_unison_score(session, intelligence)
             intelligence['unison_score'] = unison['unison_score']
             intelligence['unison_verdict'] = unison['verdict']
@@ -1492,7 +1492,7 @@ Respond ONLY in valid JSON:
 
     def _check_credential_lure(self, username: str, password: str, src_ip: str):
         try:
-            from credential_propagation import check_cowrie_login_for_lure
+            from wraithwall.credential_propagation import check_cowrie_login_for_lure
             check_cowrie_login_for_lure(username, password, src_ip)
         except ImportError:
             pass

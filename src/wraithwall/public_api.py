@@ -22,6 +22,24 @@ def _get_redis():
     except Exception:
         return None
 
+@public_bp.route('/api/health', methods=['GET'])
+def health():
+    """Liveness probe for the SDK client and container healthchecks.
+
+    Returns 200 even when Redis is unreachable: this is a *liveness* probe, and
+    the blueprints that need Redis already degrade to a reduced feature set
+    instead of failing. The Redis state is reported in the body so a degraded
+    instance is still visible to a caller that cares.
+    """
+    from wraithwall import __version__ as _version
+
+    redis_ok = _get_redis() is not None
+    return jsonify({
+        "status": "ok",
+        "version": _version,
+        "redis": "ok" if redis_ok else "degraded",
+    }), 200
+
 def record_public_activity(activity_type: str, target: str, details: dict = None):
     """Push a public activity entry to the Redis feed for the landing page."""
     r = _get_redis()

@@ -170,8 +170,8 @@ mistake it for ML.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Niffy_hunt.
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Niffyhunt.
 
 ---
 
-Part of the WraithWall project — https://wraithwall.online · by Niffy_hunt
+Part of the WraithWall project — https://wraithwall.online · by Niffyhunt

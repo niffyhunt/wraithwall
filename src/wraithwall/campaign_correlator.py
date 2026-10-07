@@ -37,6 +37,15 @@ SESSION_TIMING_WINDOW = int(os.environ.get('SESSION_TIMING_WINDOW', '300'))
 CAMPAIGN_TTL = int(os.environ.get('CAMPAIGN_TTL', '604800'))
 FINGERPRINT_CACHE_TTL = int(os.environ.get('FINGERPRINT_CACHE_TTL', '259200'))
 MAX_CANDIDATES = int(os.environ.get('MAX_CANDIDATES', '50'))
+TENANT_ID_PATTERN = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}')
+
+
+def _strict_tenant_id(value: Any) -> Optional[str]:
+    """Validate tenant context without ever falling back to a shared namespace."""
+    tenant = str(value or '').strip()
+    if tenant.lower() == 'global' or not TENANT_ID_PATTERN.fullmatch(tenant):
+        return None
+    return tenant
 
 # ────────────────────────────────────────────────────────────
 # REGULAR EXPRESSIONS FOR COMMAND NORMALIZATION
@@ -511,13 +520,16 @@ class CampaignCorrelator:
         return None
 
     def ingest_deception_event(self, event: Dict) -> Optional[Dict]:
-        """Ingest non-Cowrie deception bus events for cross-bait correlation."""
+        """Ingest deception events only inside an authenticated tenant namespace."""
         ip = event.get('attacker_ip')
-        if not ip or not self.redis:
+        tenant_id = _strict_tenant_id(event.get('tenant_id'))
+        if not ip or not tenant_id or not self.redis:
+            self.metrics['tenant_rejected'] = self.metrics.get('tenant_rejected', 0) + (0 if tenant_id else 1)
             return None
         try:
-            key = f"deception:correlation:{ip}"
+            key = f"deception:correlation:{tenant_id}:{ip}"
             self.redis.lpush(key, json.dumps({
+                'tenant_id': tenant_id,
                 'source': event.get('source'),
                 'bait_id': event.get('bait_id'),
                 'bait_type': event.get('bait_type'),

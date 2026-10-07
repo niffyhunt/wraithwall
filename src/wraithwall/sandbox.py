@@ -133,7 +133,7 @@ def _run_url_scan(payload):
     return run_full_scan(raw), 200
 
 def _run_ip_intel(payload):
-    from asn_intelligence import lookup_ip
+    from wraithwall.asn_intelligence import lookup_ip
     ip = str(payload.get('ip', '')).strip()[:64]
     if not ip:
         return {'error': 'Enter an IP address.'}, 400

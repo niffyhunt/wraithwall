@@ -4,7 +4,7 @@ Plant uniquely-derived canary tokens in software packages, then detect when one
 "fires" by matching an inbound beacon back to the issued token. Pure stdlib at
 its core; storage is pluggable (in-memory by default, optional injected Redis).
 
-Part of the WraithWall project — https://wraithwall.online · by Niffy_hunt
+Part of the WraithWall project — https://wraithwall.online · by Niffyhunt
 """
 
 from __future__ import annotations
@@ -25,28 +25,11 @@ from .tokens import (
 
 __version__ = "0.1.0"
 
-def create_canary(
-    package_name: str,
-    version: str,
-    *,
-    token_type: str = TOKEN_TYPE_RUNTIME,
-    salt: str | None = None,
-) -> CanaryToken:
-    """Public API: mint and return a new canary token record."""
-    return CanaryToken(
-        token=mint_token(package_name, version, salt=salt),
-        package_name=package_name,
-        version=version,
-        token_type=token_type,
-    )
-
-
 __all__ = [
     "__version__",
     # tokens
     "CanaryToken",
     "mint_token",
-    "create_canary",
     "derive_token",
     "encode_watermark",
     "decode_watermark",

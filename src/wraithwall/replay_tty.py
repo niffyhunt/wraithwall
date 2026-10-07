@@ -1,9 +1,9 @@
 """
 REPLAY — Cowrie TTY session playback.
 
-Parses Cowrie's binary ttylog format (4-byte big-endian timestamp seconds,
-4-byte big-endian length, raw terminal bytes), sanitizes escape sequences,
-and serves through an admin-gated endpoint for xterm.js rendering.
+Parses Cowrie's binary ttylog format (little-endian 24-byte frame header plus
+raw terminal bytes), sanitizes escape sequences, and serves through an
+admin-gated endpoint for xterm.js rendering.
 
 TTY logs are read from the shared Docker volume mounted on the honeypot
 host and shipped through the existing cowrie:log → consumer pipeline.
@@ -47,49 +47,65 @@ def _get_redis():
         return None
 
 def _require_admin():
-    try:
+    """Fail-closed admin gate for TTY replay.
 
-        if not is_logged_in() or not is_admin():
-            return jsonify({"error": "Admin authentication required"}), 403
-    except ImportError:
-        pass
+    The published package ships no account system, so the check is bound by
+    the host application (``wraithwall.host_auth.bind(is_logged_in=...,
+    is_admin=...)``). With nothing bound, TTY replay is refused rather than
+    served to anonymous callers.
+    """
+    from wraithwall import host_auth
+
+    if not {"is_logged_in", "is_admin"}.issubset(host_auth.bound()):
+        return jsonify({"error": "Admin authentication required"}), 403
+    if not host_auth.is_logged_in() or not host_auth.is_admin():
+        return jsonify({"error": "Admin authentication required"}), 403
     return None
 
 def _require_logged_in():
     """Softer check for playbook-linked TTY replays (analysts with playbook perms can view their incident TTYs)."""
-    try:
+    from wraithwall import host_auth
 
-        if not is_logged_in():
-            return jsonify({"error": "Login required"}), 401
-    except ImportError:
-        pass
+    if "is_logged_in" not in host_auth.bound():
+        return jsonify({"error": "Login required"}), 401
+    if not host_auth.is_logged_in():
+        return jsonify({"error": "Login required"}), 401
     return None
 
 def parse_ttylog(file_path: str) -> List[Tuple[float, str]]:
-    """Parse a Cowrie binary ttylog file.
+    """Parse a Cowrie binary ttylog file (authoritative format).
 
-    Format: repeated blocks of [timestamp:u32 BE][length:u32 BE][data:bytes]
+    Verified against cowrie 3.0.14 src/cowrie/core/ttylog.py:
+      TTYSTRUCT = "<iLiiLL"  ->  [op:i][tty:L][length:i][direction:i][sec:L][usec:L]
+      little-endian, 24-byte header, followed by `length` payload bytes.
+      op: 1=open 2=close 3=write 4=exec; direction: 1=input 2=output 3=interact.
+
+    Only OP_WRITE frames with direction != 2 (i.e. attacker INPUT — the
+    same rule cowrie's own input-hash uses) contribute replay frames.
 
     Returns:
-        List of (timestamp_seconds, sanitized_text) tuples.
+        List of (timestamp_seconds, sanitized_text) tuples for input frames.
     """
     frames: List[Tuple[float, str]] = []
+    hdr = struct.Struct("<iLiiLL")
+    OP_WRITE, DIR_OUTPUT = 3, 2
 
     try:
         with open(file_path, "rb") as f:
             while True:
-                header = f.read(8)
-                if len(header) < 8:
+                header = f.read(hdr.size)
+                if len(header) < hdr.size:
                     break
-                ts_raw, length = struct.unpack("!II", header)
-                ts_float = float(ts_raw)
-                if length > 1024 * 1024:
+                op, _tty, length, direction, sec, usec = hdr.unpack(header)
+                if length < 0 or length > 1024 * 1024:
                     break
                 data = f.read(length)
                 if len(data) < length:
                     break
-                text = sanitize_for_terminal(data)
-                frames.append((ts_float, text))
+                if op == OP_WRITE and direction != DIR_OUTPUT and length:
+                    text = sanitize_for_terminal(data)
+                    if text:
+                        frames.append((sec + usec / 1_000_000.0, text))
     except FileNotFoundError:
         logger.debug(f"TTY log not found: {file_path}")
     except Exception as e:
@@ -114,8 +130,13 @@ def sanitize_for_terminal(data: bytes) -> str:
 
     return text
 
-def generate_playback_html(session_id: str, frames_json: str) -> str:
-    """Generate a sandboxed playback page with xterm.js."""
+def generate_playback_html(session_id: str, frames: list) -> str:
+    """Generate a sandboxed playback page with xterm.js.
+
+    ``frames`` is injected with Jinja's ``tojson`` filter, which escapes
+    ``<``, ``>``, ``&`` and ``'`` so hostile terminal output captured from a
+    honeypot session cannot break out of the script tag.
+    """
     return render_template_string("""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,7 +169,7 @@ body { background: #0a0a0a; color: #c0c0c0; font-family: monospace; }
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
 <script>
 (function() {
-    var frames = {{ frames_json | safe }};
+    var frames = {{ frames | tojson }};
     var term = new Terminal({
         cols: 120, rows: 40,
         cursorBlink: false, disableStdin: true,
@@ -185,8 +206,8 @@ body { background: #0a0a0a; color: #c0c0c0; font-family: monospace; }
 })();
 </script>
 </body>
-</html>""", session_id=session_id, frames_json=frames_json,
-   frame_count=0 if frames_json == "[]" else len(json.loads(frames_json)))
+</html>""", session_id=session_id, frames=frames,
+   frame_count=len(frames))
 
 @replay_bp.route("/api/cowrie/session/<session_id>/tty", methods=["GET"])
 def get_tty_replay(session_id: str):
@@ -211,8 +232,7 @@ def get_tty_replay(session_id: str):
 
     accept = request.headers.get("Accept", "")
     if "text/html" in accept:
-        frames_json = json.dumps([[ts, txt] for ts, txt in frames])
-        return generate_playback_html(session_id, frames_json)
+        return generate_playback_html(session_id, frames)
 
     return jsonify({
         "ok": True,
@@ -249,5 +269,4 @@ def play_tty_replay(session_id: str):
         tty_path = os.path.join(TTYLOG_BASE_PATH, session_id)
 
     frames = parse_ttylog(tty_path)
-    frames_json = json.dumps([[ts, txt] for ts, txt in frames])
-    return generate_playback_html(session_id, frames_json)
+    return generate_playback_html(session_id, frames)

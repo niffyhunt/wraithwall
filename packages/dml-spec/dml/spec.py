@@ -18,9 +18,12 @@ from datetime import datetime, timezone
 from typing import Optional
 
 # Current DML spec version. Documents must declare this version to validate.
-DML_VERSION: str = "0.2.0"
+DML_VERSION: str = "0.3.0"
 
-# The nine trigger types — the kind of attacker activity that fires a trap.
+# Supported spec versions (older documents remain valid where noted).
+SUPPORTED_VERSIONS: set[str] = {"0.2.0", "0.3.0"}
+
+# Trigger types — attacker activity that fires a trap.
 TRIGGER_TYPES: set[str] = {
     "http_request",
     "dns_resolution",
@@ -31,9 +34,13 @@ TRIGGER_TYPES: set[str] = {
     "timing_probe",
     "canary_email",
     "jwt_use",
+    # v0.3.0 — mesh / deception telemetry sources
+    "cowrie_session",
+    "canary_beacon",
+    "equivalence_match",
 }
 
-# The eight response types — how a trap reacts once triggered.
+# Response types — how a trap reacts once triggered.
 RESPONSE_TYPES: set[str] = {
     "fake_data",
     "redirect_sandbox",
@@ -43,7 +50,29 @@ RESPONSE_TYPES: set[str] = {
     "log_only",
     "alert_only",
     "honeypot_auth",
+    # v0.3.0 — WraithMesh / TIE integration
+    "mesh_uplink",
+    "corroborate_alert",
 }
+
+# WraithMesh sensor classes (v0.3.0 sensors section).
+SENSOR_CLASSES: set[str] = {"cowrie", "canary", "gateway", "fingerprint"}
+
+# Default privacy-safe observation fields allowed to leave a sensor node.
+DEFAULT_EGRESS_ALLOWLIST: list[str] = [
+    "schema_version",
+    "observation_id",
+    "equivalence_key",
+    "technique_set",
+    "sensor_class",
+    "confidence",
+    "seen_count_bucket",
+    "first_seen",
+    "last_seen",
+    "node_id",
+    "epoch",
+    "signature",
+]
 
 # Allowed trap severity levels.
 SEVERITY_LEVELS: set[str] = {"critical", "high", "medium", "low", "info"}
@@ -110,6 +139,50 @@ class DMLResponse:
 
 
 @dataclass
+class DMLSensorThresholds:
+    """Local rollup thresholds before a sensor uplinks an observation."""
+
+    uplink_cooldown_seconds: int = 86400
+    min_local_count: int = 1
+    novel_only: bool = False
+
+
+@dataclass
+class DMLSensor:
+    """A WraithMesh sensor node declaration (v0.3.0).
+
+    Describes how a node collects deception telemetry, what it may egress,
+    and where it uplinks. The ``node_id`` is derived at export time from the
+    signing key unless explicitly set after provisioning.
+    """
+
+    id: str
+    name: str
+    sensor_class: str = "cowrie"
+    enabled: bool = True
+    aggregator_url: str = ""
+    signing_key_env: str = "WRAITHMESH_KEY"
+    state_dir: str = ".wraithmesh"
+    cowrie_log_path: str = ""
+    beacon_inbox_path: str = ""
+    thresholds: DMLSensorThresholds = field(default_factory=DMLSensorThresholds)
+    egress_allowlist: list = field(default_factory=lambda: list(DEFAULT_EGRESS_ALLOWLIST))
+    node_id: str = ""
+    signature: Optional[str] = None
+
+
+@dataclass
+class DMLMeshPolicy:
+    """Document-level mesh / TIE policy (v0.3.0)."""
+
+    tie_min_corroboration: int = 2
+    canary_weight: float = 2.0
+    cowrie_weight: float = 1.0
+    forbid_raw_commands: bool = True
+    forbid_src_ip: bool = True
+
+
+@dataclass
 class DMLTrigger:
     """What attacker activity fires a trap.
 
@@ -129,6 +202,9 @@ class DMLTrigger:
     record_id: Optional[int] = None
     timing_target_ms: Optional[int] = None
     match_regex: Optional[str] = None
+    equivalence_key: Optional[str] = None
+    package_name: Optional[str] = None
+    package_version: Optional[str] = None
 
 
 @dataclass
@@ -180,4 +256,6 @@ class DMLDocument:
     author: str = ""
     created_at: str = field(default_factory=_utc_now_iso)
     traps: list = field(default_factory=list)
+    sensors: list = field(default_factory=list)
+    mesh_policy: Optional[DMLMeshPolicy] = None
     document_signature: Optional[str] = None

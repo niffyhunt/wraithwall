@@ -27,7 +27,7 @@ DIURNAL_START_UTC: int = int(os.environ.get("CHRONOS_DIURNAL_START", "6"))
 DIURNAL_END_UTC: int = int(os.environ.get("CHRONOS_DIURNAL_END", "18"))
 
 def _get_redis():
-    from behavioral_dna import REDIS_URL
+    from wraithwall.behavioral_dna import REDIS_URL
     if not REDIS_URL:
         return None
     try:
@@ -408,7 +408,7 @@ class ChronosAnalyzer:
         Actors below CHRONOS_MIN_SESSIONS or non-active receive
         classification 'insufficient_data'.
         """
-        from behavioral_dna import get_dna_engine
+        from wraithwall.behavioral_dna import get_dna_engine
 
         actor = get_dna_engine().get_actor(actor_uuid)
         if actor is None:
@@ -453,14 +453,14 @@ class ChronosAnalyzer:
         if actor_uuids is not None:
             return [self.analyze_actor(uid) for uid in actor_uuids]
 
-        from behavioral_dna import get_dna_engine
+        from wraithwall.behavioral_dna import get_dna_engine
 
         engine = get_dna_engine()
         if not engine.ActorModel:
             logger.warning("Chronos: DNA engine not initialized")
             return []
 
-        from behavioral_dna import _get_db_session
+        from wraithwall.behavioral_dna import _get_db_session
         db_sess = _get_db_session()
         if not db_sess:
             return []

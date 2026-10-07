@@ -16,16 +16,25 @@ from flask import Flask
 from flask_cors import CORS
 from flask_limiter import Limiter
 
-from wraithwall import shared
+from wraithwall import sandbox_mode, shared
 from wraithwall.client import Client, WraithWallClient
 from wraithwall.database import db
 
-__all__ = ["create_app", "Client", "WraithWallClient", "__version__"]
-__version__ = "0.1.0"
+__all__ = ["create_app", "get_app", "Client", "WraithWallClient", "__version__"]
+__version__ = "0.2.0"
 
 logger = logging.getLogger("wraithwall")
 
 _PKG_DIR = Path(__file__).resolve().parent
+
+#: The most recently built app — background threads outside a request context
+#: use this to push an application context (see ``wraithwall.shared.get_app``).
+_LAST_APP: Flask | None = None
+
+
+def get_app() -> Flask | None:
+    """Return the app most recently built by :func:`create_app`, or ``None``."""
+    return _LAST_APP
 
 
 def create_app(config_overrides: dict | None = None) -> Flask:
@@ -54,8 +63,13 @@ def create_app(config_overrides: dict | None = None) -> Flask:
             os.getenv("DATABASE_URL", "sqlite:///wraithwall.db"),
         )
 
+    global _LAST_APP
+    _LAST_APP = app
+
     db.init_app(app)
     shared.init_app(app)
+    sandbox_mode.announce()
+    app.extensions["wraithwall"]["sandbox_mode"] = sandbox_mode.SANDBOX_MODE
 
     _setup_redis(app)
     cors_origins = os.getenv("CORS_ORIGINS", "")
@@ -65,6 +79,7 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     limiter = Limiter(
         app=app,
         key_func=getattr(shared, "get_real_ip", lambda: "127.0.0.1"),
+        storage_uri=_limiter_storage(),
         default_limits=["1000 per day", "200 per hour"],
     )
 
@@ -85,6 +100,7 @@ def create_app(config_overrides: dict | None = None) -> Flask:
         _register_bp("asn_intelligence", app, limiter)
         _register_bp("bgp_monitor", app, limiter)
         _register_bp("cowrie_intelligence", app, limiter)
+        _register_bp("cowrie_ship", app, limiter)
 
         _register_bp("canary_service", app, limiter)
         _register_bp("fingerprint_corpus", app, limiter)
@@ -116,6 +132,27 @@ def _register_bp(module_name: str, app: Flask, limiter: Limiter) -> None:
         return
     app.register_blueprint(bp)
     logger.info("Registered blueprint: %s", module_name)
+
+
+def _limiter_storage() -> str:
+    """Rate-limiter storage backend.
+
+    Sandbox mode is self-contained: the limiter must never depend on a
+    host-provided Redis, because when that Redis rejects auth or is
+    unreachable every limited route 500s. Data-plane Redis (the Cowrie log
+    list, deception events) still attaches in sandbox mode — the local
+    sandbox ships synthetic telemetry through it.
+    """
+    if sandbox_mode.SANDBOX_MODE:
+        logger.info("Rate limiter using in-memory storage "
+                    "(sandbox mode: self-contained)")
+        return "memory://"
+    if os.getenv("REDIS_URL"):
+        logger.info("Rate limiter using Redis storage")
+        return os.environ["REDIS_URL"]
+    logger.warning("Rate limiter using in-memory storage "
+                   "(not recommended for production)")
+    return "memory://"
 
 
 def _setup_redis(app: Flask) -> None:

@@ -20,10 +20,14 @@ import sys
 
 from .io import dump, dumps, load
 from .signing import DEFAULT_KEY_ENV, DMLSigner
+from .mesh import export_mesh_manifest
 from .spec import (
+    DEFAULT_EGRESS_ALLOWLIST,
     DML_VERSION,
     MITRE_TACTICS,
     RESPONSE_TYPES,
+    SENSOR_CLASSES,
+    SUPPORTED_VERSIONS,
     SEVERITY_LEVELS,
     TRIGGER_TYPES,
 )
@@ -34,7 +38,9 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     doc = load(args.document)
     errors = DMLValidator().validate_document(doc)
     if not errors:
-        print(f"OK: valid DML document ({len(doc.get('traps', []))} traps)")
+        traps = len(doc.get("traps", []))
+        sensors = len(doc.get("sensors", []))
+        print(f"OK: valid DML document ({traps} traps, {sensors} sensors)")
         return 0
     print(f"INVALID: {len(errors)} error(s):", file=sys.stderr)
     for e in errors:
@@ -68,13 +74,42 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     return 1
 
 
+def _cmd_export_mesh(args: argparse.Namespace) -> int:
+    import os
+
+    doc = load(args.document)
+    signer = DMLSigner.from_env(args.key_env)
+    ok, errors = signer.verify_document(doc)
+    if not ok:
+        print("FAILED: document must be signed before export:", file=sys.stderr)
+        for e in errors:
+            print(f"   - {e}", file=sys.stderr)
+        return 1
+    sensor = next((s for s in doc.get("sensors", []) if s.get("id") == args.sensor_id), None)
+    mesh_key_env = (sensor or {}).get("signing_key_env", "WRAITHMESH_KEY")
+    key = os.environ.get(mesh_key_env, "")
+    if not key:
+        print(f"Error: set {mesh_key_env} for mesh manifest export", file=sys.stderr)
+        return 1
+    manifest = export_mesh_manifest(doc, args.sensor_id, key=key)
+    if args.output:
+        dump(manifest, args.output)
+        print(f"OK: mesh manifest written to {args.output}")
+    else:
+        sys.stdout.write(json.dumps(manifest, indent=2) + "\n")
+    return 0
+
+
 def _cmd_schema(_args: argparse.Namespace) -> int:
     print(
         json.dumps(
             {
                 "dml_version": DML_VERSION,
+                "supported_versions": sorted(SUPPORTED_VERSIONS),
                 "trigger_types": sorted(TRIGGER_TYPES),
                 "response_types": sorted(RESPONSE_TYPES),
+                "sensor_classes": sorted(SENSOR_CLASSES),
+                "default_egress_allowlist": DEFAULT_EGRESS_ALLOWLIST,
                 "severity_levels": sorted(SEVERITY_LEVELS),
                 "mitre_tactics": sorted(MITRE_TACTICS),
             },
@@ -119,6 +154,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_schema = sub.add_parser("schema", help="print the DML spec enums as JSON")
     p_schema.set_defaults(func=_cmd_schema)
+
+    p_mesh = sub.add_parser("export-mesh", help="export WraithMesh manifest from a signed DML sensor")
+    p_mesh.add_argument("document", help="signed DML document path")
+    p_mesh.add_argument("sensor_id", help="sensor id to export (e.g. cowrie-east-1)")
+    p_mesh.add_argument("--key-env", default=DEFAULT_KEY_ENV, help="env var for node_id derivation")
+    p_mesh.add_argument("-o", "--output", help="write mesh.json here")
+    p_mesh.set_defaults(func=_cmd_export_mesh)
 
     return parser
 

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wraithwall.online/schema/wraithmesh/manifest-0.1.json",
+  "title": "WraithMesh Sensor Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mesh_version",
+    "node_id",
+    "sensor_class",
+    "signing_key_env",
+    "thresholds",
+    "egress_allowlist",
+    "manifest_signature"
+  ],
+  "properties": {
+    "mesh_version": { "type": "string", "const": "0.1" },
+    "node_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "sensor_class": {
+      "type": "string",
+      "enum": ["cowrie", "gateway", "canary", "fingerprint"]
+    },
+    "aggregator_url": { "type": "string", "format": "uri" },
+    "signing_key_env": { "type": "string", "minLength": 1 },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uplink_cooldown_seconds", "min_local_count"],
+      "properties": {
+        "uplink_cooldown_seconds": { "type": "integer", "minimum": 60 },
+        "min_local_count": { "type": "integer", "minimum": 1 },
+        "novel_only": { "type": "boolean" }
+      }
+    },
+    "egress_allowlist": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "cowrie_log_path": { "type": "string", "minLength": 1 },
+    "state_dir": { "type": "string", "minLength": 1 },
+    "manifest_signature": { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+  }
+}

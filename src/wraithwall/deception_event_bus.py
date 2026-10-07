@@ -38,10 +38,10 @@ HONEYFS_BAIT_MAP = {
     '/root/.ssh/id_rsa': ('C-05', 'credential', 2),
     '/root/.aws/credentials': ('C-03', 'credential', 2),
     '/root/.docker/config.json': ('C-07', 'credential', 2),
-    '/home/deploy/.git-credentials': ('C-04', 'credential', 2),
-    '/home/deploy/.my.cnf': ('C-08', 'credential', 2),
-    '/var/www/ezmcyber/.env': ('C-09', 'credential', 2),
-    '/var/www/ezmcyber/.git/config': ('C-10', 'credential', 2),
+    '/home/nimbusops/.git-credentials': ('C-04', 'credential', 2),
+    '/home/nimbusops/.my.cnf': ('C-08', 'credential', 2),
+    '/var/www/nimbusops/.env': ('C-09', 'credential', 2),
+    '/var/www/nimbusops/.git/config': ('C-10', 'credential', 2),
     '/root/.bash_history': ('C-01', 'credential', 2),
     '/var/backups/db_dump_20260708.sql': ('S-07', 'credential', 2),
     '/var/backups/db_dump_20260708.sql.gz': ('S-07', 'credential', 2),
@@ -164,7 +164,7 @@ def publish_deception_event(
         pass
 
     try:
-        from campaign_correlator import get_correlator
+        from wraithwall.campaign_correlator import get_correlator
         get_correlator().ingest_deception_event(ev.to_dict())
     except Exception as e:
         logger.debug(f"deception→campaign ingest skipped: {e}")

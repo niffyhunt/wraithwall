@@ -1,0 +1,29 @@
+{
+  "mesh_version": "0.1",
+  "node_id": "REPLACE_AFTER_init-manifest",
+  "sensor_class": "cowrie",
+  "aggregator_url": "http://127.0.0.1:8787",
+  "signing_key_env": "WRAITHMESH_KEY",
+  "thresholds": {
+    "uplink_cooldown_seconds": 86400,
+    "min_local_count": 1,
+    "novel_only": false
+  },
+  "egress_allowlist": [
+    "schema_version",
+    "observation_id",
+    "equivalence_key",
+    "technique_set",
+    "sensor_class",
+    "confidence",
+    "seen_count_bucket",
+    "first_seen",
+    "last_seen",
+    "node_id",
+    "epoch",
+    "signature"
+  ],
+  "cowrie_log_path": "/var/log/cowrie/cowrie.json",
+  "state_dir": ".wraithmesh",
+  "manifest_signature": "REPLACE_AFTER_init-manifest"
+}

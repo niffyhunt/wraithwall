@@ -11,6 +11,7 @@ build/
 .eggs/
 .mypy_cache/
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
@@ -22,6 +23,7 @@ env/
 # Environment / secrets
 .env
 .env.*
+!.env.example
 secrets.py
 
 # Database
@@ -40,3 +42,6 @@ Thumbs.db
 # Node
 node_modules/
 session-export/
+
+# WraithWall local workspace
+.raven/

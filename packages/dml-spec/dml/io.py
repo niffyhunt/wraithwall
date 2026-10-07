@@ -24,7 +24,7 @@ from typing import Any, Iterable, Union
 
 import yaml
 
-from .spec import DML_VERSION, DMLDocument, DMLTrap
+from .spec import DML_VERSION, DMLDocument, DMLSensor, DMLTrap
 
 PathLike = Union[str, Path]
 
@@ -117,6 +117,8 @@ def dump(doc: Union[dict, DMLDocument], path: PathLike) -> None:
 def build_document(
     traps: Iterable[Union[dict, DMLTrap]],
     *,
+    sensors: Iterable[Union[dict, DMLSensor]] | None = None,
+    mesh_policy: dict | None = None,
     platform: str = "",
     namespace: str = "",
     description: str = "",
@@ -142,7 +144,8 @@ def build_document(
         signing and serialization.
     """
     trap_dicts = [to_dict(t) for t in traps]
-    return {
+    sensor_dicts = [to_dict(s) for s in (sensors or [])]
+    doc = {
         "dml_version": DML_VERSION,
         "platform": platform,
         "namespace": namespace,
@@ -151,3 +154,8 @@ def build_document(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "traps": trap_dicts,
     }
+    if sensor_dicts:
+        doc["sensors"] = sensor_dicts
+    if mesh_policy:
+        doc["mesh_policy"] = mesh_policy
+    return doc

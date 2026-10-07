@@ -30,7 +30,42 @@ make a deception config trustworthy:
 
 ## Trigger types
 
-The nine trigger types — the kind of attacker activity that fires a trap:
+## DML 0.3.0 — WraithMesh sensors
+
+v0.3.0 adds a **`sensors`** section for declaring WraithMesh nodes inside the
+same signed document as your traps, plus an optional **`mesh_policy`** for
+TIE corroboration rules.
+
+```yaml
+dml_version: "0.3.0"
+mesh_policy:
+  tie_min_corroboration: 2
+  forbid_raw_commands: true
+  forbid_src_ip: true
+sensors:
+  - id: cowrie-east-1
+    name: Cowrie observer
+    sensor_class: cowrie
+    cowrie_log_path: /var/log/cowrie/cowrie.json
+    aggregator_url: http://127.0.0.1:8787
+```
+
+Export a WraithMesh `mesh.json` from a signed document:
+
+```bash
+DML_KEY=... WRAITHMESH_KEY=... dml sign examples/example_mesh.yaml -o signed_mesh.yaml
+DML_KEY=... WRAITHMESH_KEY=... dml export-mesh signed_mesh.yaml cowrie-east-1 -o mesh.json
+```
+
+New trigger types: `cowrie_session`, `canary_beacon`, `equivalence_match`.  
+New response types: `mesh_uplink`, `corroborate_alert`.  
+Sensor classes: `cowrie`, `canary`, `gateway`, `fingerprint`.
+
+Documents declaring `dml_version: "0.2.0"` remain valid (traps-only).
+
+## Trigger types
+
+The trigger types — the kind of attacker activity that fires a trap:
 
 | Trigger type     | Fires when…                                              | Key fields                       |
 | ---------------- | -------------------------------------------------------- | -------------------------------- |
@@ -43,6 +78,9 @@ The nine trigger types — the kind of attacker activity that fires a trap:
 | `timing_probe`   | response-timing probing is detected                      | `timing_target_ms` (required)    |
 | `canary_email`   | mail arrives at a canary address                         | `email` (required)               |
 | `jwt_use`        | a planted/forged JWT is presented                        | `match_regex`                    |
+| `cowrie_session` | a Cowrie session matches a known equivalence key         | `equivalence_key` (required)     |
+| `canary_beacon`  | a supply-chain canary token fires                        | `package_name` (required)        |
+| `equivalence_match` | any sensor sees a campaign equivalence key            | `equivalence_key` (required)     |
 
 ## Response types
 
@@ -58,6 +96,8 @@ The eight response types — how a trap reacts once triggered:
 | `log_only`         | record the event, no visible reaction                       | —                                |
 | `alert_only`       | fire an alert, no visible reaction                          | —                                |
 | `honeypot_auth`    | accept the credential into a honeypot auth flow             | `http_status`                    |
+| `mesh_uplink`      | emit a signed observation to the TIE aggregator               | `aggregator_url` (required)      |
+| `corroborate_alert`| request corroboration / high-priority TIE alert             | `aggregator_url`                 |
 
 Severity levels: `critical`, `high`, `medium`, `low`, `info`.
 MITRE tactics: the standard ATT&CK enterprise tactic set (e.g.
@@ -170,10 +210,33 @@ contains no default, fallback, or hardcoded key; a missing key raises rather
 than signing with a guessable value. Keep the key secret: anyone who has it
 can forge valid signatures.
 
+## Limitations
+
+- **HMAC-SHA256, not asymmetric.** Signatures use HMAC-SHA256 (symmetric key),
+  not public-key cryptography. Anyone who holds the signing key can forge
+  signatures. Key distribution and rotation are outside DML's scope — treat the
+  key as a shared secret scoped to a deployment environment.
+- **No encryption.** DML signs documents but does not encrypt them. Trap
+  definitions are visible to anyone who can read the file. If your trap
+  definitions themselves are sensitive (e.g., they reveal internal network
+  paths), sign and then encrypt at the transport or storage layer.
+- **Canonicalization is JSON-only.** The deterministic serialisation used for
+  signing is compact JSON with sorted keys. Documents stored in YAML are
+  converted to JSON before signing, so the on-disk format and the signed
+  representation differ. This is transparent to the library but matters if you
+  verify signatures outside Python.
+- **No automatic key rotation.** DML has no built-in key lifecycle. Rotating
+  the key requires re-signing every document — plan your key rotation process
+  separately.
+- **The spec is not a runtime.** DML describes and signs traps; it does not
+  deploy, manage, or enforce them. Integration with sensors, aggregators, and
+  response systems is the responsibility of the platform consuming the DML
+  document (e.g., WraithWall).
+
 ## License
 
-MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Niffy_hunt.
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Niffyhunt.
 
 ---
 
-Part of the WraithWall project — https://wraithwall.online · by Niffy_hunt.
+Part of the WraithWall project — https://wraithwall.online · by Niffyhunt.

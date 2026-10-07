@@ -46,3 +46,19 @@ def routes():
 
     for rule in create_app({"TESTING": True}).url_map.iter_rules():
         typer.echo(f"{rule.methods or ''} {rule.rule}")
+
+
+@app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+def sandbox(ctx: typer.Context):
+    """Launch the local secure sandbox (sandbox_kit).
+
+    Delegates every argument through verbatim, so this is the same entry
+    point as ``./sandbox.sh`` and ``python -m sandbox_kit``::
+
+        wraithwall sandbox up --profile local-sandbox
+        wraithwall sandbox status --security
+        wraithwall sandbox destroy --yes
+    """
+    from sandbox_kit.cli import main as sandbox_main
+
+    raise typer.Exit(code=sandbox_main(list(ctx.args)))

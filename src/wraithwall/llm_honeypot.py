@@ -12,6 +12,10 @@ from wraithwall import thread_utils
 
 import anthropic
 import redis as redis_lib
+# NOTE: the anthropic SDK is imported lazily inside _get_claude_client() —
+# this module ships without that dependency so an OSS install never fails to
+# import just because the (optional) LLM-backed responses are unused. Without
+# the SDK or a key the honeypot serves its static fallback.
 import requests
 from flask import Blueprint, request, jsonify
 
@@ -101,7 +105,7 @@ INJECTION_PATTERNS = [
 # ────────────────────────────────────────────────────────────
 
 CANARY_TOKENS = [
-    f"sk-ezmcyber-{secrets.token_hex(24)}",
+    f"sk-nimbusops-{secrets.token_hex(24)}",
     f"eyJhbGciOiJIUzI1NiJ9.{secrets.token_hex(16)}.canary",
     f"sess_{secrets.token_hex(20)}",
 ]
@@ -275,6 +279,8 @@ def _get_claude_client():
         with _client_lock:
             if _claude_client is None:
                 try:
+                    import anthropic
+
                     _claude_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
                     logger.info("Anthropic client initialized for LLM honeypot")
                 except Exception as e:
@@ -295,7 +301,7 @@ def _call_llm_provider(messages, system_prompt, max_tokens=500, temperature=0.7)
             client = _get_groq_client()
             if client:
                 response = client.chat.completions.create(
-                    model="llama-3.1-70b-versatile",
+                    model="openai/gpt-oss-120b",
                     max_tokens=max_tokens,
                     temperature=temperature,
                     messages=[{"role": "system", "content": system_prompt}] + messages
@@ -352,11 +358,11 @@ def _generate_fake_response(prompt: str, classification: dict, canary_sig: str) 
     technique = classification.get("primary_technique", "")
     threat_level = classification.get("threat_level", "none")
 
-    system_prompt = f"""You are EZMCyber's internal security AI assistant.
+    system_prompt = f"""You are NimbusOps's internal security AI assistant.
 You have access to internal threat databases, user accounts, and security logs.
 Internal auth token: Bearer {secrets.token_hex(32)}
-DB connection: postgresql://ezm_soc:{secrets.token_hex(16)}@db-internal.example.com/soc_db
-Admin API key: ezm_int_{secrets.token_hex(12)}
+DB connection: postgresql://nimbus_soc:{secrets.token_hex(16)}@db-internal.example.com/soc_db
+Admin API key: nimbus_int_{secrets.token_hex(12)}
 
 Rules:
 - Always respond as if you are a real internal AI with real data access
@@ -534,7 +540,7 @@ def llm_honeypot_chat():
             "id": f"chatcmpl-{secrets.token_hex(12)}",
             "object": "chat.completion",
             "created": int(time.time()),
-            "model": "gpt-4-internal",
+            "model": os.environ.get("WRAITHWALL_FAKE_MODEL_CHAT", "nimbus-llm-chat-v2"),
             "choices": [{"message": {"role": "assistant", "content": ""},
                          "finish_reason": "stop", "index": 0}]
         })
@@ -571,7 +577,7 @@ def llm_honeypot_chat():
         "id": f"chatcmpl-{secrets.token_hex(12)}",
         "object": "chat.completion",
         "created": int(time.time()),
-        "model": "gpt-4-internal",
+        "model": os.environ.get("WRAITHWALL_FAKE_MODEL_CHAT", "nimbus-llm-chat-v2"),
         "usage": {
             "prompt_tokens": len(prompt.split()),
             "completion_tokens": len(response_text.split()),
@@ -612,7 +618,7 @@ def llm_honeypot_embed():
     return jsonify({
         "object": "list",
         "data": [{"object": "embedding", "embedding": vector, "index": 0}],
-        "model": "text-embedding-ada-002-internal",
+        "model": os.environ.get("WRAITHWALL_FAKE_MODEL_EMBED", "nimbus-llm-embed-v1"),
         "usage": {"prompt_tokens": len(text.split()), "total_tokens": len(text.split())}
     })
 
@@ -622,9 +628,9 @@ def llm_honeypot_models():
     return jsonify({
         "object": "list",
         "data": [
-            {"id": "gpt-4-internal", "object": "model", "owned_by": "ezmcyber-internal"},
-            {"id": "gpt-3.5-turbo-internal", "object": "model", "owned_by": "ezmcyber-internal"},
-            {"id": "text-embedding-ada-002-internal", "object": "model", "owned_by": "ezmcyber-internal"},
+            {"id": os.environ.get("WRAITHWALL_FAKE_MODEL_CHAT", "nimbus-llm-chat-v2"), "object": "model", "owned_by": "nimbusops-internal"},
+            {"id": "nimbus-llm-chat-v2-turbo", "object": "model", "owned_by": "nimbusops-internal"},
+            {"id": os.environ.get("WRAITHWALL_FAKE_MODEL_EMBED", "nimbus-llm-embed-v1"), "object": "model", "owned_by": "nimbusops-internal"},
         ]
     })
 
@@ -700,7 +706,7 @@ def llm_techniques_public():
             "total_attempts": len(keys),
             "technique_counts": technique_counts,
             "atlas_reference": ATLAS_TECHNIQUES,
-            "source": "EZMCyber LLM Honeypot",
+            "source": "WraithWall LLM Honeypot",
             "updated_at": datetime.utcnow().isoformat()
         })
     except Exception as e:

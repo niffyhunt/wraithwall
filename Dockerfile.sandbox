@@ -1,0 +1,94 @@
+# syntax=docker/dockerfile:1
+#
+# WraithWall Local Secure Sandbox — hardened application image (Phase 3).
+#
+# Runs the published OSS package (`src/wraithwall`), not the private monolith.
+# This file exists only for the local sandbox compose project.
+#
+# Hardening deltas vs. the root Dockerfile (Stage 2 CONTAINER_HARDENING_REQUIREMENTS.md):
+#   H3  — non-root runtime identity (uid/gid 1000). The root image has no USER
+#         directive and runs as root.
+#   H4  — read-only-rootfs aware: nothing is written outside the /tmp tmpfs and
+#         the /state volume at runtime.
+#   H11 — HEALTHCHECK against the in-container /api/health endpoint.
+#   H12 — no `.env` copied and no host-env inheritance: only explicit paths are
+#         copied and compose supplies an explicit environment allowlist.
+#   H9  — runtime egress is denied by the compose networks (both internal).
+#
+# Deliberate difference: exactly one gunicorn worker. The sandbox is a
+# single-developer environment, and Phase 1 already suppresses the scheduler
+# subset, keep-alive pings, the host-PTY route and the alert transports when
+# WRAITHWALL_SANDBOX=1. One worker means one engine owner — no leader-election
+# race, no duplicate engine threads.
+#
+# Base image is digest-pinned (H10). Digests and provenance are recorded in
+# `sandbox_kit/images.py` and `docs/sandbox/security-model.md`.
+
+FROM python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    WRAITHWALL_SANDBOX=1 \
+    PYTHONPATH=/app/src
+
+# Why PYTHONPATH=/app/src: `src/wraithwall/__init__.py` imports itself by its
+# installed name (`from wraithwall import shared`, `from wraithwall.client …`).
+# The sandbox installs nothing editable, so `src/` is put on the path instead —
+# the repo's copy of the package is the code the image serves (verified: with
+# `src` on the path, `import wraithwall` loads
+# /app/src/wraithwall/__init__.py and resolves `shared`/`client`/`database`).
+
+WORKDIR /app
+
+# curl is required by HEALTHCHECK. No other tooling is installed (smaller
+# surface); the sandbox runs no scanners or shells of its own.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Dependencies first, so edits to application code do not invalidate the
+# (expensive) dependency layer.
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Application code.
+#
+# `COPY . .` copies the prepared build context, which is itself an explicit
+# allowlist (`sandbox_kit/images.py :: BUILD_CONTEXT_ALLOWLIST`) — the context
+# contains only those paths, so this line cannot pick up `.env`, git history,
+# the developer's venv, or any file that was never listed (H12). The allowlist
+# is `requirements.txt`, `src/`, `sandbox_kit/` and `detonate_sandbox/`.
+COPY . .
+
+# Non-root runtime identity (H3). Mutable state lives on the named volume
+# mounted at /state by compose.sandbox.yml.
+#
+# /var/log/wraithwall is the mount point for the gateway's immutable audit
+# log. `wraithwall.gateway` writes it via the GATEWAY_AUDIT_LOG environment
+# variable (compose sets it; without it the logger falls back to stdout). On a
+# read-only root filesystem that directory must exist; compose mounts a tmpfs
+# there so the sandbox's audit log is ephemeral and never lands on the host,
+# which is what H4/G3 require.
+RUN useradd --uid 1000 --create-home --shell /usr/sbin/nologin sandbox \
+    && mkdir -p /state /var/log/wraithwall \
+    && chown -R 1000:1000 /app /state /var/log/wraithwall
+
+USER 1000:1000
+
+# NOTE: EXPOSE is documentation only. compose.sandbox.yml publishes NOTHING —
+# see the comment in that file for why (internal networks cannot publish ports).
+EXPOSE 8000
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=40s --retries=5 \
+    CMD curl -fsS http://127.0.0.1:8000/api/health || exit 1
+
+# --worker-tmp-dir keeps gunicorn's worker heartbeat on the tmpfs so the
+# read-only root filesystem is honored (H4).
+CMD ["gunicorn", "wraithwall:create_app()", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "1", \
+     "--timeout", "120", \
+     "--worker-tmp-dir", "/tmp", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]

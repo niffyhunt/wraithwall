@@ -11,7 +11,7 @@ import redis
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 GATEWAY_SECRET   = os.getenv('GATEWAY_SECRET', secrets.token_hex(32))
-COOKIE_NAME      = 'ezm_gw'
+COOKIE_NAME      = 'ww_gw'
 COOKIE_TTL       = 60 * 30          # 30 minutes
 CHALLENGE_TTL    = 60 * 5           # 5 minutes
 BLOCK_TTL        = 60 * 60 * 24     # 24 hours

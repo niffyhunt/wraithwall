@@ -12,9 +12,12 @@ from __future__ import annotations
 import re
 
 from .spec import (
+    DEFAULT_EGRESS_ALLOWLIST,
     DML_VERSION,
     MITRE_TACTICS,
     RESPONSE_TYPES,
+    SENSOR_CLASSES,
+    SUPPORTED_VERSIONS,
     SEVERITY_LEVELS,
     TRIGGER_TYPES,
 )
@@ -55,14 +58,21 @@ class DMLValidator:
             A list of error strings; empty if the document is valid.
         """
         errors: list[str] = []
-        if doc.get("dml_version") != DML_VERSION:
+        version = doc.get("dml_version")
+        if version not in SUPPORTED_VERSIONS:
             errors.append(
-                f"dml_version must be '{DML_VERSION}', got '{doc.get('dml_version')}'"
+                f"dml_version must be one of {sorted(SUPPORTED_VERSIONS)}, got '{version}'"
             )
-        if not doc.get("traps"):
-            errors.append("Document must contain at least one trap")
+        traps = doc.get("traps") or []
+        sensors = doc.get("sensors") or []
+        if not traps and not sensors:
+            errors.append("Document must contain at least one trap or sensor")
+        if sensors and version == "0.2.0":
+            errors.append("sensors require dml_version 0.3.0 or later")
+        if doc.get("mesh_policy") and version == "0.2.0":
+            errors.append("mesh_policy requires dml_version 0.3.0 or later")
         ids_seen: set[str] = set()
-        for i, trap in enumerate(doc.get("traps", [])):
+        for i, trap in enumerate(traps):
             trap_errors = self.validate_trap(trap)
             for e in trap_errors:
                 errors.append(f"traps[{i}].{e}")
@@ -72,6 +82,58 @@ class DMLValidator:
             if fqid in ids_seen:
                 errors.append(f"traps[{i}]: duplicate fully-qualified ID '{fqid}'")
             ids_seen.add(fqid)
+        sensor_ids: set[str] = set()
+        for i, sensor in enumerate(sensors):
+            sensor_errors = self.validate_sensor(sensor)
+            for e in sensor_errors:
+                errors.append(f"sensors[{i}].{e}")
+            sid = sensor.get("id", "")
+            if sid in sensor_ids:
+                errors.append(f"sensors[{i}]: duplicate sensor id '{sid}'")
+            sensor_ids.add(sid)
+        if doc.get("mesh_policy"):
+            errors.extend(self.validate_mesh_policy(doc["mesh_policy"]))
+        return errors
+
+    def validate_mesh_policy(self, policy: dict) -> list[str]:
+        errors: list[str] = []
+        min_corr = policy.get("tie_min_corroboration", 2)
+        if not isinstance(min_corr, int) or min_corr < 1:
+            errors.append("mesh_policy.tie_min_corroboration must be a positive integer")
+        for field in ("canary_weight", "cowrie_weight"):
+            val = policy.get(field)
+            if val is not None and (not isinstance(val, (int, float)) or val <= 0):
+                errors.append(f"mesh_policy.{field} must be a positive number")
+        return errors
+
+    def validate_sensor(self, sensor: dict) -> list[str]:
+        errors: list[str] = []
+        if not sensor.get("id"):
+            errors.append("id is required")
+        elif not _TRAP_ID_RE.match(sensor["id"]):
+            errors.append("id must be lowercase alphanumeric with hyphens (3-50 chars)")
+        if not sensor.get("name"):
+            errors.append("name is required")
+        sensor_class = sensor.get("sensor_class")
+        if not sensor_class:
+            errors.append("sensor_class is required")
+        elif sensor_class not in SENSOR_CLASSES:
+            errors.append(f"sensor_class must be one of: {sorted(SENSOR_CLASSES)}")
+        if sensor_class == "cowrie" and not sensor.get("cowrie_log_path"):
+            errors.append("cowrie_log_path required for cowrie sensor_class")
+        if sensor_class == "canary" and not sensor.get("beacon_inbox_path"):
+            errors.append("beacon_inbox_path required for canary sensor_class")
+        egress = sensor.get("egress_allowlist")
+        if egress is not None:
+            forbidden = {"src_ip", "commands", "session_id", "password", "hostname"}
+            if forbidden & set(egress):
+                errors.append(f"egress_allowlist must not include: {sorted(forbidden & set(egress))}")
+        thresholds = sensor.get("thresholds") or {}
+        cooldown = thresholds.get("uplink_cooldown_seconds")
+        if cooldown is not None and (not isinstance(cooldown, int) or cooldown < 0):
+            errors.append("thresholds.uplink_cooldown_seconds must be a non-negative integer")
+        if egress is not None and not egress:
+            errors.append("egress_allowlist must not be empty when provided")
         return errors
 
     def validate_trap(self, trap: dict) -> list[str]:
@@ -116,6 +178,12 @@ class DMLValidator:
                 )
             if trigger_type == "canary_email" and not trigger.get("email"):
                 errors.append("trigger.email required for canary_email trigger")
+            if trigger_type == "cowrie_session" and not trigger.get("equivalence_key"):
+                errors.append("trigger.equivalence_key required for cowrie_session trigger")
+            if trigger_type == "canary_beacon" and not trigger.get("package_name"):
+                errors.append("trigger.package_name required for canary_beacon trigger")
+            if trigger_type == "equivalence_match" and not trigger.get("equivalence_key"):
+                errors.append("trigger.equivalence_key required for equivalence_match trigger")
 
         response = trap.get("response", {})
         resp_type = response.get("type")
@@ -123,6 +191,8 @@ class DMLValidator:
             errors.append(f"response.type must be one of: {RESPONSE_TYPES}")
         if resp_type == "delay_response" and not response.get("delay_ms"):
             errors.append("response.delay_ms required for delay_response type")
+        if resp_type == "mesh_uplink" and not response.get("aggregator_url"):
+            errors.append("response.aggregator_url required for mesh_uplink type")
 
         return errors
 

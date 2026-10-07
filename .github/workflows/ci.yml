@@ -1,0 +1,190 @@
+name: CI
+on: [push, pull_request]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: "package: unit + integration suite"
+    runs-on: ubuntu-latest
+    env:
+      TESTING: 1
+      FLASK_ENV: development
+      SECRET_KEY: test
+      DATABASE_URL: "sqlite:///:memory:"
+      REDIS_URL: ""
+      PYTHONPATH: ".:src"
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: pip
+    - name: Install deps
+      run: |
+        pip install -r requirements.txt
+        pip install -e .
+        pip install pytest pyyaml
+    - name: Test
+      run: python -m pytest -q --tb=short
+
+  package:
+    name: "package: build + metadata gate"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Build sdist + wheel
+      run: |
+        pip install build twine
+        python -m build
+    - name: Metadata check
+      run: twine check dist/*
+    - name: Upload distributions
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+        retention-days: 7
+
+  sandbox-platform-linux:
+    # Linux x86_64 — reference platform (full run).
+    name: "sandbox matrix: linux-x86_64 (reference)"
+    runs-on: ubuntu-latest
+    env:
+      TESTING: 1
+      FLASK_ENV: development
+      SECRET_KEY: test
+      DATABASE_URL: "sqlite:///:memory:"
+      PYTHONPATH: ".:src"
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install pytest
+      run: pip install pytest
+    - name: Platform report (human)
+      run: python -m sandbox_kit platform
+    - name: Unit suite (platform + kit)
+      run: python -m pytest -q tests/test_sandbox_platform.py tests/test_sandbox_kit.py
+
+    - name: Smoke (no-container profile lifecycle)
+      run: |
+        python -m sandbox_kit up --profile app-only
+        python -m sandbox_kit status
+        python -m sandbox_kit destroy
+
+    - name: "Doc-freshness (stale doc means red)"
+      run: python -m pytest -q tests/test_sandbox_docs.py
+
+    - name: "Onboarding dry-run (README to up to status)"
+      run: |
+        # Replays the README "Run the local secure sandbox" box verbatim:
+        # every command a fresh contributor meets must exist and succeed.
+        python -m sandbox_kit up --profile app-only
+        python -m sandbox_kit status --security
+        python -m sandbox_kit platform
+        python -m sandbox_kit profiles
+        python -m sandbox_kit status
+        python -m sandbox_kit verify
+        python -m sandbox_kit destroy
+        # research-sandbox without --allow-host refuses fail-closed (nothing
+        # inert can start), and a policy-denied host is refused at start time
+        # rather than at fetch time.
+        ! python -m sandbox_kit up --profile research-sandbox
+        ! python -m sandbox_kit up --profile research-sandbox --yes --allow-host 169.254.169.254
+        # detonate outside a RUNNING T2 sandbox refuses.
+        ! python -m sandbox_kit detonate --url https://example.com
+        # --allow-host on a profile that never fetches developer-supplied URLs
+        # must refuse — never a silent no-op.
+        ! python -m sandbox_kit up --profile app-only --allow-host example.com
+
+  sandbox-supply-chain:
+    # SBOM + vulnerability scan with the waiver-register gate.
+    # Fails on unwaived CRITICAL/HIGH in the pinned base/probe images.
+    name: "sandbox supply-chain: SBOM + scan (G10)"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install syft + grype
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+    - name: Pull pinned images
+      run: |
+        docker pull redis@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
+        docker pull busybox@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
+        docker pull python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
+    - name: SBOM + waiver-gated scan
+      run: |
+        python -m sandbox_kit sbom \
+          --out sbom/ci \
+          --image redis@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99 \
+          --image busybox@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616 \
+          --image python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
+    - name: Upload SBOM artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: sbom-cyclonedx
+        path: sbom/ci/
+        retention-days: 30
+
+  sandbox-platform-macos:
+    # macOS 13+ — app-only smoke; no Docker on GH macOS runners, so the
+    # platform reporter must honestly show runtime=none and everything
+    # daemon-side UNKNOWN. Best-effort by design.
+    name: "sandbox matrix: macOS (app-only smoke, best-effort)"
+    runs-on: macos-latest
+    continue-on-error: true
+    env:
+      TESTING: 1
+      FLASK_ENV: development
+      SECRET_KEY: test
+      DATABASE_URL: "sqlite:///:memory:"
+      PYTHONPATH: ".:src"
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install pytest
+      run: pip install pytest
+    - name: Platform report must degrade honestly (no runtime)
+      run: |
+        python -m sandbox_kit platform
+        python -m sandbox_kit platform --json | python -c \
+          "import json,sys; d=json.load(sys.stdin); assert d['runtime']=='', d; assert d['summary']['active']==[], d['summary']"
+    - name: App-only smoke
+      run: |
+        python -m pytest -q tests/test_sandbox_platform.py
+        python -m sandbox_kit up --profile app-only
+        python -m sandbox_kit destroy
+
+  sandbox-platform-arm64:
+    # Linux arm64 — best-effort QEMU label. Runs the sandbox_kit tests that do
+    # not import the Flask app.
+    name: "sandbox matrix: linux-arm64 (QEMU, best-effort)"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - uses: actions/checkout@v4
+    - uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm64
+    - name: Run arm64 unit smoke in container
+      run: |
+        docker run --rm --platform linux/arm64 -v "$PWD":/w -w /w \
+          arm64v8/python:3.12-slim bash -ec '
+          pip install -q pytest
+          python -m sandbox_kit platform
+          python -m pytest -q tests/test_sandbox_platform.py tests/test_sandbox_kit.py'
