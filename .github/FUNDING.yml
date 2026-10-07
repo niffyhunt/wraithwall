@@ -1,2 +1,4 @@
-# GitHub Sponsors funding platforms — enables the Sponsor button on the repo.
+# GitHub funding platforms — enables the Sponsor button on the repo.
+# Syntax per docs: one username/project per platform, one platform per line.
 github: niffyhunt
+open_collective: wraithwall
