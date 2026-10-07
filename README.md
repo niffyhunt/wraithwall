@@ -66,8 +66,8 @@ wraithwall serve
 
 | Package | Install | Purpose | Status |
 |---------|---------|---------|--------|
-| **wraithwall** | `pip install wraithwall` | Flask platform — gateway, intel, honeypots, deception, playbooks | PyPI 0.2.0 |
-| **ravenscan** | `pip install ravenscan` | Engineering intelligence CLI (`raven`) and library | PyPI 0.1.0 |
+| **wraithwall** | `pip install wraithwall` | Flask platform — gateway, intel, honeypots, deception, playbooks | PyPI 0.2.1 |
+| **ravenscan** | `pip install ravenscan` | Engineering intelligence CLI (`raven`) and library | PyPI 0.1.1 |
 | **canary-kit** | `pip install canary-kit` | Supply-chain canary token minting and detection | PyPI 0.1.0 |
 | **honeypot-mitre** | `pip install honeypot-mitre` | Cowrie logs → MITRE ATT&CK scoring | PyPI 0.1.0 |
 | **dml-spec** | `pip install dml-spec` | Signed deception markup language validator | PyPI 1.0.0 |

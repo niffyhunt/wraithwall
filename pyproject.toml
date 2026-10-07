@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wraithwall"
-version = "0.2.0"
+version = "0.2.1"
 description = "Production deception-and-threat-intelligence platform"
 readme = "README.md"
 license = { text = "MIT" }
@@ -53,6 +53,13 @@ all = ["wraithwall[dev]"]
 [project.scripts]
 wraithwall = "wraithwall.cli:app"
 wraithwall-sandbox = "sandbox_kit.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/niffyhunt/wraithwall"
+Repository = "https://github.com/niffyhunt/wraithwall"
+Documentation = "https://wraithwall.online/docs"
+"Bug Tracker" = "https://github.com/niffyhunt/wraithwall/issues"
+Changelog = "https://github.com/niffyhunt/wraithwall/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wraithwall", "sandbox_kit"]

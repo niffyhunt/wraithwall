@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ravenscan"
-version = "0.1.0"
+version = "0.1.1"
 description = "Open-source engineering intelligence agent — learns a software project over time, detects architectural and security change, and produces evidence-backed intelligence reports."
 readme = "README.md"
 license = { text = "MIT" }
