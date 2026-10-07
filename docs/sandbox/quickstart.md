@@ -26,6 +26,7 @@ limits). Windows: WSL2 only — native Windows is refused (E104).
 
 ```bash
 ./sandbox.sh up --profile app-only          # T0: gates + state, no containers
+./sandbox.sh destroy --yes                  # profiles don't switch in place — clean T0 first
 ./sandbox.sh up --profile local-sandbox     # T1: build, boot, self-check (one-time ack)
 ./sandbox.sh platform                       # this host's isolation-control report (G14)
 ./sandbox.sh status

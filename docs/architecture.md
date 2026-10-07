@@ -2,7 +2,7 @@
 
 WraithWall is a Flask monolith with deception and intelligence engines. This page indexes validated documentation — not a substitute for the Phase 8 corpus.
 
-**Last updated:** Phase 9 launch preparation (2026-07-09)
+**Last updated:** Phase 3 intelligence layer (2026-07-16)
 
 ## Start here
 
@@ -10,8 +10,7 @@ WraithWall is a Flask monolith with deception and intelligence engines. This pag
 | -------- | ----------- |
 | [wraithwall.online/docs](https://wraithwall.online/docs) | Public documentation hub |
 | [LAUNCH.md](../LAUNCH.md) | Plain-language field guide to production behaviour |
-| [wraithwall.online/#architecture](https://wraithwall.online/#architecture) | Four public redacted blueprints |
-| [AGENTS.md](../AGENTS.md) | Repository map for contributors and agents |
+| [Public redacted blueprints (below)](#public-vs-operator-diagrams) | Four public overviews embedded on this page |
 | [CLAUDE.md](../CLAUDE.md) | Commands, blueprints, env vars |
 
 ## Public vs operator diagrams
@@ -55,6 +54,22 @@ Regenerate Phase 8 publication SVGs/PNGs:
 python3 scripts/generate_wraithwall_diagrams.py
 ```
 
+## Phase 3 — Intelligence & adversary analysis
+
+Production intelligence core (not chatbot AI):
+
+| Component | Module | Role |
+| --------- | ------ | ---- |
+| Multi-signal campaigns | `campaign_correlator.py` + `intelligence_layer.py` | Evolving campaign graphs + evidence trails |
+| Attacker memory | `behavioral_dna.py` + `AttackerMemory` | 90-day durable profiles |
+| Threat reasoning | `ThreatReasoner` | Evidence-backed conclusions + uncertainty |
+| Adaptive risk | `unison_score.py` + `compute_adaptive_risk` | Memory/campaign/MITRE-aware scoring |
+| Intelligence graph | `IntelligenceGraph` | Attacker→infra→session→technique→campaign |
+| Prediction | `predict_attacker` | Next stage / return / escalation (confidence required) |
+| Async enrichment | `start_intelligence_worker` | Non-blocking queue from Cowrie close path |
+
+Details: [docs/intelligence.md](intelligence.md).
+
 ## Runtime visualization
 
 | Surface | Data source | Auth |
@@ -62,6 +77,7 @@ python3 scripts/generate_wraithwall_diagrams.py
 | Landing HeroTerminal + charts | `/api/public/stats` | Public |
 | Attack feed / sensor radar | Redis-backed public stats | Public |
 | Console architecture graphs | `architecture_viz` + corpus JSON | Login required |
+| Intelligence graph API | `/api/intelligence/graph/*` | Login / API key |
 | Ops dashboard (separate service) | `ops-dashboard/` | Independent deploy |
 
 ## Audit documents (operator use)

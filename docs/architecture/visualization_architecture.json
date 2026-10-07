@@ -1,0 +1,163 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "generated_at": "2026-07-09T12:00:00Z",
+    "source_commit": "0b8d520492767ee067c6ea33350cc7ba24a30164",
+    "derived_from": [
+      "VISUALIZATION_ARCHITECTURE.md",
+      "VISUALIZATION_PLAN.md",
+      "LIVE_VISUALIZATION_CONTRACT.md",
+      "DECEPTION_PIPELINE.md"
+    ],
+    "access_tier_default": "internal_authenticated",
+    "corpus_directory": "docs/architecture"
+  },
+  "domains": [
+    {
+      "id": "production",
+      "label": "Production Application",
+      "color": "#3498db",
+      "cluster_ids": ["cluster_intake", "cluster_fingerprint", "cluster_intel", "cluster_llm", "cluster_infra"]
+    },
+    {
+      "id": "deception",
+      "label": "Deception Blueprint",
+      "color": "#f39c12",
+      "cluster_ids": ["cluster_canary"],
+      "isolated": true,
+      "note": "Logical domain — not merged into production route handlers"
+    },
+    {
+      "id": "cowrie_vps",
+      "label": "Cowrie VPS",
+      "color": "#2ecc71",
+      "host": "COWRIE_VPS_IP",
+      "cluster_ids": ["cluster_cowrie"],
+      "external": true
+    }
+  ],
+  "views": [
+    {
+      "id": "executive_overview",
+      "label": "Executive Overview",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["architecture.json", "runtime_metrics.json", "visualization_state.json"],
+      "live_sources": ["/api/platform/health"],
+      "renderer": "dashboard_cards",
+      "max_nodes": 34,
+      "lod_strategy": "aggregate_by_cluster"
+    },
+    {
+      "id": "system_architecture",
+      "label": "Complete System Architecture",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["dependency_graph.json", "architecture.json", "blueprint_graph.json"],
+      "renderer": "force_canvas",
+      "max_nodes": 200,
+      "max_depth": 4,
+      "lod_strategy": "cluster_collapse"
+    },
+    {
+      "id": "runtime_services",
+      "label": "Runtime Services",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["runtime_graph.json", "live_nodes.json", "live_edges.json"],
+      "live_sources": ["/api/platform/health", "/api/health/detailed"],
+      "renderer": "force_canvas",
+      "overlay": "health_status",
+      "max_nodes": 100
+    },
+    {
+      "id": "event_flow",
+      "label": "Event Flow",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["event_graph.json", "EVENT_VALIDATION.md"],
+      "renderer": "dag_svg",
+      "max_nodes": 150,
+      "animation": "event_pulse"
+    },
+    {
+      "id": "deception_mesh",
+      "label": "Deception Mesh",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["deception_bait_analysis.txt", "BAIT_INVENTORY.md", "DECEPTION_PIPELINE.md", "blueprint_graph.json", "live_nodes.json", "live_edges.json"],
+      "renderer": "force_canvas",
+      "domain_isolation": true,
+      "max_nodes": 80,
+      "lod_strategy": "collapse_by_bait_layer"
+    },
+    {
+      "id": "threat_intel_pipeline",
+      "label": "Threat Intelligence Pipeline",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["dependency_graph.json", "live_edges.json"],
+      "node_filter": ["fingerprint-corpus", "asn-intelligence", "bgp-monitor", "cowrie-pipeline", "campaign-correlator"],
+      "renderer": "pipeline_canvas",
+      "max_nodes": 50
+    },
+    {
+      "id": "cowrie_pipeline",
+      "label": "Cowrie Pipeline",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["DECEPTION_PIPELINE.md", "live_nodes.json", "live_edges.json"],
+      "live_sources": ["/api/cowrie/stats", "/api/cowrie/stream"],
+      "renderer": "pipeline_canvas",
+      "stream_preference": ["websocket", "sse", "polling"],
+      "max_nodes": 30
+    },
+    {
+      "id": "campaign_correlation",
+      "label": "Campaign Correlation Graph",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["dependency_graph.json", "event_graph.json"],
+      "live_sources": ["/api/campaigns", "/api/campaigns/stats"],
+      "renderer": "force_canvas",
+      "max_nodes": 500,
+      "lod_strategy": "collapse_by_asn_campaign",
+      "unbounded_telemetry": true
+    },
+    {
+      "id": "redis_topology",
+      "label": "Redis Topology",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["redis_graph.json", "live_nodes.json"],
+      "renderer": "hierarchy_svg",
+      "max_nodes": 300,
+      "lod_strategy": "pattern_grouping"
+    },
+    {
+      "id": "scheduler_topology",
+      "label": "Scheduler Topology",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["scheduler_graph.json"],
+      "renderer": "timeline_svg",
+      "max_nodes": 100
+    },
+    {
+      "id": "trust_boundaries",
+      "label": "Trust Boundary Map",
+      "access_tier": "internal_authenticated",
+      "corpus_sources": ["trust_boundaries.json", "RISK_REVIEW.md"],
+      "renderer": "zone_canvas",
+      "max_nodes": 50
+    }
+  ],
+  "raven_integration": {
+    "status": "stub",
+    "label": "Raven (future)",
+    "interface_contract": {
+      "ingest_endpoint": "/api/raven/ingest",
+      "auth": "session_cookie_plus_admin_check",
+      "events_accepted": ["architecture.node_health", "architecture.corpus_stale"],
+      "note": "Raven not built — render placeholder node only; no fabricated internals"
+    }
+  },
+  "security": {
+    "default_posture": "internal_authenticated",
+    "csp": "script-src 'self'; object-src 'none'; base-uri 'self'",
+    "attacker_controlled_fields": ["username", "password", "command", "client_string", "hassh", "llm_response"],
+    "encoding": "html_entity_encode_at_render",
+    "graph_query_limits": { "max_depth": 6, "max_nodes": 500, "rate_limit": "30 per minute" },
+    "sse_limits": { "per_session": 2, "per_ip": 5, "backpressure": "drop_oldest" }
+  }
+}

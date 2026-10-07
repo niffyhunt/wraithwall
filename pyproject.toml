@@ -41,6 +41,9 @@ dependencies = [
     # gracefully without it, but the platform ships it so an OSS install has
     # the full correlation surface rather than a silently skipped module.
     "numpy>=1.26,<3",
+    # cowrie_intelligence (a registered blueprint module) imports groq at
+    # module load; without it create_app crashes on boot in a fresh install.
+    "groq>=1,<2",
 ]
 
 [project.optional-dependencies]

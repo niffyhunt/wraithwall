@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "generated_at": "2026-07-09T12:00:00Z",
+    "source_commit": "0b8d520492767ee067c6ea33350cc7ba24a30164",
+    "rationale": "Corpus-scale graphs are ≤500 nodes; Cowrie/campaign views are telemetry-unbounded — require LOD"
+  },
+  "engine": {
+    "primary": "custom_canvas_force",
+    "dependency_added": false,
+    "reason": "Avoid new supply-chain dep; Vue 3 console has no graph lib; canvas handles 500+ nodes"
+  },
+  "views": [
+    {
+      "view_id": "executive_overview",
+      "renderer": "html_cards",
+      "technology": "Vue template",
+      "max_nodes": 34,
+      "lod": "aggregate_by_cluster",
+      "why": "Small fixed subsystem count; cards faster than graph"
+    },
+    {
+      "view_id": "system_architecture",
+      "renderer": "canvas",
+      "technology": "custom force simulation",
+      "max_nodes": 200,
+      "lod": "cluster_collapse",
+      "why": "dependency_graph has ~90 edges; canvas for pan/zoom performance"
+    },
+    {
+      "view_id": "runtime_services",
+      "renderer": "canvas",
+      "technology": "custom force + health overlay",
+      "max_nodes": 100,
+      "lod": "cluster_collapse",
+      "why": "live_nodes=34; health colors updated via polling"
+    },
+    {
+      "view_id": "event_flow",
+      "renderer": "svg",
+      "technology": "layered DAG layout",
+      "max_nodes": 150,
+      "lod": "filter_by_subsystem",
+      "why": "SVG better for inspectable event nodes <200; animated pulses"
+    },
+    {
+      "view_id": "deception_mesh",
+      "renderer": "canvas",
+      "technology": "custom force + domain zones",
+      "max_nodes": 80,
+      "lod": "collapse_by_bait_layer",
+      "why": "Three isolated domains; bait inventory collapses to 4 layer nodes when expanded"
+    },
+    {
+      "view_id": "threat_intel_pipeline",
+      "renderer": "canvas",
+      "technology": "horizontal pipeline layout",
+      "max_nodes": 50,
+      "lod": "none",
+      "why": "Fixed pipeline stages from corpus"
+    },
+    {
+      "view_id": "cowrie_pipeline",
+      "renderer": "canvas",
+      "technology": "horizontal pipeline + SSE pulse",
+      "max_nodes": 30,
+      "lod": "none",
+      "why": "Fixed 6-stage pipeline; animation on SSE events"
+    },
+    {
+      "view_id": "campaign_correlation",
+      "renderer": "canvas",
+      "technology": "force + ASN clustering",
+      "max_nodes": 500,
+      "lod": "collapse_by_asn_campaign",
+      "why": "Unbounded sessions; collapse to campaign hubs, expand on click"
+    },
+    {
+      "view_id": "redis_topology",
+      "renderer": "svg",
+      "technology": "hierarchical tree",
+      "max_nodes": 300,
+      "lod": "pattern_grouping",
+      "why": "150+ key patterns grouped by subsystem prefix"
+    },
+    {
+      "view_id": "scheduler_topology",
+      "renderer": "svg",
+      "technology": "gantt timeline",
+      "max_nodes": 100,
+      "lod": "group_by_subsystem",
+      "why": "APScheduler jobs + daemon threads as timeline rows"
+    },
+    {
+      "view_id": "trust_boundaries",
+      "renderer": "canvas",
+      "technology": "zone rectangles + crossing edges",
+      "max_nodes": 50,
+      "lod": "none",
+      "why": "Fixed boundary count from trust_boundaries.json"
+    }
+  ],
+  "lod_strategies": {
+    "collapse_by_asn_campaign": "Backend aggregation preferred; frontend collapses session nodes into campaign parent until expand",
+    "collapse_by_bait_layer": "42 baits → 4 layer super-nodes (L1-L4) with expand",
+    "pattern_grouping": "redis key_patterns grouped by subsystem field",
+    "cluster_collapse": "visualization_state.json clusters as super-nodes"
+  }
+}

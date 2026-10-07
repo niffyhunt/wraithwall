@@ -1,0 +1,388 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-07-09T00:00:00Z",
+  "description": "Complete catalog of every telemetry metric and label dimension emitted or receivable by the WraithWall runtime. Defines metric_name, type, subsystem, labels, unit, and scrape endpoint.",
+  "total_metrics": 34,
+  "metrics": [
+    {
+      "metric_name": "redis_key_cardinality",
+      "type": "gauge",
+      "subsystem": "monitoring",
+      "description": "Current cardinality of each Redis key pattern",
+      "labels": ["key_pattern", "subsystem_id", "subsystem_name", "key_type"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS INFO / custom lua script",
+      "alert_threshold": "varies by key pattern",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "redis_memory_usage_bytes",
+      "type": "gauge",
+      "subsystem": "monitoring",
+      "description": "Redis total memory usage",
+      "labels": ["db_instance"],
+      "unit": "bytes",
+      "scrape_endpoint": "REDIS INFO memory",
+      "alert_threshold": ">80% of maxmemory",
+      "recommended_interval_seconds": 30
+    },
+    {
+      "metric_name": "redis_key_ttl_seconds",
+      "type": "gauge",
+      "subsystem": "monitoring",
+      "description": "Remaining TTL on tracked keys (zero = no TTL)",
+      "labels": ["key_pattern", "subsystem_id"],
+      "unit": "seconds",
+      "scrape_endpoint": "TTL command per key",
+      "alert_threshold": "0 for critical keys",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "subsystem_health_status",
+      "type": "gauge",
+      "subsystem": "monitoring",
+      "description": "Health check result for each subsystem (1=up, 0=down)",
+      "labels": ["subsystem_id", "subsystem_name", "health_probe"],
+      "unit": "boolean",
+      "scrape_endpoint": "health check per subsystem route",
+      "alert_threshold": "0 for >30s",
+      "recommended_interval_seconds": 30
+    },
+    {
+      "metric_name": "subsystem_thread_count",
+      "type": "gauge",
+      "subsystem": "monitoring",
+      "description": "Number of active threads per subsystem",
+      "labels": ["subsystem_id", "subsystem_name", "thread_type"],
+      "unit": "count",
+      "scrape_endpoint": "Python threading.active_count() per module",
+      "alert_threshold": ">16 per subsystem",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "gateway_challenges_issued_total",
+      "type": "counter",
+      "subsystem": "37ff6202",
+      "description": "Total PoW challenges issued",
+      "labels": ["ip", "country", "challenge_type"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS gateway:stats",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "gateway_challenges_solved_total",
+      "type": "counter",
+      "subsystem": "37ff6202",
+      "description": "Total PoW challenges solved successfully",
+      "labels": ["ip", "country", "solved_in_seconds"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS gateway:stats",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "gateway_blocklist_size",
+      "type": "gauge",
+      "subsystem": "37ff6202",
+      "description": "Current size of the IP blocklist set",
+      "labels": [],
+      "unit": "count",
+      "scrape_endpoint": "SCARD gw:blocklist",
+      "alert_threshold": ">10000",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "key_pattern": "sandbox_active_count",
+      "metric_name": "sandbox_active_count",
+      "type": "gauge",
+      "subsystem": "44a15b3a",
+      "description": "Number of IPs currently in attractor sandbox",
+      "labels": [],
+      "unit": "count",
+      "scrape_endpoint": "REDIS KEYS attractor_sandbox:* (or SCAN)",
+      "alert_threshold": ">200 (resource exhaustion concern)",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "canary_tokens_active_total",
+      "type": "gauge",
+      "subsystem": "cdea7e10",
+      "description": "Total active canary tokens",
+      "labels": ["token_type", "owner_tier"],
+      "unit": "count",
+      "scrape_endpoint": "HLEN canary:tokens or DB query",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "canary_triggers_total",
+      "type": "counter",
+      "subsystem": "cdea7e10",
+      "description": "Total canary trigger events",
+      "labels": ["token_type", "trigger_source", "ip"],
+      "unit": "count",
+      "scrape_endpoint": "canary:{public_id}:hits list length or dedicated counter",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "canary_hits_unbounded_growth",
+      "type": "gauge",
+      "subsystem": "cdea7e10",
+      "description": "Size of largest canary:{public_id}:hits list",
+      "labels": ["public_id"],
+      "unit": "count",
+      "scrape_endpoint": "LLEN canary:{public_id}:hits per token",
+      "alert_threshold": ">10000",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "cowrie_sessions_total",
+      "type": "counter",
+      "subsystem": "c5de21e5",
+      "description": "Total Cowrie sessions ingested",
+      "labels": ["source_ip", "country", "protocol"],
+      "unit": "count",
+      "scrape_endpoint": "LLEN cowrie_sessions:recent or cowrie:stats",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "cowrie_recent_events_stale",
+      "type": "gauge",
+      "subsystem": "c5de21e5",
+      "description": "1 if legacy cowrie:recent_events endpoint is still receiving reads (stale data)",
+      "labels": [],
+      "unit": "boolean",
+      "scrape_endpoint": "EXISTS cowrie:recent_events + TTL",
+      "alert_threshold": "1 (action: migrate endpoint or remove stale key)",
+      "recommended_interval_seconds": 3600
+    },
+    {
+      "metric_name": "fingerprint_corpus_size",
+      "type": "gauge",
+      "subsystem": "bee89df8",
+      "description": "Total unique fingerprints in corpus",
+      "labels": ["fingerprint_type"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS SCAN corpus:*",
+      "alert_threshold": ">100000",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "bgp_route_state_cardinality",
+      "type": "gauge",
+      "subsystem": "4d7a10be",
+      "description": "Number of BGP route state entries",
+      "labels": [],
+      "unit": "count",
+      "scrape_endpoint": "HLEN bgp:route_state:* per prefix or SCAN count",
+      "alert_threshold": ">50000",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "bgp_alerts_total",
+      "type": "counter",
+      "subsystem": "4d7a10be",
+      "description": "Total BGP anomaly alerts generated",
+      "labels": ["alert_type", "asn", "prefix"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS bgp:alerts:* or counter",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "immutable_log_cardinality",
+      "type": "gauge",
+      "subsystem": "9c88d0d6",
+      "description": "Total immutable log entries in Redis",
+      "labels": [],
+      "unit": "count",
+      "scrape_endpoint": "SCARD log:index:*",
+      "alert_threshold": ">50000 (memory pressure)",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "immutable_log_archival_gap",
+      "type": "gauge",
+      "subsystem": "9c88d0d6",
+      "description": "Number of log entries not yet archived to S3",
+      "labels": [],
+      "unit": "count",
+      "scrape_endpoint": "SCARD log:index:* minus archived offset",
+      "alert_threshold": ">100000",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "credential_lures_active",
+      "type": "gauge",
+      "subsystem": "8d9782c9",
+      "description": "Number of active credential lures",
+      "labels": ["lure_type", "platform"],
+      "unit": "count",
+      "scrape_endpoint": "SCARD lures:active",
+      "alert_threshold": ">MAX_ACTIVE_LURES",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "credential_lures_triggered_total",
+      "type": "counter",
+      "subsystem": "8d9782c9",
+      "description": "Total credential lure triggers",
+      "labels": ["lure_id", "platform", "source_ip"],
+      "unit": "count",
+      "scrape_endpoint": "SCARD lures:triggered",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "llm_honeypot_sessions_total",
+      "type": "counter",
+      "subsystem": "aade65c5",
+      "description": "Total LLM honeypot sessions",
+      "labels": ["model", "source_ip", "endpoint"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS llm:stats:* or session count",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "llm_firewall_blocks_total",
+      "type": "counter",
+      "subsystem": "b23751bb",
+      "description": "Total prompts blocked by LLM firewall",
+      "labels": ["block_reason", "severity", "source_ip"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS llm:detections:*",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "airs_detections_total",
+      "type": "counter",
+      "subsystem": "f2e70df8",
+      "description": "Total AI runtime security detections",
+      "labels": ["detection_type", "severity", "model"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS airs:detections:*",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "detonate_jobs_total",
+      "type": "counter",
+      "subsystem": "c31e66ac",
+      "description": "Total files submitted for detonation",
+      "labels": ["file_type", "verdict"],
+      "unit": "count",
+      "scrape_endpoint": "REDIS detonate:stats or job count",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "asn_enrichment_cache_hit_ratio",
+      "type": "gauge",
+      "subsystem": "b2e90a78",
+      "description": "Cache hit ratio for ASN IP enrichment",
+      "labels": [],
+      "unit": "ratio (0-1)",
+      "scrape_endpoint": "Computed from EXISTS checks vs total queries",
+      "alert_threshold": "<0.5 (inefficient caching)",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "campaign_correlation_latency_ms",
+      "type": "gauge",
+      "subsystem": "c96f524c",
+      "description": "Time to correlate a new event into existing campaigns",
+      "labels": [],
+      "unit": "milliseconds",
+      "scrape_endpoint": "Instrumented in campaign_correlator.py",
+      "alert_threshold": ">5000ms",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "public_api_requests_per_minute",
+      "type": "gauge",
+      "subsystem": "5c9ec19f",
+      "description": "Public API request rate",
+      "labels": ["endpoint", "status_code"],
+      "unit": "requests/min",
+      "scrape_endpoint": "REDIS public:stats or Flask metrics",
+      "recommended_interval_seconds": 30
+    },
+    {
+      "metric_name": "auth_login_attempts_per_minute",
+      "type": "gauge",
+      "subsystem": "4910baa2",
+      "description": "Authentication attempt rate",
+      "labels": ["ip", "status", "method"],
+      "unit": "attempts/min",
+      "scrape_endpoint": "REDIS auth:attempts:{ip} or Flask metrics",
+      "alert_threshold": ">100/min from single IP",
+      "recommended_interval_seconds": 30
+    },
+    {
+      "metric_name": "notification_dispatch_latency_ms",
+      "type": "gauge",
+      "subsystem": "c534ffe2",
+      "description": "Time to dispatch a notification to all channels",
+      "labels": ["channel", "success"],
+      "unit": "milliseconds",
+      "scrape_endpoint": "Instrumented in services/",
+      "alert_threshold": ">10000ms",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "notification_dlq_depth",
+      "type": "gauge",
+      "subsystem": "c534ffe2",
+      "description": "Number of failed notifications awaiting retry",
+      "labels": [],
+      "unit": "count",
+      "scrape_endpoint": "REDIS notif:dlq:* count",
+      "alert_threshold": ">10",
+      "recommended_interval_seconds": 60
+    },
+    {
+      "metric_name": "apscheduler_job_duration_ms",
+      "type": "gauge",
+      "subsystem": "monitoring",
+      "description": "Execution duration of each APScheduler job",
+      "labels": ["job_name", "success"],
+      "unit": "milliseconds",
+      "scrape_endpoint": "Wrap each job with timing decorator",
+      "alert_threshold": ">300000 (5 min)",
+      "recommended_interval_seconds": "per job run"
+    },
+    {
+      "metric_name": "apscheduler_job_missed_runs",
+      "type": "counter",
+      "subsystem": "monitoring",
+      "description": "Number of missed APScheduler runs",
+      "labels": ["job_name"],
+      "unit": "count",
+      "scrape_endpoint": "APScheduler listener events",
+      "alert_threshold": ">0 (any missed run is incident-worthy)",
+      "recommended_interval_seconds": 300
+    },
+    {
+      "metric_name": "thread_pool_utilization",
+      "type": "gauge",
+      "subsystem": "monitoring",
+      "description": "Current thread pool utilization ratio for bounded pools",
+      "labels": ["pool_name", "subsystem_id"],
+      "unit": "ratio (0-1)",
+      "scrape_endpoint": "semaphore._value / semaphore._initial_value or ThreadPoolExecutor internals",
+      "alert_threshold": ">0.9 (pool saturation)",
+      "recommended_interval_seconds": 30
+    }
+  ],
+  "missing_metrics": {
+    "description": "Metrics that should exist but are not currently instrumented",
+    "items": [
+      "redis_key_cardinality (per pattern)",
+      "subsystem_health_status",
+      "subsystem_thread_count",
+      "immutable_log_archival_gap",
+      "campaign_correlation_latency_ms",
+      "notification_dispatch_latency_ms",
+      "apscheduler_job_duration_ms",
+      "apscheduler_job_missed_runs",
+      "thread_pool_utilization",
+      "bgp_route_state_cardinality",
+      "canary_hits_unbounded_growth",
+      "cowrie_recent_events_stale"
+    ]
+  }
+}

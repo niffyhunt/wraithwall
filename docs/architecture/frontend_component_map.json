@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "generated_at": "2026-07-09T12:00:00Z",
+    "source_commit": "0b8d520492767ee067c6ea33350cc7ba24a30164",
+    "framework": "Vue 3 + Vite",
+    "build_output": "static/app",
+    "entry_route": "/console#/architecture"
+  },
+  "component_tree": {
+    "App.vue": {
+      "children": ["ConsoleShell.vue"]
+    },
+    "ConsoleShell.vue": {
+      "children": ["NavRail.vue", "RouterView"]
+    },
+    "ArchitectureView.vue": {
+      "path": "frontend/src/views/ArchitectureView.vue",
+      "role": "hub",
+      "access_tier": "internal_authenticated",
+      "children": [
+        "ViewShell.vue",
+        "GraphControls.vue",
+        "GraphCanvas.vue",
+        "NodeInspector.vue",
+        "EdgeInspector.vue",
+        "RuntimeOverlay.vue",
+        "ExecutiveSummary.vue"
+      ]
+    },
+    "ViewShell.vue": {
+      "role": "layout_wrapper",
+      "props": ["viewId", "title", "accessTier", "corpusSources"]
+    },
+    "GraphCanvas.vue": {
+      "role": "graph_rendering_engine",
+      "renderer": "canvas",
+      "composables": ["useGraphEngine.js"]
+    },
+    "GraphControls.vue": {
+      "role": "zoom_pan_search_filter",
+      "features": ["search", "subsystem_group", "dark_mode_toggle", "cluster_expand"]
+    },
+    "NodeInspector.vue": {
+      "role": "node_detail_panel",
+      "sanitizes": "attacker_controlled_fields"
+    },
+    "EdgeInspector.vue": {
+      "role": "edge_detail_panel"
+    },
+    "RuntimeOverlay.vue": {
+      "role": "live_health_overlay",
+      "composables": ["useArchitectureRuntime.js", "usePoll.js", "useSSE.js"],
+      "degradation": ["sse", "polling"]
+    },
+    "ExecutiveSummary.vue": {
+      "role": "executive_overview_cards",
+      "view_id": "executive_overview"
+    }
+  },
+  "data_layer": {
+    "useCorpus.js": {
+      "endpoints": [
+        "/api/architecture/corpus",
+        "/api/architecture/corpus/<file>",
+        "/api/architecture/graph/<view_id>"
+      ],
+      "auth": "session_cookie",
+      "cache": "session_memory",
+      "corpus_commit_tracking": true
+    },
+    "sanitize.js": {
+      "exports": ["encodeHtml", "sanitizeTelemetryField"]
+    },
+    "accessTier.js": {
+      "exports": ["classifyField", "filterNodeForTier", "canRenderField"]
+    }
+  },
+  "routes": [
+    { "path": "/architecture", "component": "ArchitectureView.vue", "meta": { "title": "Architecture", "tier": "internal_authenticated" } }
+  ],
+  "existing_reuse": {
+    "CampaignMap.vue": "campaign_correlation live overlay reference",
+    "BGPMonitor.vue": "polling pattern reference",
+    "useSSE.js": "cowrie stream for cowrie_pipeline view",
+    "usePoll.js": "runtime health polling",
+    "http.js": "authenticated fetch wrapper"
+  }
+}

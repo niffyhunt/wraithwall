@@ -41,7 +41,7 @@
 #       a failed start
 #   H12 explicit environment allowlist; no env_file, no host-env inheritance
 #   H13 named in-project volume only; reset/destroy remove it with the project
-#   H14 runtime: runsc (gVisor) — the workload runs on a userspace kernel, so a
+#   H14 runtime: runsc (gVisor) is OPT-IN — the workload runs on a userspace kernel, so a
 #       syscall-based escape must defeat the Sentry, not just the host kernel
 #
 # PROJECT NAME IS INTENTIONALLY ABSENT. The launcher passes `-p ww-sb-<name>` so
@@ -51,10 +51,12 @@
 
 x-hardening: &hardening
   restart: "no"
-  # H14: run every sandbox service on the gVisor userspace kernel (runsc) instead
-  # of runc/host kernel. Requires the `runsc` Docker runtime to be registered
-  # (/etc/docker/daemon.json); no KVM needed on x86_64 (systrap platform).
-  runtime: "runsc"
+  # H14: gVisor userspace kernel (runsc), OPT-IN via WRAITHWALL_SANDBOX_RUNTIME=runsc.
+  # Default runc: current runsc builds cannot reach Docker's embedded DNS
+  # (127.0.0.11) from inside the sandbox, so sb-app/sb-redis/sb-seed cannot
+  # resolve each other and the seed's ship step fails (E304); CI runners ship
+  # no runsc at all. See docs/sandbox/platforms.md § gVisor / runsc.
+  runtime: ${WRAITHWALL_SANDBOX_RUNTIME:-runc}
   cap_drop:
     - ALL
   security_opt:

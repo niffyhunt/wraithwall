@@ -8,7 +8,7 @@ How WraithWall performance numbers are defined, measured, and scoped. **Do not c
 | ----- | -------------- | ---------- |
 | **Cowrie honeypot** | No legitimate user traffic — every session is adversarial or probe | "False positive" = analyst labels session `false_positive` after review, not "wrong traffic" |
 | **Breach monitor** | Paste/GitHub/HIBP correlation — mixed signal | FP = finding dismissed after cross-source validation |
-| **Campaign / CRYSTAL** | Multi-engine scoring + suppression | FP = `recalibration.py` precision on analyst-labeled sessions |
+| **Campaign / CRYSTAL** | Multi-engine scoring + suppression | FP = `recalibration.py` precision on labeled `cowrie_completed:*` sessions |
 | **Public landing counters** | Aggregated Redis (`/api/public/stats`) | Not a precision metric — volume telemetry only |
 
 ---
@@ -33,8 +33,8 @@ How WraithWall performance numbers are defined, measured, and scoped. **Do not c
 
 **Measurement:**
 
-1. Event `timestamp` in the honeypot JSON log on the remote VPS.
-2. Watcher tail position tracked in Redis.
+1. Event `timestamp` in JSON log (VPS) / main `/var/log/cowrie/cowrie.json`.
+2. Watcher tail position in Redis `cowrie_intel:log_pos`.
 3. Alert queue drain in `_alert_worker` (Telegram/Discord).
 
 **Order of magnitude:** Sub-second to tens of seconds for log tail + queue — dominated by session duration and command count, not batch ETL.
@@ -58,10 +58,10 @@ Operator-reported **breach-monitor alert path** under 30-day production monitori
 
 **Measurement** (`recalibration.py`):
 
-- Labels stored per session → `label` ∈ `{true_positive, false_positive, benign}` via `/api/cowrie/label` (admin).
-- Tracked in Redis for recalibration access.
+- Labels stored on `cowrie_completed:{sid}` → `label` ∈ `{true_positive, false_positive, benign}` via `/api/cowrie/label` (admin).
+- Set `cowrie:labeled_sessions` in Redis.
 - Precision per signal: `tp / (tp + fp)` from `load_labeled_sessions()`.
-- **Minimum sample:** 200 labeled sessions before recalibration proposals.
+- **Minimum sample:** 200 labeled sessions (`MIN_LABELED`) before recalibration proposals.
 
 **Formula:**
 
@@ -87,6 +87,7 @@ Scoped to **labeled Cowrie + CRYSTAL alert decisions** over a 30-day window, not
 
 ```bash
 TESTING=1 python3 -c "from recalibration import load_labeled_sessions; ..."
+# or query Redis cowrie:labeled_sessions + labels
 ```
 
 Do **not** cite 8% for honeypot byte-level signal — that layer has no legitimate traffic.
@@ -119,7 +120,7 @@ Do **not** cite 8% for honeypot byte-level signal — that layer has no legitima
 
 ## 5. Uptime
 
-**Measurement:** External HTTP check on `https://wraithwall.online/api/public/stats` or `/api/platform/health` (authenticated). Service restart events tracked in system journal.
+**Measurement:** External HTTP check on `https://wraithwall.online/api/public/stats` or `/api/platform/health` (authenticated). systemd service restart events in the journal.
 
 ---
 
@@ -144,4 +145,4 @@ See `public_api.py`. These are **volume counters** for the landing page — not 
 
 ---
 
-*Maintainer-confirmed: MIT license yes · audit docs stay internal · disclosure 72h ack · portfolio at wraithwall.online/niffy*
+*Maintainer-confirmed: MIT license yes · audit docs stay internal · disclosure 72h ack · portfolio at niffyhunt.online*

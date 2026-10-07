@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-label="Scheduler Topology">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2332" stroke-width="0.6" opacity="0.45"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#00e5ff" opacity="0.9"/>
+    </marker>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#ff2d95"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#080c14"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <rect x="0" y="0" width="1920" height="72" fill="#0a1018" opacity="0.92"/>
+  <line x1="48" y1="72" x2="1872" y2="72" stroke="#2a3a52" stroke-width="1"/>
+  <text x="56" y="38" fill="url(#titleGrad)" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="22" font-weight="700">Scheduler Topology</text>
+  <text x="56" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11" letter-spacing="1.2">9 APScheduler jobs · 58 daemon threads</text>
+  <text x="1864" y="44" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="10" text-anchor="end">WRAITHWALL · PHASE 8 CORPUS</text>
+  <text x="1864" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="9" text-anchor="end">scheduler_graph.json</text>
+<rect x="40" y="100" width="1840" height="420" rx="6" fill="#ffb020" opacity="0.08" stroke="#ffb020" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="122" fill="#ffb020" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">APSCHEDULER — INTERVAL &amp; CRON JOBS</text>
+  <rect x="60" y="140" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="490.0" y="162.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">retrain_models</text>
+  <text x="490.0" y="182.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">session-dna · 604800s</text>
+  <rect x="960" y="140" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="1390.0" y="162.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">mimicry_engine</text>
+  <text x="1390.0" y="182.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">canary-service · 14400s</text>
+  <rect x="60" y="212" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="490.0" y="234.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">breach_scan_cycle</text>
+  <text x="490.0" y="254.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">breach-monitor · 21600s</text>
+  <rect x="960" y="212" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="1390.0" y="234.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">run_bgp_monitor</text>
+  <text x="1390.0" y="254.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">bgp-monitor · 900s</text>
+  <rect x="60" y="284" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="490.0" y="306.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">paste_monitor</text>
+  <text x="490.0" y="326.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">breach-monitor · 7200s</text>
+  <rect x="960" y="284" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="1390.0" y="306.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">github_monitor</text>
+  <text x="1390.0" y="326.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">breach-monitor · 14400s</text>
+  <rect x="60" y="356" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="490.0" y="378.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">send_daily_digest</text>
+  <text x="490.0" y="398.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">notification-routing · 0 8 * * *s</text>
+  <rect x="960" y="356" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="1390.0" y="378.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">canarytokens_poll</text>
+  <text x="1390.0" y="398.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">canary-service · 900s</text>
+  <rect x="60" y="428" width="860" height="56" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="490.0" y="450.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">trial_billing</text>
+  <text x="490.0" y="470.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">canary-service · 3600s</text>
+  <rect x="40" y="540" width="1840" height="380" rx="6" fill="#3dff9a" opacity="0.08" stroke="#3dff9a" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="562" fill="#3dff9a" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">DAEMON THREADS — IMPORT-TIME STARTUP</text>
+  <rect x="60" y="580" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="608.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">_engine_supervisor</text>
+  <rect x="960" y="580" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1390.0" y="608.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">_watch_cowrie_log</text>
+  <rect x="60" y="652" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="680.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">_event_worker_N (N=ceil(cpu/2), max 4)</text>
+  <rect x="960" y="652" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1390.0" y="680.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">_alert_worker</text>
+  <rect x="60" y="724" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="752.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">auto_rotate</text>
+  <rect x="960" y="724" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1390.0" y="752.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">_run_ripe_ris_thread</text>
+  <rect x="60" y="796" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="824.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">detonate_worker_loop</text>
+  <rect x="960" y="796" width="860" height="56" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1390.0" y="824.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">keep_alive_ping</text>
+  <text x="56" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10">Per-worker duplication risk — see ARCHITECTURE_VALIDATION.md</text>
+  <text x="1864" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10" text-anchor="end">Validated architecture · No inferred components</text>
+</svg>

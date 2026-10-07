@@ -76,6 +76,25 @@ host kernel enforces anything. This is a labeled limitation, not a
 different security claim: the T1 boundary statement in
 `security-model.md` is unchanged.
 
+## gVisor / runsc (opt-in)
+
+Every sandbox container *can* run under gVisor by setting
+`WRAITHWALL_SANDBOX_RUNTIME=runsc` — it is **off by default**, and that
+default is the honest one:
+
+- On current runsc builds the Docker embedded DNS (`127.0.0.11`) is
+  unreachable from inside the sandbox (`Connection refused`), so service
+  names (`sb-app`, `sb-redis`) do not resolve, the app cannot reach Redis,
+  and the synthetic seed's ship step fails with E304. The default `runc`
+  runtime is what the seed pipeline, the sandbox matrix, and CI exercise.
+- CI runners ship no runsc at all; a `runsc` default would fail at
+  container creation there.
+
+Verified on this platform: `nslookup sb-app` inside runsc on a
+user-defined network → `write to '127.0.0.11': Connection refused`; the
+same probe under runc → resolves. If your runsc build proxies the
+embedded DNS, flip the variable and re-run `./sandbox.sh verify`.
+
 ## Doc-freshness gate
 
 `tests/test_sandbox_platform.py` verifies: the `platform` command exists in

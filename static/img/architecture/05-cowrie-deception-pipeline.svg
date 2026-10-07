@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-label="Cowrie Deception Pipeline">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2332" stroke-width="0.6" opacity="0.45"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#00e5ff" opacity="0.9"/>
+    </marker>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#ff2d95"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#080c14"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <rect x="0" y="0" width="1920" height="72" fill="#0a1018" opacity="0.92"/>
+  <line x1="48" y1="72" x2="1872" y2="72" stroke="#2a3a52" stroke-width="1"/>
+  <text x="56" y="38" fill="url(#titleGrad)" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="22" font-weight="700">Cowrie Deception Pipeline</text>
+  <text x="56" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11" letter-spacing="1.2">COWRIE_VPS_IP → SSH tunnel → SERVER_IP intelligence</text>
+  <text x="1864" y="44" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="10" text-anchor="end">WRAITHWALL · PHASE 8 CORPUS</text>
+  <text x="1864" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="9" text-anchor="end">DECEPTION_PIPELINE.md · live_nodes.json · live_edges.json</text>
+<rect x="80" y="480" width="220" height="80" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="190.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Cowrie Honeypot</text>
+  <text x="190.0" y="534.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">SSH:2222 · cowrie.json</text>
+  <line x1="300" y1="520" x2="360" y2="520" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="330.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">JSON events</text>
+  <rect x="360" y="480" width="220" height="80" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="470.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Redis Shipper</text>
+  <text x="470.0" y="534.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">tail → RPUSH cowrie:log</text>
+  <line x1="580" y1="520" x2="640" y2="520" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="610.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">JSON events</text>
+  <rect x="640" y="480" width="220" height="80" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="750.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">SSH Tunnel</text>
+  <text x="750.0" y="534.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">:16379 → main Redis</text>
+  <line x1="860" y1="520" x2="920" y2="520" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="890.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">JSON events</text>
+  <rect x="920" y="480" width="220" height="80" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1030.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Consumer</text>
+  <text x="1030.0" y="534.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">BLPOP → /var/log/cowrie/</text>
+  <line x1="1140" y1="520" x2="1200" y2="520" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="1170.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">JSON events</text>
+  <rect x="1200" y="480" width="220" height="80" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5" filter="url(#glow)"/>
+  <text x="1310.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Cowrie Intelligence</text>
+  <text x="1310.0" y="534.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">watcher → sessions</text>
+  <line x1="1420" y1="520" x2="1480" y2="520" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="1450.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">JSON events</text>
+  <rect x="1480" y="480" width="220" height="80" rx="4" fill="#0f1520" stroke="#ff2d95" stroke-width="1.5"/>
+  <text x="1590.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Campaign + Alerts</text>
+  <text x="1590.0" y="534.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">correlator · Telegram</text>
+  <rect x="40" y="120" width="520" height="300" rx="6" fill="#00e5ff" opacity="0.08" stroke="#00e5ff" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="142" fill="#00e5ff" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">COWRIE VPS · COWRIE_VPS_IP</text>
+  <rect x="80" y="200" width="180" height="56" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="170.0" y="222.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie-honeypot</text>
+  <text x="170.0" y="242.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">Docker</text>
+  <rect x="300" y="200" width="180" height="56" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="390.0" y="222.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">malware-worker</text>
+  <text x="390.0" y="242.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">VT scan</text>
+  <rect x="80" y="280" width="180" height="56" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="170.0" y="302.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie-shipper</text>
+  <text x="170.0" y="322.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">host network</text>
+  <rect x="300" y="280" width="180" height="56" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="390.0" y="302.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Local Redis</text>
+  <text x="390.0" y="322.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">pub/sub</text>
+  <rect x="1000" y="120" width="880" height="300" rx="6" fill="#3dff9a" opacity="0.08" stroke="#3dff9a" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="1014" y="142" fill="#3dff9a" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">MAIN SERVER · SERVER_IP</text>
+  <rect x="1040" y="200" width="240" height="56" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1160.0" y="222.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie_intelligence.py</text>
+  <text x="1160.0" y="242.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">6 threads</text>
+  <rect x="1320" y="200" width="240" height="56" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1440.0" y="222.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">campaign_correlator.py</text>
+  <text x="1440.0" y="242.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scipy</text>
+  <rect x="1040" y="280" width="520" height="56" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1300.0" y="302.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Redis</text>
+  <text x="1300.0" y="322.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">cowrie_session:* · cowrie_completed:*</text>
+  <text x="56" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10">6-stage pipeline — verified live_edges e001–e087</text>
+  <text x="1864" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10" text-anchor="end">Validated architecture · No inferred components</text>
+</svg>

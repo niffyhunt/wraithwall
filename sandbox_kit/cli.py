@@ -586,7 +586,7 @@ def cmd_replay(args) -> int:
     cowrie_completed:*) through a read-only exec inside sb-app. Session
     replay reads the binary ttylog the seed wrote into the shared sandbox
     volume and parses it with the production parser
-    (``wraithwall.replay_tty.parse_ttylog``).
+    (``sandbox_kit.ttylog.parse_ttylog``).
     Everything shown is LOCAL-marked synthetic telemetry.
     """
     import json as _json
@@ -615,7 +615,7 @@ def cmd_replay(args) -> int:
             return 2
         try:
             blob = compose.read_ttylog(project, args.session)
-            from wraithwall.replay_tty import parse_ttylog
+            from sandbox_kit.ttylog import parse_ttylog
             with _tempfile.NamedTemporaryFile(suffix=".ttylog",
                                               delete=False) as tf:
                 tf.write(blob)

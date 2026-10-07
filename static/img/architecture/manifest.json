@@ -1,0 +1,127 @@
+{
+  "version": "1.1.0",
+  "generated_from": "docs/architecture/",
+  "public_landing": [
+    {
+      "id": "01-complete-system-architecture",
+      "title": "Complete System Architecture",
+      "svg": "/static/img/architecture/public/01-complete-system-architecture.svg",
+      "png": "/static/img/architecture/public/01-complete-system-architecture.png",
+      "redacted": true
+    },
+    {
+      "id": "02-runtime-architecture",
+      "title": "Runtime Architecture",
+      "svg": "/static/img/architecture/public/02-runtime-architecture.svg",
+      "png": "/static/img/architecture/public/02-runtime-architecture.png",
+      "redacted": true
+    },
+    {
+      "id": "07-threat-intelligence-pipeline",
+      "title": "Threat Intelligence Pipeline",
+      "svg": "/static/img/architecture/public/07-threat-intelligence-pipeline.svg",
+      "png": "/static/img/architecture/public/07-threat-intelligence-pipeline.png",
+      "redacted": true
+    },
+    {
+      "id": "11-notification-pipeline",
+      "title": "Notification Pipeline",
+      "svg": "/static/img/architecture/public/11-notification-pipeline.svg",
+      "png": "/static/img/architecture/public/11-notification-pipeline.png",
+      "redacted": true
+    }
+  ],
+  "operator_console": "login required \u00b7 /console#/architecture",
+  "diagrams": [
+    {
+      "id": "01-complete-system-architecture",
+      "title": "Complete System Architecture",
+      "svg": "/static/img/architecture/01-complete-system-architecture.svg",
+      "png": "/static/img/architecture/01-complete-system-architecture.png"
+    },
+    {
+      "id": "02-runtime-architecture",
+      "title": "Runtime Architecture",
+      "svg": "/static/img/architecture/02-runtime-architecture.svg",
+      "png": "/static/img/architecture/02-runtime-architecture.png"
+    },
+    {
+      "id": "03-event-flow",
+      "title": "Event Flow",
+      "svg": "/static/img/architecture/03-event-flow.svg",
+      "png": "/static/img/architecture/03-event-flow.png"
+    },
+    {
+      "id": "04-campaign-correlation",
+      "title": "Campaign Correlation",
+      "svg": "/static/img/architecture/04-campaign-correlation.svg",
+      "png": "/static/img/architecture/04-campaign-correlation.png"
+    },
+    {
+      "id": "05-cowrie-deception-pipeline",
+      "title": "Cowrie Deception Pipeline",
+      "svg": "/static/img/architecture/05-cowrie-deception-pipeline.svg",
+      "png": "/static/img/architecture/05-cowrie-deception-pipeline.png"
+    },
+    {
+      "id": "06-deception-mesh",
+      "title": "Deception Mesh",
+      "svg": "/static/img/architecture/06-deception-mesh.svg",
+      "png": "/static/img/architecture/06-deception-mesh.png"
+    },
+    {
+      "id": "07-threat-intelligence-pipeline",
+      "title": "Threat Intelligence Pipeline",
+      "svg": "/static/img/architecture/07-threat-intelligence-pipeline.svg",
+      "png": "/static/img/architecture/07-threat-intelligence-pipeline.png"
+    },
+    {
+      "id": "08-redis-topology",
+      "title": "Redis Topology",
+      "svg": "/static/img/architecture/08-redis-topology.svg",
+      "png": "/static/img/architecture/08-redis-topology.png"
+    },
+    {
+      "id": "09-scheduler-topology",
+      "title": "Scheduler Topology",
+      "svg": "/static/img/architecture/09-scheduler-topology.svg",
+      "png": "/static/img/architecture/09-scheduler-topology.png"
+    },
+    {
+      "id": "10-trust-boundary-map",
+      "title": "Trust Boundary Map",
+      "svg": "/static/img/architecture/10-trust-boundary-map.svg",
+      "png": "/static/img/architecture/10-trust-boundary-map.png"
+    },
+    {
+      "id": "11-notification-pipeline",
+      "title": "Notification Pipeline",
+      "svg": "/static/img/architecture/11-notification-pipeline.svg",
+      "png": "/static/img/architecture/11-notification-pipeline.png"
+    },
+    {
+      "id": "12-sandbox-execution-flow",
+      "title": "Sandbox Execution Flow",
+      "svg": "/static/img/architecture/12-sandbox-execution-flow.svg",
+      "png": "/static/img/architecture/12-sandbox-execution-flow.png"
+    },
+    {
+      "id": "13-canary-propagation",
+      "title": "Canary Propagation",
+      "svg": "/static/img/architecture/13-canary-propagation.svg",
+      "png": "/static/img/architecture/13-canary-propagation.png"
+    },
+    {
+      "id": "14-runtime-telemetry-flow",
+      "title": "Runtime Telemetry Flow",
+      "svg": "/static/img/architecture/14-runtime-telemetry-flow.svg",
+      "png": "/static/img/architecture/14-runtime-telemetry-flow.png"
+    },
+    {
+      "id": "15-autonomous-intelligence-pipeline",
+      "title": "Autonomous Intelligence Pipeline",
+      "svg": "/static/img/architecture/15-autonomous-intelligence-pipeline.svg",
+      "png": "/static/img/architecture/15-autonomous-intelligence-pipeline.png"
+    }
+  ]
+}

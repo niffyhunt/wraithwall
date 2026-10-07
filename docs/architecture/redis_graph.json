@@ -1,0 +1,1424 @@
+{
+  "key_patterns": [
+    {
+      "pattern": "gateway:challenge:{nonce}",
+      "type": "string",
+      "purpose": "Store PoW challenge for verification",
+      "ttl": "CHALLENGE_TTL (configurable, default ~120s)",
+      "subsystem": "gateway",
+      "operations": ["SET", "GET", "DELETE"],
+      "failure_impact": "PoW verification broken, gateway bypassed",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "gateway:fails:{ip}",
+      "type": "string",
+      "purpose": "Track PoW failure count per IP for auto-block threshold",
+      "ttl": "Varies (INCR + EXPIRE)",
+      "subsystem": "gateway",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Auto-block threshold not enforced, repeat attackers not blocked",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "gateway:blocked:{ip}",
+      "type": "string",
+      "purpose": "IP currently blocked by gateway",
+      "ttl": "BLOCK_TTL (24h default)",
+      "subsystem": "gateway",
+      "operations": ["SETEX", "GET", "DELETE"],
+      "failure_impact": "Blocked IPs regain access to platform",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "gateway:verify_rl:{ip}",
+      "type": "string",
+      "purpose": "Rate limit on PoW verification attempts per IP",
+      "ttl": "INCR + EXPIRE sliding window",
+      "subsystem": "gateway",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Fail-open → no rate limit applied (availability over security)",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:fp:{hash}:data",
+      "type": "string",
+      "purpose": "Store fingerprint data (headers, JA3, techniques) per hash",
+      "ttl": "30d (SETEX)",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Fingerprint corpus degraded, threat scoring accuracy drops",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:fp:{hash}:count",
+      "type": "string",
+      "purpose": "Count occurrences of a specific fingerprint",
+      "ttl": "30d",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["INCR", "GET"],
+      "failure_impact": "Frequency stats inaccurate",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:ja3:{ja3}",
+      "type": "set",
+      "purpose": "Set of IPs for each JA3 fingerprint",
+      "ttl": "30d (SADD with TTL)",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "JA3 analysis broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:hassh:{hassh}",
+      "type": "set",
+      "purpose": "Set of IPs for each HASSH fingerprint",
+      "ttl": "30d",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "HASSH analysis broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:tool:{tool}",
+      "type": "set",
+      "purpose": "Set of IPs per automation tool signature",
+      "ttl": "30d",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "Tool detection broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:techniques",
+      "type": "sorted_set",
+      "purpose": "MITRE technique frequency leaderboard",
+      "ttl": "None (persistent counter)",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["ZINCRBY", "ZREVRANGE"],
+      "failure_impact": "Technique distribution stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:country_scores",
+      "type": "sorted_set",
+      "purpose": "Country-level fingerprint score leaderboard",
+      "ttl": "None (persistent)",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["ZINCRBY", "ZREVRANGE"],
+      "failure_impact": "Geographic distribution stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:total_entries",
+      "type": "string",
+      "purpose": "Global fingerprint counter",
+      "ttl": "None (persistent)",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["INCR", "GET"],
+      "failure_impact": "Total entry count lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "fingerprint:recent_events",
+      "type": "list",
+      "purpose": "Recent fingerprint events for live dashboard feed",
+      "ttl": "None (capped by LTRIM)",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Live fingerprint feed broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "corpus:proxy_discovery",
+      "type": "string",
+      "purpose": "Proxy detection results (ORPHANED - no consumer)",
+      "ttl": "Unknown",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["SET"],
+      "failure_impact": "None (orphaned, written but never read)",
+      "confidence": 0.8
+    },
+    {
+      "pattern": "cowrie_session:{sid}",
+      "type": "string",
+      "purpose": "Active cowrie session state data",
+      "ttl": "24h (SETEX)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["SETEX", "GET", "DELETE"],
+      "failure_impact": "Active session tracking lost, ongoing sessions invisible",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "cowrie_completed:{sid}",
+      "type": "string",
+      "purpose": "Completed cowrie session analysis results (CRITICAL - 7+ subsystems depend)",
+      "ttl": "30d (SETEX)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["SETEX", "GET", "DEL"],
+      "failure_impact": "All session history, stats, dashboards break",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "cowrie_sessions:recent",
+      "type": "list",
+      "purpose": "Recent completed session IDs for dashboards, SSE, enrichment consumers",
+      "ttl": "None (capped at 1000 by LTRIM)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["LPUSH", "LTRIM", "LRANGE", "LLEN"],
+      "failure_impact": "SSE streams, public API, dashboards, canary enrichment stop receiving cowrie data",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "cowrie:log_pos",
+      "type": "string",
+      "purpose": "File position in cowrie.json log for tail tracking",
+      "ttl": "None (persistent between restarts)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["SET", "GET"],
+      "failure_impact": "Log reader restarts from beginning, duplicate events",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "cowrie_intel:log_pos",
+      "type": "string",
+      "purpose": "Alternative log position tracker",
+      "ttl": "None",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["SET", "GET"],
+      "failure_impact": "Duplicate or missed events",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "cowrie_llm:global:{day}",
+      "type": "string",
+      "purpose": "Daily LLM budget counter for session enrichment",
+      "ttl": "1d (EXPIRE at midnight)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["INCR", "GET", "EXPIRE"],
+      "failure_impact": "LLM budget enforcement fails (fail-closed → fallback to rule-based)",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "cowrie:alert_rate:global",
+      "type": "string",
+      "purpose": "Global rate limit counter for cowrie alerts",
+      "ttl": "Sliding window",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Alert rate limiting fails (fail-open → always alert)",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "cowrie:suppressed",
+      "type": "list",
+      "purpose": "Log of suppressed alert events for debugging",
+      "ttl": "Capped list",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Suppression logging lost, debugging impaired",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "cowrie:labeled_sessions",
+      "type": "set",
+      "purpose": "Set of session IDs with CRYSTAL classification labels (suppress/summarize/alert)",
+      "ttl": "None",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "Classification labels lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "cowrie_campaign_ips:{sig}",
+      "type": "set",
+      "purpose": "IPs per campaign signature for cross-referencing",
+      "ttl": "None",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "Campaign IP cross-reference broken",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "cowrie:recent_events",
+      "type": "list",
+      "purpose": "Alternative/legacy recent events list (STALE - not written by modern pipeline)",
+      "ttl": "None",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["LRANGE"],
+      "failure_impact": "Stale data returned by legacy endpoint",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "alert_dedup:{dedup_key}",
+      "type": "string",
+      "purpose": "Deduplication lock for alert notifications across subsystems",
+      "ttl": "120-300s (SET NX)",
+      "subsystem": "notification-routing",
+      "operations": ["SET", "GET", "DELETE"],
+      "failure_impact": "Fail-open → duplicate alerts sent (operational, not security)",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "cowrie_alert_dedup:{sig}",
+      "type": "string",
+      "purpose": "Deduplication for cowrie-specific alerts",
+      "ttl": "900s (SETEX)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Cowrie alerts may duplicate",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "fingerprint_data:{fid}",
+      "type": "string",
+      "purpose": "Session fingerprint data for campaign correlation (21-dimension fingerprint)",
+      "ttl": "3d (SETEX)",
+      "subsystem": "campaign-correlator",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Recent campaign correlation data lost, new sessions cannot match",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "recent_fingerprints",
+      "type": "list",
+      "purpose": "Recent fingerprint IDs for candidate search in campaign matching",
+      "ttl": "None (capped at 10000 by LTRIM)",
+      "subsystem": "campaign-correlator",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Campaign correlator cannot find candidates, clustering broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "campaign:{id}",
+      "type": "string",
+      "purpose": "Campaign state data (sessions, IPs, sensors, threat level, techniques)",
+      "ttl": "7d (SETEX, CAMPAIGN_TTL)",
+      "subsystem": "campaign-correlator",
+      "operations": ["SETEX", "GET", "DEL"],
+      "failure_impact": "Campaign state lost - all campaign history, clustering broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "campaigns:active",
+      "type": "list",
+      "purpose": "List of currently active campaign IDs",
+      "ttl": "None (persistent, entries expire via TTL of campaign:{id})",
+      "subsystem": "campaign-correlator",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Active campaign list lost (stale pointers)",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "bgp_monitor:route_state",
+      "type": "string",
+      "purpose": "Current BGP route state data (known routes, origin AS, paths)",
+      "ttl": "None (persistent, overridden on each update)",
+      "subsystem": "bgp-monitor",
+      "operations": ["SET", "GET"],
+      "failure_impact": "BGP baselines reset, all route comparisons lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "bgp_monitor:alerts",
+      "type": "list",
+      "purpose": "Recent BGP anomaly alerts for dashboards and consumers",
+      "ttl": "None (capped at 500)",
+      "subsystem": "bgp-monitor",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "BGP alert feed broken, dashboards stale",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "bgp_monitor:route_changes",
+      "type": "sorted_set",
+      "purpose": "Time-series log of BGP route changes with timestamps",
+      "ttl": "24h (ZREMRANGEBYSCORE trim)",
+      "subsystem": "bgp-monitor",
+      "operations": ["ZADD", "ZREMRANGEBYSCORE", "ZRANGE"],
+      "failure_impact": "Route change history lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "bgp_monitor:hijacks:active:{hash}",
+      "type": "string",
+      "purpose": "Active BGP hijack event state",
+      "ttl": "24h (SETEX)",
+      "subsystem": "bgp-monitor",
+      "operations": ["SETEX", "GET", "DEL"],
+      "failure_impact": "Active hijack tracking lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "bgp_alert_sent:{hash}",
+      "type": "string",
+      "purpose": "Deduplication for BGP anomaly alerts",
+      "ttl": "3600s (SETEX)",
+      "subsystem": "bgp-monitor",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "BGP alerts would duplicate without dedup",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "BGP_ALERTS_KEY",
+      "type": "list",
+      "purpose": "Constant-key BGP alerts list (alternate/duplicate of bgp_monitor:alerts)",
+      "ttl": "Capped at 500",
+      "subsystem": "bgp-monitor",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Partial alert loss if this key is stale",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "BGP_STATE_KEY",
+      "type": "string",
+      "purpose": "Constant-key BGP state store",
+      "ttl": "Persistent",
+      "subsystem": "bgp-monitor",
+      "operations": ["SET", "GET"],
+      "failure_impact": "BGP state tracking broken",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "attractor_sandbox:{ip}",
+      "type": "string",
+      "purpose": "Sandbox state per attacker IP (entry reason, threat score, profile)",
+      "ttl": "48h (SETEX)",
+      "subsystem": "sandbox",
+      "operations": ["SETEX", "GET", "DELETE"],
+      "failure_impact": "Attackers escape containment, sandbox diversion stops",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "sandbox:active:{uid}",
+      "type": "string",
+      "purpose": "Sandbox trial state per user (SandboxSession uid)",
+      "ttl": "24h (SETEX)",
+      "subsystem": "sandbox",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Sandbox trial state lost, trial gate broken",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "sandbox:used:{uid}",
+      "type": "string",
+      "purpose": "Permanent record of sandbox trial usage (prevent replay)",
+      "ttl": "None (persistent)",
+      "subsystem": "sandbox",
+      "operations": ["SET", "GET"],
+      "failure_impact": "Trial gate broken, users can replay sandbox trial",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "llm_rl:{key}",
+      "type": "string",
+      "purpose": "Rate limit for LLM honeypot endpoint",
+      "ttl": "Sliding window (INCR + EXPIRE)",
+      "subsystem": "llm-honeypot",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Fail-closed → no LLM calls (cost protection, default deny)",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "llm_honeypot:{ip}:{ts}",
+      "type": "string",
+      "purpose": "Record of LLM honeypot interaction (prompt, bait served, technique)",
+      "ttl": "7d (SETEX)",
+      "subsystem": "llm-honeypot",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Honeypot interaction history lost",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "llmfw:key:{api_key}",
+      "type": "string",
+      "purpose": "LLM firewall API key configuration lookup",
+      "ttl": "None (persistent config)",
+      "subsystem": "llm-firewall",
+      "operations": ["GET", "SET"],
+      "failure_impact": "API key authentication fails, 401 for all requests",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "llmfw:rl:{key}:{hour}",
+      "type": "string",
+      "purpose": "Hourly rate limit counter per LLM firewall API key",
+      "ttl": "1h (INCR + EXPIRE)",
+      "subsystem": "llm-firewall",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Fail-open → rate limiting disabled, possible abuse",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "llmfw:events:{key}",
+      "type": "list",
+      "purpose": "Recent LLM firewall events per API key (allowed/flagged)",
+      "ttl": "None (capped at 100)",
+      "subsystem": "llm-firewall",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Per-key event history lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "llmfw:blocks:{key}",
+      "type": "list",
+      "purpose": "Blocked prompts per LLM firewall API key",
+      "ttl": "None (capped at 500)",
+      "subsystem": "llm-firewall",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Block history lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "llmfw:stats:{key}:{day}",
+      "type": "hash",
+      "purpose": "Daily stats per API key (requests, blocks, flags)",
+      "ttl": "None (persistent, HINCRBY)",
+      "subsystem": "llm-firewall",
+      "operations": ["HINCRBY", "HGETALL", "HDEL"],
+      "failure_impact": "Daily stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "llmfw:cat:{key}:{day}",
+      "type": "hash",
+      "purpose": "Daily category breakdown per API key (injection, jailbreak, encoding, etc.)",
+      "ttl": "None (persistent, HINCRBY)",
+      "subsystem": "llm-firewall",
+      "operations": ["HINCRBY", "HGETALL"],
+      "failure_impact": "Category breakdown stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "llmfw:alert_dedup:{hash}",
+      "type": "string",
+      "purpose": "Dedup for LLM firewall alert notifications",
+      "ttl": "120s (SET NX + EXPIRE)",
+      "subsystem": "llm-firewall",
+      "operations": ["SET", "EXPIRE", "GET"],
+      "failure_impact": "Fail-open → duplicate alerts sent",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "llm_cache",
+      "type": "string",
+      "purpose": "Cache for LLM classification results (Layer 2)",
+      "ttl": "3600s (SETEX)",
+      "subsystem": "llm-firewall",
+      "operations": ["GET", "SETEX"],
+      "failure_impact": "LLM cache misses, more API calls to providers",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "airs:rl:{key.id}",
+      "type": "string",
+      "purpose": "Rate limit for AI Runtime Security API",
+      "ttl": "INCR + EXPIRE",
+      "subsystem": "ai-runtime-security",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Rate limit fails open, possible abuse",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "airs:alert:{email}:{technique}",
+      "type": "string",
+      "purpose": "Dedup for AIRS detection alerts per email+technique",
+      "ttl": "300s (SETEX)",
+      "subsystem": "ai-runtime-security",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "AIRS alerts would duplicate",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "canary:rl:hit:{token}",
+      "type": "string",
+      "purpose": "Rate limit on canary token hits per token",
+      "ttl": "300s (SETEX)",
+      "subsystem": "canary-service",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Fail-open → no rate limit (user experience over abuse prevention)",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "canary:triggers:total",
+      "type": "string",
+      "purpose": "Global canary trigger counter (ORPHANED - no consumer)",
+      "ttl": "None",
+      "subsystem": "canary-service",
+      "operations": ["INCR"],
+      "failure_impact": "None (orphaned, written but never read)",
+      "confidence": 0.8
+    },
+    {
+      "pattern": "canary:settings:{key}",
+      "type": "hash",
+      "purpose": "Canary service settings (webhook URLs, notification preferences)",
+      "ttl": "None",
+      "subsystem": "canary-service",
+      "operations": ["HSET", "HGET", "HGETALL"],
+      "failure_impact": "Canary service configuration lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "canarytoken_last_hit:{token}",
+      "type": "string",
+      "purpose": "Timestamp of last canarytoken.org poll hit",
+      "ttl": "None",
+      "subsystem": "canary-service",
+      "operations": ["SET", "GET"],
+      "failure_impact": "Canarytoken hit dedup lost",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "ip_enrich:{hash}",
+      "type": "string",
+      "purpose": "Cached IP enrichment data (ASN, country, ISP, risk score, VPN/Tor status, BGP status)",
+      "ttl": "IP_ENRICHMENT_TTL (configurable, ~24h-7d)",
+      "subsystem": "asn-intelligence",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "IP enrichment cache lost, API provider costs increase, enrichment latency increases",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:daily:{asn}:{date}",
+      "type": "hash",
+      "purpose": "Daily attack statistics per ASN",
+      "ttl": "None (HINCRBY, persistent)",
+      "subsystem": "asn-intelligence",
+      "operations": ["HINCRBY", "HGETALL"],
+      "failure_impact": "Daily ASN stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:leaderboard:total",
+      "type": "sorted_set",
+      "purpose": "All-time ASN hit count leaderboard",
+      "ttl": "None (ZINCRBY, persistent)",
+      "subsystem": "asn-intelligence",
+      "operations": ["ZINCRBY", "ZREVRANGE"],
+      "failure_impact": "ASN leaderboard stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:leaderboard:24h",
+      "type": "sorted_set",
+      "purpose": "Rolling 24-hour ASN hit count leaderboard",
+      "ttl": "24h (periodic trim)",
+      "subsystem": "asn-intelligence",
+      "operations": ["ZINCRBY", "ZREVRANGE", "ZREMRANGEBYSCORE"],
+      "failure_impact": "24h ASN leaderboard stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:countries",
+      "type": "sorted_set",
+      "purpose": "Country distribution leaderboard for attack sources",
+      "ttl": "None (ZINCRBY, persistent)",
+      "subsystem": "asn-intelligence",
+      "operations": ["ZINCRBY", "ZREVRANGE"],
+      "failure_impact": "Country distribution stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:hosting_providers",
+      "type": "sorted_set",
+      "purpose": "Hosting provider distribution leaderboard",
+      "ttl": "None (ZINCRBY, persistent)",
+      "subsystem": "asn-intelligence",
+      "operations": ["ZINCRBY", "ZREVRANGE"],
+      "failure_impact": "Hosting provider distribution stats lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:high_risk",
+      "type": "sorted_set",
+      "purpose": "High-risk ASN scoring (cross-fed from BGP, attack volume)",
+      "ttl": "None (ZADD, persistent)",
+      "subsystem": "asn-intelligence",
+      "operations": ["ZADD", "ZREVRANGE"],
+      "failure_impact": "High-risk ASN detection broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:bgp_hijack:{asn}",
+      "type": "string",
+      "purpose": "BGP hijack cross-reference flag per ASN (fed from bgp-monitor)",
+      "ttl": "30d (SETEX)",
+      "subsystem": "asn-intelligence",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "ASN hijack links broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "asn:stats:{key}",
+      "type": "hash",
+      "purpose": "General ASN stats aggregation",
+      "ttl": "Varies",
+      "subsystem": "asn-intelligence",
+      "operations": ["HINCRBY", "HGETALL"],
+      "failure_impact": "ASN stats degraded",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "lures:active",
+      "type": "sorted_set",
+      "purpose": "Active planted lure credentials with timestamps",
+      "ttl": "None (ZADD, entries removed on eviction)",
+      "subsystem": "credential-propagation",
+      "operations": ["ZADD", "ZREVRANGE", "ZREMRANGEBYSCORE"],
+      "failure_impact": "Active lure set lost, planted credentials untracked",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "lure:{lid}",
+      "type": "string",
+      "purpose": "Individual lure credential details (platform, URL, username, planted timestamp)",
+      "ttl": "Configurable (SETEX, matches MAX_ACTIVE_LURES policy)",
+      "subsystem": "credential-propagation",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Individual lure details lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "lures:triggered",
+      "type": "sorted_set",
+      "purpose": "Set of triggered lures with timestamps for alert dedup",
+      "ttl": "None (ZADD, persistent)",
+      "subsystem": "credential-propagation",
+      "operations": ["ZADD", "ZREVRANGE"],
+      "failure_impact": "Triggered lure tracking lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "supply_chain_canary:{token}",
+      "type": "string",
+      "purpose": "Supply chain canary token state (version, location, env hash)",
+      "ttl": "365d (SETEX)",
+      "subsystem": "supply-chain-canary",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Supply chain canary state lost - beacons untracked",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "canaries:active",
+      "type": "set",
+      "purpose": "Active supply chain canary tokens",
+      "ttl": "None (SADD, permanent)",
+      "subsystem": "supply-chain-canary",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "Active canary set lost",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "canaries:triggered",
+      "type": "set",
+      "purpose": "Triggered supply chain canary tokens",
+      "ttl": "None (SADD, permanent)",
+      "subsystem": "supply-chain-canary",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "Triggered canary set lost",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "detonate:queue",
+      "type": "list",
+      "purpose": "Async detonation job queue (link/URL sandbox)",
+      "ttl": "None (list, capped at 10 reject)",
+      "subsystem": "detonation",
+      "operations": ["LPUSH", "BRPOP", "LLEN"],
+      "failure_impact": "Async detonation jobs lost, worker starves",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "detonate:job:{job_id}",
+      "type": "string",
+      "purpose": "Individual detonation job state (status, URL, container_id, report)",
+      "ttl": "SETEX (until result consumed)",
+      "subsystem": "detonation",
+      "operations": ["SETEX", "GET", "DEL"],
+      "failure_impact": "Detonation job result lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "detonation:recent",
+      "type": "list",
+      "purpose": "Recent detonation job IDs for dashboard",
+      "ttl": "None (capped at 500)",
+      "subsystem": "detonation",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Detonation recent history lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "detonation:domain:{hash}",
+      "type": "string",
+      "purpose": "Domain detonation results cache (dedup per domain)",
+      "ttl": "24h (SETEX)",
+      "subsystem": "detonation",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Domain detonation dedup lost, redundant scans",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "lc_stats:{date}",
+      "type": "hash",
+      "purpose": "Link checker daily stats (ORPHANED - written, never queried externally)",
+      "ttl": "Unknown",
+      "subsystem": "link-checker",
+      "operations": ["HINCRBY"],
+      "failure_impact": "None (orphaned, written but never read by other subsystems)",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "public:activity",
+      "type": "list",
+      "purpose": "Recent public tool usage activity (scans, lookups) for live dashboard",
+      "ttl": "None (capped by LTRIM)",
+      "subsystem": "public-api",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Public activity feed broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "ops:actions:log",
+      "type": "stream",
+      "purpose": "Ops-dashboard SSH command/action audit log",
+      "ttl": "None (XADD stream)",
+      "subsystem": "ops-dashboard",
+      "operations": ["XADD", "XREAD", "XRANGE"],
+      "failure_impact": "Ops action audit trail lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "ops:incidents:{rule_id}",
+      "type": "stream",
+      "purpose": "Ops-dashboard rule engine incident stream",
+      "ttl": "None (XADD stream)",
+      "subsystem": "ops-dashboard",
+      "operations": ["XADD", "XREAD"],
+      "failure_impact": "Ops incident stream lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "ops:alerts:acknowledged",
+      "type": "hash",
+      "purpose": "Ops-dashboard alert acknowledgment tracking",
+      "ttl": "None (HSET, persistent)",
+      "subsystem": "ops-dashboard",
+      "operations": ["HSET", "HGET"],
+      "failure_impact": "Alert acknowledgment state lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "ops:terminal:audit",
+      "type": "stream",
+      "purpose": "Ops-dashboard terminal session audit stream",
+      "ttl": "None (XADD stream)",
+      "subsystem": "ops-dashboard",
+      "operations": ["XADD", "XREAD"],
+      "failure_impact": "Terminal session audit trail lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "mirror:{ip}:{sid}",
+      "type": "string",
+      "purpose": "Hall of Mirrors session state (current depth, layer data)",
+      "ttl": "1h (SETEX)",
+      "subsystem": "hall-of-mirrors",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Mirror session lost, attacker state reset",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "mirror_depth:{ip}",
+      "type": "string",
+      "purpose": "Current mirror depth per attacker IP",
+      "ttl": "None (INCR, decays with TTL or explicit reset)",
+      "subsystem": "hall-of-mirrors",
+      "operations": ["INCR", "GET"],
+      "failure_impact": "Mirror depth tracking lost",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "timing_canary:{name}:{ip}:{ts}",
+      "type": "string",
+      "purpose": "Timing canary planted credential tracking",
+      "ttl": "7d (SETEX)",
+      "subsystem": "timing-canaries",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Timing canary state lost, stolen credential detection broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "timing_canary_hits:{key}",
+      "type": "string",
+      "purpose": "Timing canary hit counter (for dedup/threshold)",
+      "ttl": "INCR + EXPIRE",
+      "subsystem": "timing-canaries",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Timing canary hit dedup broken",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "dna:actor_sessions:{uuid}",
+      "type": "set",
+      "purpose": "Session IDs per behavioral DNA actor",
+      "ttl": "None (SADD, persistent until actor retired)",
+      "subsystem": "cowrie-dna",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "Actor session history lost",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "dna:session_actor:{sid}",
+      "type": "string",
+      "purpose": "Actor UUID per session ID",
+      "ttl": "None (SET, persistent)",
+      "subsystem": "cowrie-dna",
+      "operations": ["SET", "GET"],
+      "failure_impact": "Session-to-actor mapping lost",
+      "confidence": 0.95
+    },
+    {
+      "pattern": "dna:hassh:{hash}",
+      "type": "string",
+      "purpose": "HASSH fingerprint registered to actor DNA",
+      "ttl": "SETEX with TTL",
+      "subsystem": "cowrie-dna",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "HASSH-to-actor mapping lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "dna:cmdhash:{hash}",
+      "type": "string",
+      "purpose": "Command hash fingerprint registered to actor DNA",
+      "ttl": "SETEX with TTL",
+      "subsystem": "cowrie-dna",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Command signature-to-actor mapping lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "deployed_traps:all",
+      "type": "set",
+      "purpose": "All deployed DML traps",
+      "ttl": "None (SADD, persistent)",
+      "subsystem": "dml-engine",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "DML trap tracking lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "dml_trap:{fqid}",
+      "type": "string",
+      "purpose": "Individual DML trap state (trigger type, path, config)",
+      "ttl": "None (SET, persistent)",
+      "subsystem": "dml-engine",
+      "operations": ["SET", "GET"],
+      "failure_impact": "Individual DML trap state lost",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "wraithwall:engine_leader",
+      "type": "string",
+      "purpose": "Engine supervisor leader-election lock (SET NX)",
+      "ttl": "45s (renewed every 15s heartbeat)",
+      "subsystem": "leader-election",
+      "operations": ["SET", "GET", "DELETE", "EXPIRE"],
+      "failure_impact": "Multiple workers run engines, N× duplicate processing",
+      "confidence": 1.0
+    },
+    {
+      "pattern": "ioc:{hash}",
+      "type": "hash",
+      "purpose": "Indicator of Compromise tracking from cowrie pipeline",
+      "ttl": "Unknown",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["HSET", "HGET"],
+      "failure_impact": "IOC tracking lost",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "api_key:rl:{prefix}:{hour}",
+      "type": "string",
+      "purpose": "Rate limit for API key usage per hour",
+      "ttl": "1h (INCR + EXPIRE)",
+      "subsystem": "auth-sessions",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "API key rate limit fails open",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "llmfw:event_types:{key}",
+      "type": "hash",
+      "purpose": "LLM firewall event type breakdown per API key",
+      "ttl": "Unknown",
+      "subsystem": "llm-firewall",
+      "operations": ["HINCRBY", "HGETALL"],
+      "failure_impact": "Event type breakdown stats lost",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "cowrie:connect",
+      "type": "pubsub",
+      "purpose": "Redis Pub/Sub channel for cowrie SSH connection events (separate cowrie-analyzer deployment)",
+      "ttl": "N/A (Pub/Sub)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["PUBLISH", "SUBSCRIBE"],
+      "failure_impact": "Separate deployment - main pipeline uses file tail primarily",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "cowrie:hassh",
+      "type": "pubsub",
+      "purpose": "Redis Pub/Sub channel for cowrie HASSH fingerprint events",
+      "ttl": "N/A (Pub/Sub)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["PUBLISH", "SUBSCRIBE"],
+      "failure_impact": "HASSH Pub/Sub consumer misses events",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "cowrie:downloads",
+      "type": "pubsub",
+      "purpose": "Redis Pub/Sub channel for cowrie file download events",
+      "ttl": "N/A (Pub/Sub)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["PUBLISH", "SUBSCRIBE"],
+      "failure_impact": "Download analysis via malware worker fails",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "cowrie:commands",
+      "type": "pubsub",
+      "purpose": "Redis Pub/Sub channel for cowrie command events",
+      "ttl": "N/A (Pub/Sub)",
+      "subsystem": "cowrie-pipeline",
+      "operations": ["PUBLISH", "SUBSCRIBE"],
+      "failure_impact": "Command analysis via Pub/Sub consumer fails",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "link_checker:rl:{ip}",
+      "type": "string",
+      "purpose": "Rate limit for link checker tool per IP",
+      "ttl": "INCR + EXPIRE",
+      "subsystem": "link-checker",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Link checker rate limit fails open",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "canary:rl:{scope}:{key}",
+      "type": "string",
+      "purpose": "General canary rate limit keys",
+      "ttl": "INCR + EXPIRE",
+      "subsystem": "canary-service",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Canary rate limiting fails open",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "incident:rl:{key}",
+      "type": "string",
+      "purpose": "Rate limit for incident response endpoints",
+      "ttl": "INCR + EXPIRE",
+      "subsystem": "incident-response",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Incident response rate limit fails open",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "llm_rl:{ip}:{day}",
+      "type": "string",
+      "purpose": "LLM honeypot daily budget per IP",
+      "ttl": "1d (EXPIRE at midnight)",
+      "subsystem": "llm-honeypot",
+      "operations": ["INCR", "EXPIRE", "GET"],
+      "failure_impact": "Fail-closed → no LLM calls (cost protection)",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "fingerprint:{type}:recent",
+      "type": "list",
+      "purpose": "Recent fingerprint events by type for live feed",
+      "ttl": "Capped list",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Type-specific fingerprint feed lost",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "sandbox:stats:{key}",
+      "type": "hash",
+      "purpose": "Sandbox subsystem statistics",
+      "ttl": "None",
+      "subsystem": "sandbox",
+      "operations": ["HINCRBY", "HGETALL"],
+      "failure_impact": "Sandbox stats lost",
+      "confidence": 0.8
+    },
+    {
+      "pattern": "bgp_monitor:feed_status",
+      "type": "hash",
+      "purpose": "BGP monitor feed health status (RIPE RIS connected/Cloudflare last poll)",
+      "ttl": "None",
+      "subsystem": "bgp-monitor",
+      "operations": ["HSET", "HGETALL"],
+      "failure_impact": "Feed health monitoring broken",
+      "confidence": 0.9
+    },
+    {
+      "pattern": "canary:events:recent",
+      "type": "list",
+      "purpose": "Recent canary service events for live feed",
+      "ttl": "Capped list",
+      "subsystem": "canary-service",
+      "operations": ["LPUSH", "LTRIM", "LRANGE"],
+      "failure_impact": "Canary event feed broken",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "public:stats_cache",
+      "type": "string",
+      "purpose": "Aggregated public stats cache",
+      "ttl": "SETEX (seconds to minutes)",
+      "subsystem": "public-api",
+      "operations": ["SETEX", "GET"],
+      "failure_impact": "Public stats response slower (DB fallback)",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "airs:actor:{fingerprint}",
+      "type": "hash",
+      "purpose": "AIRS repeat offender actor tracking",
+      "ttl": "None",
+      "subsystem": "ai-runtime-security",
+      "operations": ["HSET", "HGETALL", "HINCRBY"],
+      "failure_impact": "AIRS actor tracking broken",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "terminal:session:{sid}",
+      "type": "string",
+      "purpose": "WebSocket terminal session state",
+      "ttl": "Session duration",
+      "subsystem": "terminal-replay",
+      "operations": ["SET", "GET", "DELETE"],
+      "failure_impact": "Terminal session state lost",
+      "confidence": 0.85
+    },
+    {
+      "pattern": "corpus:fp:{hash}:techniques",
+      "type": "set",
+      "purpose": "MITRE techniques associated with a specific fingerprint",
+      "ttl": "30d",
+      "subsystem": "fingerprint-corpus",
+      "operations": ["SADD", "SMEMBERS"],
+      "failure_impact": "Per-fingerprint technique breakdown lost",
+      "confidence": 0.85
+    }
+  ],
+  "queues": [
+    {
+      "key": "cowrie_sessions:recent",
+      "type": "list",
+      "producer": "cowrie-pipeline (_handle_close)",
+      "consumer": "public-api, main.py dashboards, canary-service, ops-dashboard SSE",
+      "delivery": "LRANGE (polling, non-destructive)",
+      "cap": 1000
+    },
+    {
+      "key": "detonate:queue",
+      "type": "list",
+      "producer": "detonate (POST /api/link/detonate/async)",
+      "consumer": "detonate-worker (_worker_loop, BRPOP)",
+      "delivery": "BRPOP (at-least-once, blocking)",
+      "cap": 10
+    },
+    {
+      "key": "bgp_monitor:alerts",
+      "type": "list",
+      "producer": "bgp-monitor (_handle_anomaly)",
+      "consumer": "public-api, ops-dashboard, main.py health endpoints",
+      "delivery": "LRANGE (polling, non-destructive)",
+      "cap": 500
+    },
+    {
+      "key": "recent_fingerprints",
+      "type": "list",
+      "producer": "campaign-correlator (ingest_session)",
+      "consumer": "campaign-correlator (_find_candidates)",
+      "delivery": "LRANGE (per-ingest polling)",
+      "cap": 10000
+    },
+    {
+      "key": "llmfw:events:{key}",
+      "type": "list",
+      "producer": "llm-firewall (_record_event)",
+      "consumer": "LLM firewall UI/dashboard",
+      "delivery": "LRANGE (non-destructive)",
+      "cap": 100
+    },
+    {
+      "key": "llmfw:blocks:{key}",
+      "type": "list",
+      "producer": "llm-firewall (_record_event on block)",
+      "consumer": "LLM firewall UI/dashboard",
+      "delivery": "LRANGE (non-destructive)",
+      "cap": 500
+    },
+    {
+      "key": "BGP_ALERTS_KEY",
+      "type": "list",
+      "producer": "bgp-monitor",
+      "consumer": "bgp-monitor internal consumers, dashboards",
+      "delivery": "LRANGE",
+      "cap": 500
+    },
+    {
+      "key": "public:activity",
+      "type": "list",
+      "producer": "public-api, link-checker",
+      "consumer": "Public API dashboards",
+      "delivery": "LRANGE",
+      "cap": null
+    },
+    {
+      "key": "detonation:recent",
+      "type": "list",
+      "producer": "detonate (_pipeline_detonation_signals)",
+      "consumer": "Dashboard consumers",
+      "delivery": "LRANGE",
+      "cap": 500
+    },
+    {
+      "key": "cowrie:recent_events",
+      "type": "list",
+      "producer": "cowrie-pipeline (legacy, possibly stale)",
+      "consumer": "main.py legacy cowrie endpoint",
+      "delivery": "LRANGE",
+      "cap": null
+    },
+    {
+      "key": "cowrie:suppressed",
+      "type": "list",
+      "producer": "cowrie-pipeline (CRYSTAL suppressed sessions)",
+      "consumer": "Debug/analysis",
+      "delivery": "LRANGE",
+      "cap": null
+    },
+    {
+      "key": "fingerprint:recent_events",
+      "type": "list",
+      "producer": "fingerprint-corpus",
+      "consumer": "Admin dashboards",
+      "delivery": "LRANGE",
+      "cap": null
+    },
+    {
+      "key": "canary:events:recent",
+      "type": "list",
+      "producer": "canary-service",
+      "consumer": "Canary dashboards",
+      "delivery": "LRANGE",
+      "cap": null
+    }
+  ],
+  "locks": [
+    {
+      "key": "wraithwall:engine_leader",
+      "type": "NX lock",
+      "purpose": "Leader election for engine supervisor",
+      "ttl": "45s (renewed every 15s heartbeat)",
+      "subsystem": "leader-election",
+      "acquire": "SET NX",
+      "release": "DELETE (atexit) / EXPIRE timeout"
+    },
+    {
+      "pattern": "alert_dedup:{dedup_key}",
+      "type": "NX dedup lock",
+      "purpose": "Alert deduplication across all subsystems",
+      "ttl": "120-300s",
+      "subsystem": "notification-routing",
+      "fallback": "fail-open (always alert if Redis down)"
+    }
+  ],
+  "rate_limits": [
+    {
+      "key": "gateway:verify_rl:{ip}",
+      "type": "INCR+EXPIRE",
+      "purpose": "PoW verification rate limit",
+      "subsystem": "gateway",
+      "fallback": "fail-open (no rate limit)"
+    },
+    {
+      "key": "gateway:fails:{ip}",
+      "type": "INCR+EXPIRE",
+      "purpose": "PoW failure threshold for auto-block",
+      "subsystem": "gateway",
+      "fallback": "fail-open (no auto-block)"
+    },
+    {
+      "key": "llm_rl:{key}",
+      "type": "INCR+EXPIRE",
+      "purpose": "LLM honeypot rate limit",
+      "subsystem": "llm-honeypot",
+      "fallback": "fail-closed (no LLM calls, cost protection)"
+    },
+    {
+      "key": "llm_rl:{ip}:{day}",
+      "type": "INCR+EXPIRE",
+      "purpose": "LLM honeypot daily budget",
+      "subsystem": "llm-honeypot",
+      "fallback": "fail-closed (rule-based fallback)"
+    },
+    {
+      "key": "llmfw:rl:{key}:{hour}",
+      "type": "INCR+EXPIRE",
+      "purpose": "LLM firewall hourly API key limit",
+      "subsystem": "llm-firewall",
+      "fallback": "fail-open (no rate limit)"
+    },
+    {
+      "key": "airs:rl:{key.id}",
+      "type": "INCR+EXPIRE",
+      "purpose": "AIRS rate limit per API key",
+      "subsystem": "ai-runtime-security",
+      "fallback": "fail-open"
+    },
+    {
+      "key": "canary:rl:hit:{token}",
+      "type": "SETEX",
+      "purpose": "Canary token hit rate limit",
+      "subsystem": "canary-service",
+      "fallback": "fail-open (UX over abuse prevention)"
+    },
+    {
+      "key": "canary:rl:{scope}:{key}",
+      "type": "INCR+EXPIRE",
+      "purpose": "General canary rate limiting",
+      "subsystem": "canary-service",
+      "fallback": "fail-open"
+    },
+    {
+      "key": "link_checker:rl:{ip}",
+      "type": "INCR+EXPIRE",
+      "purpose": "Link checker per-IP rate limit",
+      "subsystem": "link-checker",
+      "fallback": "fail-open"
+    },
+    {
+      "key": "api_key:rl:{prefix}:{hour}",
+      "type": "INCR+EXPIRE",
+      "purpose": "API key hourly usage limit",
+      "subsystem": "auth-sessions",
+      "fallback": "fail-open"
+    },
+    {
+      "key": "cowrie_llm:global:{day}",
+      "type": "INCR+EXPIRE",
+      "purpose": "Cowrie LLM daily budget (300/day default)",
+      "subsystem": "cowrie-pipeline",
+      "fallback": "fail-closed (rule-based analysis fallback)"
+    },
+    {
+      "key": "cowrie:alert_rate:global",
+      "type": "INCR+EXPIRE",
+      "purpose": "Cowrie alert global rate cap",
+      "subsystem": "cowrie-pipeline",
+      "fallback": "fail-open (always alert)"
+    },
+    {
+      "key": "incident:rl:{key}",
+      "type": "INCR+EXPIRE",
+      "purpose": "Incident response rate limit",
+      "subsystem": "incident-response",
+      "fallback": "fail-open"
+    }
+  ],
+  "pubsub_channels": [
+    {
+      "channel": "cowrie:connect",
+      "purpose": "Cowrie SSH connection events (separate cowrie-analyzer deployment)",
+      "subsystem": "cowrie-pipeline",
+      "producer": "Cowrie honeypot VPS",
+      "consumer": "Malware worker (pubsub.listen)"
+    },
+    {
+      "channel": "cowrie:hassh",
+      "purpose": "Cowrie HASSH fingerprint events",
+      "subsystem": "cowrie-pipeline",
+      "producer": "Cowrie honeypot VPS",
+      "consumer": "Malware worker, fingerprint analysis"
+    },
+    {
+      "channel": "cowrie:downloads",
+      "purpose": "Cowrie file download events",
+      "subsystem": "cowrie-pipeline",
+      "producer": "Cowrie honeypot VPS",
+      "consumer": "Malware worker (file analysis)"
+    },
+    {
+      "channel": "cowrie:commands",
+      "purpose": "Cowrie SSH command events",
+      "subsystem": "cowrie-pipeline",
+      "producer": "Cowrie honeypot VPS",
+      "consumer": "Command analysis worker"
+    }
+  ],
+  "streams": [
+    {
+      "key": "ops:actions:log",
+      "purpose": "Ops-dashboard SSH command/action audit log",
+      "subsystem": "ops-dashboard",
+      "fields": ["action", "target", "success", "output", "timestamp"]
+    },
+    {
+      "key": "ops:incidents:{rule_id}",
+      "purpose": "Ops-dashboard rule engine incident stream",
+      "subsystem": "ops-dashboard",
+      "fields": ["rule_id", "severity", "condition", "context"]
+    },
+    {
+      "key": "ops:terminal:audit",
+      "purpose": "Ops-dashboard terminal session lifecycle stream",
+      "subsystem": "ops-dashboard",
+      "fields": ["server_id", "host", "connected_at", "disconnected_at", "duration"]
+    }
+  ],
+  "expiration_cascades": [
+    {
+      "description": "cowrie_sessions:recent (persistent list) → cowrie_completed:{sid} (30d TTL) → stale pointers after 30d",
+      "primary_key": "cowrie_sessions:recent",
+      "dependent_key": "cowrie_completed:{sid}",
+      "type": "list → string",
+      "risk": "Stale list entries reference expired completed-session data"
+    },
+    {
+      "description": "campaigns:active (persistent list) → campaign:{id} (7d TTL) → stale pointers after 7d",
+      "primary_key": "campaigns:active",
+      "dependent_key": "campaign:{id}",
+      "type": "list → string",
+      "risk": "Active campaign list contains references to expired campaign state"
+    },
+    {
+      "description": "recent_fingerprints (persistent list) → fingerprint_data:{fid} (3d TTL) → stale pointers after 3d",
+      "primary_key": "recent_fingerprints",
+      "dependent_key": "fingerprint_data:{fid}",
+      "type": "list → string",
+      "risk": "Recent fingerprints list references expired fingerprint data"
+    },
+    {
+      "description": "bgp_monitor:route_changes (sorted set, 24h trim) → bgp_monitor:hijacks:active:{hash} (24h TTL) → coordinated expiry",
+      "primary_key": "bgp_monitor:route_changes",
+      "dependent_key": "bgp_monitor:hijacks:active:{hash}",
+      "type": "sorted_set → string",
+      "risk": "Low (coordinated TTLs)"
+    }
+  ],
+  "total_key_patterns": 100,
+  "confidence": 0.97
+}

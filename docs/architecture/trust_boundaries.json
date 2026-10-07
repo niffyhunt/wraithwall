@@ -1,0 +1,417 @@
+{
+  "boundaries": [
+    {
+      "name": "Internet \u2192 Gateway",
+      "type": "external",
+      "trust_level": "untrusted",
+      "authentication": "pow_challenge",
+      "encryption": "https_only",
+      "subsystems_inside": ["gateway", "fingerprint_corpus_middleware"],
+      "subsystems_outside": ["internet"],
+      "risk_level": "critical",
+      "failure_mode": "deny_all"
+    },
+    {
+      "name": "Internet \u2192 Public API / Landing",
+      "type": "external",
+      "trust_level": "untrusted",
+      "authentication": "none",
+      "encryption": "https_only",
+      "subsystems_inside": ["public_api", "threat_intel_tools", "landing_pages"],
+      "subsystems_outside": ["internet"],
+      "risk_level": "high",
+      "failure_mode": "rate_limit"
+    },
+    {
+      "name": "Internet \u2192 LLM Honeypot",
+      "type": "external",
+      "trust_level": "untrusted",
+      "authentication": "none",
+      "encryption": "https_only",
+      "subsystems_inside": ["llm_honeypot", "llm_honeypot_rate_limiter"],
+      "subsystems_outside": ["internet"],
+      "risk_level": "high",
+      "failure_mode": "rate_limit_and_sandbox"
+    },
+    {
+      "name": "Authenticated \u2192 User API",
+      "type": "internal",
+      "trust_level": "low",
+      "authentication": "session_cookie_or_api_key",
+      "encryption": "https_only",
+      "subsystems_inside": ["auth_middleware", "route_handlers", "session_dna"],
+      "subsystems_outside": ["authenticated_users"],
+      "risk_level": "medium",
+      "failure_mode": "deny_authenticated"
+    },
+    {
+      "name": "Admin \u2192 Admin API",
+      "type": "internal",
+      "trust_level": "medium",
+      "authentication": "session_cookie_plus_admin_check",
+      "encryption": "https_only",
+      "subsystems_inside": ["admin_routes", "canary_management", "user_management"],
+      "subsystems_outside": ["admin_users"],
+      "risk_level": "high",
+      "failure_mode": "deny_all"
+    },
+    {
+      "name": "Internal \u2192 Redis",
+      "type": "internal",
+      "trust_level": "high",
+      "authentication": "none_network_level",
+      "encryption": "none_network_level",
+      "subsystems_inside": [
+        "gateway_state", "sandbox_state", "cowrie_pipeline", "campaign_correlator",
+        "bgp_monitor_state", "llm_firewall_state", "asn_intelligence_cache",
+        "rate_limiter_storage", "public_stats", "fingerprint_corpus", "canary_state",
+        "credential_propagation_state", "supply_chain_state", "alert_dedup"
+      ],
+      "subsystems_outside": ["flask_app", "engine_supervisor"],
+      "risk_level": "critical",
+      "failure_mode": "degraded_operation"
+    },
+    {
+      "name": "Internal \u2192 PostgreSQL",
+      "type": "internal",
+      "trust_level": "high",
+      "authentication": "database_password",
+      "encryption": "optional_tls",
+      "subsystems_inside": [
+        "auth_sessions", "user_accounts", "canary_records", "honeytoken_records",
+        "sandbox_sessions", "dna_models", "immutable_log", "audit_log",
+        "behavioral_actors", "incident_playbooks", "airs_detections",
+        "api_keys", "trusted_devices", "login_attempts"
+      ],
+      "subsystems_outside": ["flask_app"],
+      "risk_level": "critical",
+      "failure_mode": "deny_all"
+    },
+    {
+      "name": "Cowrie VPS \u2192 Pipeline",
+      "type": "external",
+      "trust_level": "low",
+      "authentication": "network_trust",
+      "encryption": "optional",
+      "subsystems_inside": ["cowrie_watcher", "cowrie_intelligence", "crystal_classifier"],
+      "subsystems_outside": ["cowrie_honeypot_sensors"],
+      "risk_level": "medium",
+      "failure_mode": "log_and_alert"
+    },
+    {
+      "name": "Cowrie Analyzer \u2192 Redis Pub/Sub",
+      "type": "external",
+      "trust_level": "low",
+      "authentication": "redis_password_optional",
+      "encryption": "none_network_level",
+      "subsystems_inside": ["cowrie_malware_worker", "cowrie_pubsub_consumer"],
+      "subsystems_outside": ["cowrie_analyzer_deployment"],
+      "risk_level": "medium",
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "name": "Breach Monitor \u2192 Main App Proxy",
+      "type": "internal",
+      "trust_level": "medium",
+      "authentication": "Ezm_api_key_header",
+      "encryption": "internal_http",
+      "subsystems_inside": ["breach_monitor_proxy", "scheduler_breach_scans"],
+      "subsystems_outside": ["breach_monitor_service"],
+      "risk_level": "medium",
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "name": "Ops Dashboard \u2192 Main App",
+      "type": "internal",
+      "trust_level": "medium",
+      "authentication": "network_trust",
+      "encryption": "internal_http",
+      "subsystems_inside": ["ops_sse_endpoint", "ops_poller"],
+      "subsystems_outside": ["ops_dashboard_service"],
+      "risk_level": "low",
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "name": "External LLM API \u2192 LLM Firewall",
+      "type": "external",
+      "trust_level": "untrusted",
+      "authentication": "api_key_required",
+      "encryption": "https_only",
+      "subsystems_inside": ["llm_firewall_3layer", "llm_firewall_rate_limiter"],
+      "subsystems_outside": ["external_llm_clients"],
+      "risk_level": "critical",
+      "failure_mode": "deny_all"
+    },
+    {
+      "name": "Paystack/BTCPay \u2192 Canary Webhook",
+      "type": "external",
+      "trust_level": "low",
+      "authentication": "hmac_signature_verification",
+      "encryption": "https_only",
+      "subsystems_inside": ["canary_subscription_handler"],
+      "subsystems_outside": ["payment_providers"],
+      "risk_level": "high",
+      "failure_mode": "log_and_alert"
+    },
+    {
+      "name": "Telegram \u2192 Bot Webhook",
+      "type": "external",
+      "trust_level": "low",
+      "authentication": "TELEGRAM_WEBHOOK_SECRET",
+      "encryption": "https_only",
+      "subsystems_inside": ["telegram_bot_handler", "telegram_command_processor"],
+      "subsystems_outside": ["telegram_servers"],
+      "risk_level": "medium",
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "name": "Flask App \u2192 External APIs (VirusTotal, Shodan, etc.)",
+      "type": "external",
+      "trust_level": "medium",
+      "authentication": "api_keys_in_env",
+      "encryption": "https_only",
+      "subsystems_inside": ["threat_intel_enrichers", "asn_enrichment", "bgp_monitor"],
+      "subsystems_outside": ["third_party_apis"],
+      "risk_level": "low",
+      "failure_mode": "graceful_degradation"
+    },
+    {
+      "name": "Flask App \u2192 AI Providers (Groq/DeepSeek/Anthropic)",
+      "type": "external",
+      "trust_level": "medium",
+      "authentication": "api_keys_in_env",
+      "encryption": "https_only",
+      "subsystems_inside": ["cowrie_llm_enrichment", "llm_firewall_layer2", "llm_honeypot_responder"],
+      "subsystems_outside": ["ai_model_providers"],
+      "risk_level": "medium",
+      "failure_mode": "circuit_breaker_fallback"
+    },
+    {
+      "name": "Internal \u2192 R2/S3 Object Storage",
+      "type": "internal",
+      "trust_level": "high",
+      "authentication": "R2_access_key_secret",
+      "encryption": "https_only",
+      "subsystems_inside": ["immutable_log_archive"],
+      "subsystems_outside": ["flask_app"],
+      "risk_level": "low",
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "name": "Browserless/Docker \u2192 Detonation Sandbox",
+      "type": "internal",
+      "trust_level": "low",
+      "authentication": "none_readonly_container",
+      "encryption": "none_localhost",
+      "subsystems_inside": ["detonation_worker", "detonation_pipeline_signals"],
+      "subsystems_outside": ["external_urls"],
+      "risk_level": "high",
+      "failure_mode": "deny_all"
+    },
+    {
+      "name": "RIPE RIS WebSocket \u2192 BGP Monitor",
+      "type": "external",
+      "trust_level": "low",
+      "authentication": "none",
+      "encryption": "wss_only",
+      "subsystems_inside": ["bgp_monitor_ripe_ris_consumer"],
+      "subsystems_outside": ["ripe_ris_live_service"],
+      "risk_level": "low",
+      "failure_mode": "fallback_to_cloudflare_poll"
+    }
+  ],
+  "trust_levels": {
+    "untrusted": ["Internet", "External LLM clients", "Cowrie analyzer pub/sub"],
+    "low": ["Authenticated users", "Cowrie VPS sensors", "Payment webhooks", "Telegram webhook", "Browserless containers", "RIPE RIS feed"],
+    "medium": ["Admin users", "Breach monitor service", "Ops dashboard", "External API providers", "AI model providers"],
+    "high": ["Redis network", "PostgreSQL network", "Internal R2/S3", "Flask application internal"],
+    "critical": []
+  },
+  "attack_surface_map": [
+    {
+      "entry_point": "/gateway, /gateway/solve",
+      "protocol": "https",
+      "auth_required": false,
+      "rate_limited": true,
+      "subsystems_exposed": ["gateway_pow", "redis_blocklist_state"]
+    },
+    {
+      "entry_point": "/v1/chat/completions (honeypot)",
+      "protocol": "https",
+      "auth_required": false,
+      "rate_limited": true,
+      "subsystems_exposed": ["llm_honeypot", "sandbox_entry", "redis_rate_limiter"]
+    },
+    {
+      "entry_point": "/api/llm-firewall/check",
+      "protocol": "https",
+      "auth_required": true,
+      "rate_limited": true,
+      "subsystems_exposed": ["llm_firewall_3layer", "redis_rate_limiter", "redis_api_key_store"]
+    },
+    {
+      "entry_point": "/api/canary-service/webhook/paystack",
+      "protocol": "https",
+      "auth_required": false,
+      "rate_limited": true,
+      "subsystems_exposed": ["canary_subscription_handler", "postgres_subscription_state"]
+    },
+    {
+      "entry_point": "/api/canary-service/webhook/btcpay",
+      "protocol": "https",
+      "auth_required": false,
+      "rate_limited": true,
+      "subsystems_exposed": ["canary_subscription_handler", "postgres_subscription_state"]
+    },
+    {
+      "entry_point": "/api/telegram/webhook",
+      "protocol": "https",
+      "auth_required": false,
+      "rate_limited": true,
+      "subsystems_exposed": ["telegram_bot_processor", "telegram_command_executor"]
+    },
+    {
+      "entry_point": "/api/tools/*",
+      "protocol": "https",
+      "auth_required": false,
+      "rate_limited": true,
+      "subsystems_exposed": ["threat_intel_enrichers", "external_api_proxies"]
+    },
+    {
+      "entry_point": "/api/link/detonate, /api/detonate",
+      "protocol": "https",
+      "auth_required": false,
+      "rate_limited": true,
+      "subsystems_exposed": ["detonation_sandbox", "docker_container", "browserless"]
+    },
+    {
+      "entry_point": "Redis TCP (internal)",
+      "protocol": "redis",
+      "auth_required": false,
+      "rate_limited": false,
+      "subsystems_exposed": ["ALL_REDIS_KEYS"]
+    },
+    {
+      "entry_point": "PostgreSQL TCP (internal)",
+      "protocol": "postgresql",
+      "auth_required": true,
+      "rate_limited": false,
+      "subsystems_exposed": ["ALL_DB_TABLES"]
+    },
+    {
+      "entry_point": "RIPE RIS WebSocket",
+      "protocol": "websocket",
+      "auth_required": false,
+      "rate_limited": false,
+      "subsystems_exposed": ["bgp_route_state_engine"]
+    },
+    {
+      "entry_point": "Cowrie VPS (filesystem /var/log/cowrie/cowrie.json)",
+      "protocol": "ssh",
+      "auth_required": false,
+      "rate_limited": false,
+      "subsystems_exposed": ["cowrie_pipeline", "crystal_classifier", "campaign_correlator"]
+    },
+    {
+      "entry_point": "Cowrie Redis Pub/Sub (cowrie:downloads, etc.)",
+      "protocol": "redis",
+      "auth_required": false,
+      "rate_limited": false,
+      "subsystems_exposed": ["cowrie_malware_worker"]
+    },
+    {
+      "entry_point": "All /api/* POST/PUT/DELETE (XHR gate)",
+      "protocol": "https",
+      "auth_required": true,
+      "rate_limited": true,
+      "subsystems_exposed": ["all_authenticated_blueprints"]
+    }
+  ],
+  "security_choke_points": [
+    {
+      "name": "XHR Origin Gate",
+      "location": "main.py:960 (check_xhr_for_state_change)",
+      "type": "middleware",
+      "enforces": "csrf_like_origin_check",
+      "subsystems_protected": ["all_api_endpoints"]
+    },
+    {
+      "name": "Request Size Limiter",
+      "location": "main.py:986 (limit_request_size)",
+      "type": "middleware",
+      "enforces": "max_16mb_payload",
+      "subsystems_protected": ["all_endpoints"]
+    },
+    {
+      "name": "HTTPS Enforcer",
+      "location": "main.py:1212 (enforce_https)",
+      "type": "middleware",
+      "enforces": "tls_required_in_production",
+      "subsystems_protected": ["all_endpoints"]
+    },
+    {
+      "name": "Session Activity Guard",
+      "location": "main.py:7068 (update_session_activity)",
+      "type": "middleware",
+      "enforces": "24h_session_idle_timeout",
+      "subsystems_protected": ["all_authenticated_endpoints"]
+    },
+    {
+      "name": "Honey Token Check (8-branch)",
+      "location": "main.py:7288 (honey_token_check)",
+      "type": "middleware",
+      "enforces": "sandbox_diversion_api_key_trap_reverse_canary_provenance",
+      "subsystems_protected": ["all_unauthenticated_endpoints"]
+    },
+    {
+      "name": "IP Blocklist Check",
+      "location": "main.py:8411 (check_ip_blocklist)",
+      "type": "middleware",
+      "enforces": "blocklisted_ip_denial",
+      "subsystems_protected": ["all_endpoints"]
+    },
+    {
+      "name": "Security Headers Injector",
+      "location": "main.py:1177 (set_security_headers)",
+      "type": "after_request",
+      "enforces": "csp_hsts_xfo_frame_options",
+      "subsystems_protected": ["all_endpoints"]
+    },
+    {
+      "name": "Gateway PoW Challenge",
+      "location": "gateway.py",
+      "type": "blueprint",
+      "enforces": "proof_of_work_before_signup_admin",
+      "subsystems_protected": ["signup", "admin"]
+    },
+    {
+      "name": "Engine Supervisor Redis Leader Lock",
+      "location": "main.py:12254",
+      "type": "background_lock",
+      "enforces": "single_leader_for_engine_threads",
+      "subsystems_protected": ["cowrie_pipeline", "campaign_correlator", "credential_propagation", "asn_engine", "bgp_monitor"]
+    },
+    {
+      "name": "SSRF Guard (Detonation)",
+      "location": "detonate.py (validate_url)",
+      "type": "validation",
+      "enforces": "block_private_ips_localhost_metadata",
+      "subsystems_protected": ["detonation_sandbox"]
+    },
+    {
+      "name": "LLM Firewall Rate Limiter",
+      "location": "llm_firewall.py (_rate_limited)",
+      "type": "rate_limiter",
+      "enforces": "1000_requests_per_hour_per_key",
+      "subsystems_protected": ["llm_firewall_layer2_llm_api"]
+    },
+    {
+      "name": "Cowrie LLM Budget Gate",
+      "location": "cowrie_intelligence.py (budget_check)",
+      "type": "budget_limiter",
+      "enforces": "300_llm_calls_per_day_fail_closed",
+      "subsystems_protected": ["cowrie_llm_enrichment_budget"]
+    }
+  ],
+  "confidence": 0.95
+}

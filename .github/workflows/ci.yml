@@ -68,7 +68,10 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install pytest
-      run: pip install pytest
+      # sandbox_kit.gates_static imports PyYAML at module load (declared
+      # package dependency); the platform jobs install no package deps
+      # otherwise, and `python -m sandbox_kit` dies with ModuleNotFoundError.
+      run: pip install pytest pyyaml
     - name: Platform report (human)
       run: python -m sandbox_kit platform
     - name: Unit suite (platform + kit)
@@ -78,7 +81,9 @@ jobs:
       run: |
         python -m sandbox_kit up --profile app-only
         python -m sandbox_kit status
-        python -m sandbox_kit destroy
+        # destroy always refuses without --yes (Stage 3 contract); CI owns
+        # this sandbox and docs advertise `destroy --yes`, so confirm here.
+        python -m sandbox_kit destroy --yes
 
     - name: "Doc-freshness (stale doc means red)"
       run: python -m pytest -q tests/test_sandbox_docs.py
@@ -88,12 +93,16 @@ jobs:
         # Replays the README "Run the local secure sandbox" box verbatim:
         # every command a fresh contributor meets must exist and succeed.
         python -m sandbox_kit up --profile app-only
+        python -m sandbox_kit destroy --yes
+        # --yes records the T1 risk acknowledgement non-interactively (no TTY
+        # here; a human running the README box gets the prompt instead).
+        python -m sandbox_kit up --profile local-sandbox --yes
         python -m sandbox_kit status --security
         python -m sandbox_kit platform
         python -m sandbox_kit profiles
         python -m sandbox_kit status
         python -m sandbox_kit verify
-        python -m sandbox_kit destroy
+        python -m sandbox_kit destroy --yes
         # research-sandbox without --allow-host refuses fail-closed (nothing
         # inert can start), and a policy-denied host is refused at start time
         # rather than at fetch time.
@@ -124,6 +133,8 @@ jobs:
         docker pull redis@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
         docker pull busybox@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
         docker pull python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea
+    - name: Install sandbox_kit deps
+      run: pip install pyyaml
     - name: SBOM + waiver-gated scan
       run: |
         python -m sandbox_kit sbom \
@@ -158,7 +169,7 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install pytest
-      run: pip install pytest
+      run: pip install pytest pyyaml
     - name: Platform report must degrade honestly (no runtime)
       run: |
         python -m sandbox_kit platform
@@ -168,7 +179,7 @@ jobs:
       run: |
         python -m pytest -q tests/test_sandbox_platform.py
         python -m sandbox_kit up --profile app-only
-        python -m sandbox_kit destroy
+        python -m sandbox_kit destroy --yes
 
   sandbox-platform-arm64:
     # Linux arm64 — best-effort QEMU label. Runs the sandbox_kit tests that do
@@ -185,6 +196,6 @@ jobs:
       run: |
         docker run --rm --platform linux/arm64 -v "$PWD":/w -w /w \
           arm64v8/python:3.12-slim bash -ec '
-          pip install -q pytest
+          pip install -q pytest pyyaml
           python -m sandbox_kit platform
           python -m pytest -q tests/test_sandbox_platform.py tests/test_sandbox_kit.py'

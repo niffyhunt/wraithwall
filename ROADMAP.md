@@ -33,10 +33,10 @@
 | ---- | ------ |
 | **MIT LICENSE** | Confirmed — root `LICENSE` is MIT |
 | **SECURITY.md** | Finalized — `contact@wraithwall.online`, **72h acknowledgement** |
-| **Metrics** | Methodology in [docs/METRICS_METHODOLOGY.md](METRICS_METHODOLOGY.md) — scope per subsystem before citing headline numbers |
+| **Metrics** | Methodology in [docs/METRICS_METHODOLOGY.md](docs/METRICS_METHODOLOGY.md) — scope per subsystem before citing headline numbers |
 | **Audit docs** | Stay internal — not linked from public README |
 | **Origin narrative** | Approved — README Maintainer section |
-| **Portfolio** | [wraithwall.online/niffy](https://wraithwall.online/niffy) |
+| **Portfolio** | [niffyhunt.online](https://niffyhunt.online) |
 
 ---
 

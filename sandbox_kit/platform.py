@@ -198,6 +198,11 @@ def report_platform_controls(
     ("docker"/"podman"/"").
     """
     system, release, machine = system()
+    # Honor the PlatformReport contract ("docker" | "podman" | ""): callers
+    # may pass None (gates._probe_runtime returns (None, None) when nothing
+    # is found), and a JSON `null` here broke the macOS CI assertion that
+    # expects "" for "no runtime".
+    runtime = runtime or ""
     info = _try_probe(docker_info, {}) or {}
 
     controls: list = []

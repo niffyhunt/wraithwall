@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-label="Threat Intelligence Pipeline">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2332" stroke-width="0.6" opacity="0.45"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#00e5ff" opacity="0.9"/>
+    </marker>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#ff2d95"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#080c14"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <rect x="0" y="0" width="1920" height="72" fill="#0a1018" opacity="0.92"/>
+  <line x1="48" y1="72" x2="1872" y2="72" stroke="#2a3a52" stroke-width="1"/>
+  <text x="56" y="38" fill="url(#titleGrad)" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="22" font-weight="700">Threat Intelligence Pipeline</text>
+  <text x="56" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11" letter-spacing="1.2">Ingest → enrich → correlate → respond</text>
+  <text x="1864" y="44" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="10" text-anchor="end">WRAITHWALL · PHASE 8 CORPUS</text>
+  <text x="1864" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="9" text-anchor="end">dependency_graph.json · asn_intelligence.py · bgp_monitor.py</text>
+<rect x="80" y="460" width="240" height="80" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="200.0" y="494.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Fingerprint Corpus</text>
+  <text x="200.0" y="514.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">JA3/HASSH/UA</text>
+  <line x1="320" y1="500" x2="380" y2="500" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="350.0" y="492.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">enrich</text>
+  <rect x="380" y="460" width="240" height="80" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="500.0" y="494.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Honeypot Intelligence</text>
+  <text x="500.0" y="514.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">SSH sessions</text>
+  <line x1="620" y1="500" x2="680" y2="500" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="650.0" y="492.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">enrich</text>
+  <rect x="680" y="460" width="240" height="80" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="800.0" y="494.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">ASN Intelligence</text>
+  <text x="800.0" y="514.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">IP enrichment</text>
+  <line x1="920" y1="500" x2="980" y2="500" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="950.0" y="492.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">enrich</text>
+  <rect x="980" y="460" width="240" height="80" rx="4" fill="#0f1520" stroke="#ffb020" stroke-width="1.5"/>
+  <text x="1100.0" y="494.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">BGP Monitor</text>
+  <text x="1100.0" y="514.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">Route monitoring</text>
+  <line x1="1220" y1="500" x2="1280" y2="500" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="1250.0" y="492.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">enrich</text>
+  <rect x="1280" y="460" width="240" height="80" rx="4" fill="#0f1520" stroke="#ff2d95" stroke-width="1.5"/>
+  <text x="1400.0" y="494.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Campaign Correlator</text>
+  <text x="1400.0" y="514.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">Similarity clustering</text>
+  <line x1="1520" y1="500" x2="1580" y2="500" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="1550.0" y="492.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">enrich</text>
+  <rect x="1580" y="460" width="240" height="80" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1700.0" y="494.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Alert Router</text>
+  <text x="1700.0" y="514.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">Operator notifications</text>
+  <rect x="40" y="140" width="1840" height="240" rx="6" fill="#00e5ff" opacity="0.08" stroke="#00e5ff" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="162" fill="#00e5ff" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">INGESTION SOURCES</text>
+  <rect x="80" y="200" width="400" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="280.0" y="218.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">HTTP requests</text>
+  <text x="280.0" y="238.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">verified edge</text>
+  <rect x="520" y="200" width="400" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="720.0" y="218.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Honeypot sensors</text>
+  <text x="720.0" y="238.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">verified edge</text>
+  <rect x="960" y="200" width="400" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1160.0" y="218.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">BGP feeds</text>
+  <text x="1160.0" y="238.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">verified edge</text>
+  <rect x="1400" y="200" width="400" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1600.0" y="218.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">Breach monitor</text>
+  <text x="1600.0" y="238.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">verified edge</text>
+  <text x="56" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10">Pipeline stages from dependency_graph intelligence category</text>
+  <text x="1864" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10" text-anchor="end">Validated architecture · No inferred components</text>
+</svg>

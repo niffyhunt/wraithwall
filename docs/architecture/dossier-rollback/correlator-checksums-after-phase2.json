@@ -1,0 +1,23 @@
+{
+  "captured_at": "2026-09-02T07:24:07.303582+00:00",
+  "phase": "after_phase_2",
+  "unchanged": true,
+  "files": [
+    {
+      "path": "campaign_correlator.py",
+      "sha256": "f47f8ba30532f70b6d78e41894c92c36ff5f71fe2162b8170f2e77dafedb494f"
+    },
+    {
+      "path": "src/wraithwall/campaign_correlator.py",
+      "sha256": "2db9128cbd5752466933718622904a63158759f3898343ed44322a89c0e84f89"
+    },
+    {
+      "path": "campaign_intel.py",
+      "sha256": "5f0d526558d8e3dd8d4da5e1ed85e1ad5157cc52a892199d7c8719226a810143"
+    },
+    {
+      "path": "webhooks.py",
+      "sha256": "e0a1a420bff94381ba0c4777ab4967d7bb92a02f2e653c7a1d28a27faeaa53c9"
+    }
+  ]
+}

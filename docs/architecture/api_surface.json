@@ -1,0 +1,392 @@
+{
+  "total_routes": 109,
+  "blueprints": [
+    {
+      "name": "link_checker_bp",
+      "file": "link_checker.py",
+      "url_prefix": "/api/link",
+      "routes": [
+        { "path": "/api/link/scan", "methods": ["POST"], "description": "Submit URL for synchronous detonation scan", "auth_required": false, "rate_limited": true, "subsystem": "detonation" },
+        { "path": "/api/link/detonate", "methods": ["POST"], "description": "Submit URL for synchronous container detonation", "auth_required": false, "rate_limited": true, "subsystem": "detonation" },
+        { "path": "/api/link/detonate/async", "methods": ["POST"], "description": "Enqueue URL for async container detonation", "auth_required": false, "rate_limited": true, "subsystem": "detonation" },
+        { "path": "/api/link/scan/stream", "methods": ["GET"], "description": "SSE stream for inline scan progress", "auth_required": false, "rate_limited": false, "subsystem": "detonation" },
+        { "path": "/api/link/status/<job_id>", "methods": ["GET"], "description": "Get detonation job status and report", "auth_required": false, "rate_limited": true, "subsystem": "detonation" }
+      ],
+      "route_count": 5
+    },
+    {
+      "name": "incident_response_bp",
+      "file": "incident_response.py",
+      "url_prefix": "/api/incident",
+      "routes": [
+        { "path": "/api/incident/playbook", "methods": ["GET", "POST"], "description": "List incident playbooks or create new", "auth_required": true, "rate_limited": false, "subsystem": "incident_response" }
+      ],
+      "route_count": 1
+    },
+    {
+      "name": "llm_honeypot_bp",
+      "file": "llm_honeypot.py",
+      "url_prefix": "/api/llm",
+      "routes": [
+        { "path": "/api/llm/honeypot/stats", "methods": ["GET"], "description": "LLM honeypot statistics", "auth_required": true, "rate_limited": false, "subsystem": "llm_honeypot" },
+        { "path": "/api/llm/honeypot/sessions", "methods": ["GET"], "description": "List LLM honeypot interaction sessions", "auth_required": true, "rate_limited": false, "subsystem": "llm_honeypot" },
+        { "path": "/api/llm/honeypot/session/<session_id>", "methods": ["GET"], "description": "Get LLM honeypot session detail", "auth_required": true, "rate_limited": false, "subsystem": "llm_honeypot" },
+        { "path": "/v1/chat/completions", "methods": ["POST"], "description": "Fake OpenAI-compatible chat endpoint (honeypot)", "auth_required": false, "rate_limited": true, "subsystem": "llm_honeypot" },
+        { "path": "/v1/embeddings", "methods": ["POST"], "description": "Fake embeddings endpoint (honeypot)", "auth_required": false, "rate_limited": true, "subsystem": "llm_honeypot" },
+        { "path": "/api/llm/honeypot/budget", "methods": ["GET"], "description": "Get daily LLM honeypot budget usage", "auth_required": true, "rate_limited": false, "subsystem": "llm_honeypot" },
+        { "path": "/api/llm/honeypot/alerts", "methods": ["GET"], "description": "List LLM honeypot alerts", "auth_required": true, "rate_limited": false, "subsystem": "llm_honeypot" }
+      ],
+      "route_count": 7
+    },
+    {
+      "name": "corpus_bp",
+      "file": "fingerprint_corpus.py",
+      "url_prefix": "/api/corpus",
+      "routes": [
+        { "path": "/api/corpus/stats", "methods": ["GET"], "description": "Fingerprint corpus aggregate statistics", "auth_required": true, "rate_limited": false, "subsystem": "fingerprint_corpus" },
+        { "path": "/api/corpus/techniques", "methods": ["GET"], "description": "Top MITRE techniques in corpus", "auth_required": true, "rate_limited": false, "subsystem": "fingerprint_corpus" },
+        { "path": "/api/corpus/countries", "methods": ["GET"], "description": "Country distribution of fingerprint events", "auth_required": true, "rate_limited": false, "subsystem": "fingerprint_corpus" },
+        { "path": "/api/corpus/tools", "methods": ["GET"], "description": "Tool signature distribution", "auth_required": true, "rate_limited": false, "subsystem": "fingerprint_corpus" },
+        { "path": "/api/corpus/ja3/<ja3_hash>", "methods": ["GET"], "description": "JA3 fingerprint detail", "auth_required": true, "rate_limited": false, "subsystem": "fingerprint_corpus" },
+        { "path": "/api/corpus/hassh/<hassh_hash>", "methods": ["GET"], "description": "HASSH fingerprint detail", "auth_required": true, "rate_limited": false, "subsystem": "fingerprint_corpus" },
+        { "path": "/api/corpus/recent", "methods": ["GET"], "description": "Recent fingerprint events", "auth_required": true, "rate_limited": false, "subsystem": "fingerprint_corpus" }
+      ],
+      "route_count": 7
+    },
+    {
+      "name": "cowrie_intel_bp",
+      "file": "cowrie_intelligence.py",
+      "url_prefix": "/api/cowrie",
+      "routes": [
+        { "path": "/api/cowrie/recent", "methods": ["GET"], "description": "Recent Cowrie sessions (legacy source)", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/sessions", "methods": ["GET"], "description": "List Cowrie sessions from pipeline", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/sessions/<session_id>", "methods": ["GET"], "description": "Get Cowrie session detail", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/stats", "methods": ["GET"], "description": "Cowrie pipeline statistics", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/stream", "methods": ["GET"], "description": "SSE stream of live Cowrie sessions", "auth_required": false, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/labels", "methods": ["GET"], "description": "CRYSTAL classification labels", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/actors", "methods": ["GET"], "description": "Behavioral DNA actors from Cowrie", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/actor/<actor_uuid>", "methods": ["GET"], "description": "Cowrie actor detail", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/ip/<ip>", "methods": ["GET"], "description": "Cowrie intelligence for specific IP", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/top-ips", "methods": ["GET"], "description": "Top attacking IPs from Cowrie", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/top-commands", "methods": ["GET"], "description": "Top commands observed in Cowrie", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/alerts", "methods": ["GET"], "description": "Cowrie CRYSTAL-generated alerts", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" }
+      ],
+      "route_count": 12
+    },
+    {
+      "name": "replay_bp",
+      "file": "replay_tty.py",
+      "url_prefix": "/api/cowrie",
+      "routes": [
+        { "path": "/api/cowrie/replay/<session_id>", "methods": ["GET"], "description": "TTY replay page for Cowrie session", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" },
+        { "path": "/api/cowrie/replay/<session_id>/log", "methods": ["GET"], "description": "TTY log data for replay", "auth_required": true, "rate_limited": false, "subsystem": "cowrie_intel" }
+      ],
+      "route_count": 2
+    },
+    {
+      "name": "campaign_bp",
+      "file": "campaign_correlator.py",
+      "url_prefix": "/api/campaign",
+      "routes": [
+        { "path": "/api/campaign/active", "methods": ["GET"], "description": "Active campaigns list", "auth_required": true, "rate_limited": false, "subsystem": "campaign_correlator" },
+        { "path": "/api/campaign/<campaign_id>", "methods": ["GET"], "description": "Campaign detail", "auth_required": true, "rate_limited": false, "subsystem": "campaign_correlator" },
+        { "path": "/api/campaign/<campaign_id>/sessions", "methods": ["GET"], "description": "Sessions in a campaign", "auth_required": true, "rate_limited": false, "subsystem": "campaign_correlator" },
+        { "path": "/api/campaign/stats", "methods": ["GET"], "description": "Campaign correlator statistics", "auth_required": true, "rate_limited": false, "subsystem": "campaign_correlator" }
+      ],
+      "route_count": 4
+    },
+    {
+      "name": "cred_prop_bp",
+      "file": "credential_propagation.py",
+      "url_prefix": "/api/credential-propagation",
+      "routes": [
+        { "path": "/api/credential-propagation/lures", "methods": ["GET"], "description": "Active planted lures", "auth_required": true, "rate_limited": false, "subsystem": "credential_propagation" },
+        { "path": "/api/credential-propagation/lure/<lure_id>", "methods": ["GET"], "description": "Lure detail", "auth_required": true, "rate_limited": false, "subsystem": "credential_propagation" },
+        { "path": "/api/credential-propagation/stats", "methods": ["GET"], "description": "Propagation network statistics", "auth_required": true, "rate_limited": false, "subsystem": "credential_propagation" },
+        { "path": "/api/credential-propagation/triggers", "methods": ["GET"], "description": "Triggered lure events", "auth_required": true, "rate_limited": false, "subsystem": "credential_propagation" }
+      ],
+      "route_count": 4
+    },
+    {
+      "name": "asn_intel_bp",
+      "file": "asn_intelligence.py",
+      "url_prefix": "/api/asn",
+      "routes": [
+        { "path": "/api/asn/leaderboard", "methods": ["GET"], "description": "ASN attack leaderboard", "auth_required": true, "rate_limited": false, "subsystem": "asn_intelligence" },
+        { "path": "/api/asn/high-risk", "methods": ["GET"], "description": "High-risk ASNs", "auth_required": true, "rate_limited": false, "subsystem": "asn_intelligence" },
+        { "path": "/api/asn/<asn>", "methods": ["GET"], "description": "ASN enrichment detail", "auth_required": true, "rate_limited": false, "subsystem": "asn_intelligence" },
+        { "path": "/api/asn/countries", "methods": ["GET"], "description": "Country distribution from ASN data", "auth_required": true, "rate_limited": false, "subsystem": "asn_intelligence" },
+        { "path": "/api/asn/stats", "methods": ["GET"], "description": "ASN intelligence statistics", "auth_required": true, "rate_limited": false, "subsystem": "asn_intelligence" }
+      ],
+      "route_count": 5
+    },
+    {
+      "name": "supply_chain_bp",
+      "file": "supply_chain_canary.py",
+      "url_prefix": "/api/supply-chain",
+      "routes": [
+        { "path": "/api/supply-chain/tokens", "methods": ["GET"], "description": "Supply chain canary tokens", "auth_required": true, "rate_limited": false, "subsystem": "supply_chain_canary" },
+        { "path": "/api/supply-chain/token/<token>", "methods": ["GET"], "description": "Token detail", "auth_required": true, "rate_limited": false, "subsystem": "supply_chain_canary" },
+        { "path": "/api/supply-chain/triggers", "methods": ["GET"], "description": "Beacon trigger events", "auth_required": true, "rate_limited": false, "subsystem": "supply_chain_canary" },
+        { "path": "/api/supply-chain/stats", "methods": ["GET"], "description": "Supply chain canary statistics", "auth_required": true, "rate_limited": false, "subsystem": "supply_chain_canary" }
+      ],
+      "route_count": 4
+    },
+    {
+      "name": "bgp_bp",
+      "file": "bgp_monitor.py",
+      "url_prefix": "/api/bgp",
+      "routes": [
+        { "path": "/api/bgp/status", "methods": ["GET"], "description": "BGP monitor feed status", "auth_required": true, "rate_limited": false, "subsystem": "bgp_monitor" },
+        { "path": "/api/bgp/routes", "methods": ["GET"], "description": "Known BGP routes", "auth_required": true, "rate_limited": false, "subsystem": "bgp_monitor" },
+        { "path": "/api/bgp/alerts", "methods": ["GET"], "description": "BGP anomaly alerts", "auth_required": true, "rate_limited": false, "subsystem": "bgp_monitor" },
+        { "path": "/api/bgp/hijacks/active", "methods": ["GET"], "description": "Active BGP hijacks", "auth_required": true, "rate_limited": false, "subsystem": "bgp_monitor" },
+        { "path": "/api/bgp/route-changes", "methods": ["GET"], "description": "BGP route change timeline", "auth_required": true, "rate_limited": false, "subsystem": "bgp_monitor" },
+        { "path": "/api/bgp/stats", "methods": ["GET"], "description": "BGP monitor statistics", "auth_required": true, "rate_limited": false, "subsystem": "bgp_monitor" }
+      ],
+      "route_count": 6
+    },
+    {
+      "name": "public_bp",
+      "file": "public_api.py",
+      "url_prefix": "/api/public",
+      "routes": [
+        { "path": "/api/public/stats", "methods": ["GET"], "description": "Public security statistics", "auth_required": false, "rate_limited": true, "subsystem": "public_api" },
+        { "path": "/api/public/activity", "methods": ["GET"], "description": "Recent public tool activity", "auth_required": false, "rate_limited": true, "subsystem": "public_api" }
+      ],
+      "route_count": 2
+    },
+    {
+      "name": "gateway_bp",
+      "file": "gateway.py",
+      "url_prefix": "/gateway",
+      "routes": [
+        { "path": "/gateway", "methods": ["GET"], "description": "Proof-of-Work challenge page", "auth_required": false, "rate_limited": true, "subsystem": "gateway" },
+        { "path": "/gateway/solve", "methods": ["POST"], "description": "Submit PoW solution", "auth_required": false, "rate_limited": true, "subsystem": "gateway" },
+        { "path": "/gateway/blocked", "methods": ["GET"], "description": "Blocked IP notification page", "auth_required": false, "rate_limited": false, "subsystem": "gateway" },
+        { "path": "/gateway/status", "methods": ["GET"], "description": "Gateway status and metrics", "auth_required": true, "rate_limited": false, "subsystem": "gateway" }
+      ],
+      "route_count": 4
+    },
+    {
+      "name": "canary_service_bp",
+      "file": "canary_service.py",
+      "url_prefix": "/api/canary-service",
+      "routes": [
+        { "path": "/api/canary-service/tokens", "methods": ["GET", "POST"], "description": "List or create canary tokens", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/token/<public_id>", "methods": ["GET", "DELETE"], "description": "Get or delete canary token", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/hits", "methods": ["GET"], "description": "Canary token hit events", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/hit/<hit_id>", "methods": ["GET"], "description": "Canary hit detail", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/stats", "methods": ["GET"], "description": "Canary service statistics", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/subscription", "methods": ["GET", "POST"], "description": "Get or create subscription", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/subscription/cancel", "methods": ["POST"], "description": "Cancel subscription", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/trial", "methods": ["POST"], "description": "Start trial", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/webhook/paystack", "methods": ["POST"], "description": "Paystack payment webhook", "auth_required": false, "rate_limited": true, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/webhook/btcpay", "methods": ["POST"], "description": "BTCPay payment webhook", "auth_required": false, "rate_limited": true, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/triggers", "methods": ["GET"], "description": "Canary trigger events", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/usage", "methods": ["GET"], "description": "Canary service usage metrics", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/alerts", "methods": ["GET"], "description": "Canary service alert history", "auth_required": true, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/plans", "methods": ["GET"], "description": "Available subscription plans", "auth_required": false, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/canary/t/<public_id>", "methods": ["GET"], "description": "Canary token tracking URL", "auth_required": false, "rate_limited": false, "subsystem": "canary_service" },
+        { "path": "/api/canary-service/status", "methods": ["GET"], "description": "Canary service health", "auth_required": false, "rate_limited": false, "subsystem": "canary_service" }
+      ],
+      "route_count": 16
+    },
+    {
+      "name": "llm_firewall_bp",
+      "file": "llm_firewall.py",
+      "url_prefix": "/api/llm-firewall",
+      "routes": [
+        { "path": "/api/llm-firewall/check", "methods": ["POST"], "description": "Check prompt through 3-layer firewall", "auth_required": false, "rate_limited": true, "subsystem": "llm_firewall" },
+        { "path": "/api/llm-firewall/stats", "methods": ["GET"], "description": "LLM firewall aggregate statistics", "auth_required": true, "rate_limited": false, "subsystem": "llm_firewall" },
+        { "path": "/api/llm-firewall/events/<api_key>", "methods": ["GET"], "description": "Per-key firewall events", "auth_required": true, "rate_limited": false, "subsystem": "llm_firewall" },
+        { "path": "/api/llm-firewall/blocks/<api_key>", "methods": ["GET"], "description": "Per-key blocked prompts", "auth_required": true, "rate_limited": false, "subsystem": "llm_firewall" },
+        { "path": "/api/llm-firewall/categories", "methods": ["GET"], "description": "Attack category breakdown", "auth_required": true, "rate_limited": false, "subsystem": "llm_firewall" },
+        { "path": "/api/llm-firewall/keys", "methods": ["GET", "POST"], "description": "Manage firewall API keys", "auth_required": true, "rate_limited": false, "subsystem": "llm_firewall" },
+        { "path": "/api/llm-firewall/key/<api_key>", "methods": ["GET", "DELETE"], "description": "Get or delete firewall key", "auth_required": true, "rate_limited": false, "subsystem": "llm_firewall" },
+        { "path": "/api/llm-firewall/dashboard", "methods": ["GET"], "description": "LLM firewall dashboard data", "auth_required": true, "rate_limited": false, "subsystem": "llm_firewall" }
+      ],
+      "route_count": 8
+    },
+    {
+      "name": "sandbox_bp",
+      "file": "sandbox.py",
+      "url_prefix": "/api/sandbox",
+      "routes": [
+        { "path": "/api/sandbox/active", "methods": ["GET"], "description": "Active sandbox sessions", "auth_required": true, "rate_limited": false, "subsystem": "sandbox" },
+        { "path": "/api/sandbox/history", "methods": ["GET"], "description": "Sandbox history for current user", "auth_required": true, "rate_limited": false, "subsystem": "sandbox" },
+        { "path": "/api/sandbox/status/<uid>", "methods": ["GET"], "description": "Sandbox session status", "auth_required": true, "rate_limited": false, "subsystem": "sandbox" },
+        { "path": "/api/sandbox/release/<uid>", "methods": ["POST"], "description": "Release IP from sandbox", "auth_required": true, "rate_limited": false, "subsystem": "sandbox" },
+        { "path": "/api/sandbox/stats", "methods": ["GET"], "description": "Sandbox statistics", "auth_required": true, "rate_limited": false, "subsystem": "sandbox" }
+      ],
+      "route_count": 5
+    },
+    {
+      "name": "detonate_bp",
+      "file": "detonate.py",
+      "url_prefix": "/api/detonate",
+      "routes": [
+        { "path": "/api/detonate", "methods": ["POST"], "description": "Submit URL for detonation", "auth_required": true, "rate_limited": true, "subsystem": "detonation" },
+        { "path": "/api/detonate/<job_id>", "methods": ["GET"], "description": "Detonation job status and results", "auth_required": true, "rate_limited": false, "subsystem": "detonation" },
+        { "path": "/api/detonate/recent", "methods": ["GET"], "description": "Recent detonation jobs", "auth_required": true, "rate_limited": false, "subsystem": "detonation" },
+        { "path": "/api/detonate/stats", "methods": ["GET"], "description": "Detonation pipeline statistics", "auth_required": true, "rate_limited": false, "subsystem": "detonation" },
+        { "path": "/api/detonate/queue", "methods": ["GET"], "description": "Detonation queue status", "auth_required": true, "rate_limited": false, "subsystem": "detonation" },
+        { "path": "/api/link/detonate/async", "methods": ["POST"], "description": "Async detonation (also in link_checker)", "auth_required": true, "rate_limited": true, "subsystem": "detonation" }
+      ],
+      "route_count": 6
+    },
+    {
+      "name": "terminal_bp",
+      "file": "terminal_bp.py",
+      "url_prefix": "/api/terminal",
+      "routes": [
+        { "path": "/api/terminal/ws", "methods": ["GET"], "description": "WebSocket terminal endpoint", "auth_required": true, "rate_limited": false, "subsystem": "terminal" },
+        { "path": "/api/terminal/sessions", "methods": ["GET"], "description": "Terminal session list", "auth_required": true, "rate_limited": false, "subsystem": "terminal" }
+      ],
+      "route_count": 2
+    },
+    {
+      "name": "ai_runtime_bp",
+      "file": "ai_runtime_security.py",
+      "url_prefix": "/api/airs",
+      "routes": [
+        { "path": "/api/airs/check", "methods": ["POST"], "description": "Check prompt through AIRS detectors", "auth_required": true, "rate_limited": true, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/stats", "methods": ["GET"], "description": "AIRS detection statistics", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/detections", "methods": ["GET"], "description": "AIRS detection history", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/detection/<detection_id>", "methods": ["GET"], "description": "AIRS detection detail", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/actors", "methods": ["GET"], "description": "AIRS tracked actors", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/actor/<actor_id>", "methods": ["GET"], "description": "AIRS actor detail", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/policy", "methods": ["GET", "POST"], "description": "Per-owner AIRS policy", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/policy/<owner>", "methods": ["GET", "PUT"], "description": "Specific owner AIRS policy", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" },
+        { "path": "/api/airs/health", "methods": ["GET"], "description": "AIRS system health", "auth_required": true, "rate_limited": false, "subsystem": "ai_runtime_security" }
+      ],
+      "route_count": 9
+    }
+  ],
+  "main_app_routes": [
+    { "path": "/health", "methods": ["GET"], "description": "Basic health check", "auth_required": false, "rate_limited": false, "subsystem": "core" },
+    { "path": "/api/health/detailed", "methods": ["GET"], "description": "Detailed pipeline health", "auth_required": true, "rate_limited": false, "subsystem": "core" },
+    { "path": "/api/platform/health", "methods": ["GET"], "description": "Platform health status", "auth_required": true, "rate_limited": false, "subsystem": "core" },
+    { "path": "/", "methods": ["GET"], "description": "Landing page", "auth_required": false, "rate_limited": false, "subsystem": "core" },
+    { "path": "/home", "methods": ["GET"], "description": "User home dashboard", "auth_required": true, "rate_limited": false, "subsystem": "core" },
+    { "path": "/signup", "methods": ["GET", "POST"], "description": "User registration page", "auth_required": false, "rate_limited": true, "subsystem": "auth" },
+    { "path": "/login", "methods": ["GET", "POST"], "description": "Login page", "auth_required": false, "rate_limited": true, "subsystem": "auth" },
+    { "path": "/logout", "methods": ["POST"], "description": "Logout", "auth_required": true, "rate_limited": false, "subsystem": "auth" },
+    { "path": "/auth/login", "methods": ["POST"], "description": "Login API", "auth_required": false, "rate_limited": true, "subsystem": "auth" },
+    { "path": "/auth/2fa", "methods": ["POST"], "description": "2FA verification", "auth_required": true, "rate_limited": true, "subsystem": "auth" },
+    { "path": "/auth/setup-2fa", "methods": ["GET", "POST"], "description": "2FA setup", "auth_required": true, "rate_limited": false, "subsystem": "auth" },
+    { "path": "/auth/reset-password", "methods": ["GET", "POST"], "description": "Password reset flow", "auth_required": false, "rate_limited": true, "subsystem": "auth" },
+    { "path": "/auth/verify-email", "methods": ["GET"], "description": "Email verification", "auth_required": false, "rate_limited": false, "subsystem": "auth" },
+    { "path": "/auth/device/verify", "methods": ["POST"], "description": "New device verification", "auth_required": true, "rate_limited": true, "subsystem": "auth" },
+    { "path": "/auth/google", "methods": ["GET", "POST"], "description": "Google OAuth sign-in", "auth_required": false, "rate_limited": true, "subsystem": "auth" },
+    { "path": "/auth/google/callback", "methods": ["GET"], "description": "Google OAuth callback", "auth_required": false, "rate_limited": false, "subsystem": "auth" },
+    { "path": "/api/keys", "methods": ["GET", "POST"], "description": "API key management", "auth_required": true, "rate_limited": false, "subsystem": "auth" },
+    { "path": "/api/keys/<key_id>", "methods": ["DELETE"], "description": "Delete API key", "auth_required": true, "rate_limited": false, "subsystem": "auth" },
+    { "path": "/admin", "methods": ["GET"], "description": "Admin dashboard", "auth_required": true, "rate_limited": false, "subsystem": "admin" },
+    { "path": "/admin/users", "methods": ["GET"], "description": "Admin user management", "auth_required": true, "rate_limited": false, "subsystem": "admin" },
+    { "path": "/admin/logs", "methods": ["GET"], "description": "Admin audit log viewer", "auth_required": true, "rate_limited": false, "subsystem": "admin" },
+    { "path": "/admin/sessions", "methods": ["GET"], "description": "Admin session management", "auth_required": true, "rate_limited": false, "subsystem": "admin" },
+    { "path": "/api/tools/ip", "methods": ["GET", "POST"], "description": "IP reputation lookup", "auth_required": false, "rate_limited": true, "subsystem": "threat_intel" },
+    { "path": "/api/tools/domain", "methods": ["GET", "POST"], "description": "Domain intelligence", "auth_required": false, "rate_limited": true, "subsystem": "threat_intel" },
+    { "path": "/api/tools/url", "methods": ["GET", "POST"], "description": "URL scanner", "auth_required": false, "rate_limited": true, "subsystem": "threat_intel" },
+    { "path": "/api/tools/hash", "methods": ["GET", "POST"], "description": "File hash lookup", "auth_required": false, "rate_limited": true, "subsystem": "threat_intel" },
+    { "path": "/api/tools/password", "methods": ["POST"], "description": "Password breach check", "auth_required": false, "rate_limited": true, "subsystem": "threat_intel" },
+    { "path": "/api/canary/plant", "methods": ["POST"], "description": "Plant a database canary", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/canary/list", "methods": ["GET"], "description": "List planted canaries", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/canary/stats", "methods": ["GET"], "description": "Canary statistics", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/canary/triggers", "methods": ["GET"], "description": "Canary trigger events", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/honeytokens", "methods": ["GET", "POST"], "description": "Honey token management", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/honeytokens/<token_id>", "methods": ["DELETE"], "description": "Delete honey token", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/honeytokens/events", "methods": ["GET"], "description": "Honey token trigger events", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/honeytokens/stats", "methods": ["GET"], "description": "Honey token statistics", "auth_required": true, "rate_limited": false, "subsystem": "canary" },
+    { "path": "/api/immutable-log/verify", "methods": ["GET"], "description": "Verify immutable log chain integrity", "auth_required": true, "rate_limited": false, "subsystem": "immutable_log" },
+    { "path": "/api/immutable-log/entries", "methods": ["GET"], "description": "Query immutable log entries", "auth_required": true, "rate_limited": false, "subsystem": "immutable_log" },
+    { "path": "/api/dna/status", "methods": ["GET"], "description": "Session DNA status for current user", "auth_required": true, "rate_limited": false, "subsystem": "dna" },
+    { "path": "/api/dna/alerts", "methods": ["GET"], "description": "User DNA alert history", "auth_required": true, "rate_limited": false, "subsystem": "dna" },
+    { "path": "/api/provenance/check", "methods": ["POST"], "description": "Check data provenance", "auth_required": true, "rate_limited": false, "subsystem": "provenance" },
+    { "path": "/api/demo/request", "methods": ["POST"], "description": "Submit demo request", "auth_required": false, "rate_limited": true, "subsystem": "core" },
+    { "path": "/api/newsletter/signup", "methods": ["POST"], "description": "Newsletter signup", "auth_required": false, "rate_limited": true, "subsystem": "core" },
+    { "path": "/api/attacker-profile/<ip>", "methods": ["GET"], "description": "Get attacker profile", "auth_required": true, "rate_limited": false, "subsystem": "sandbox" },
+    { "path": "/api/telegram/webhook", "methods": ["POST"], "description": "Telegram bot webhook", "auth_required": false, "rate_limited": true, "subsystem": "notifications" }
+  ],
+  "public_routes": [
+    "/health", "/", "/signup", "/login", "/gateway", "/gateway/solve", "/gateway/blocked",
+    "/api/public/stats", "/api/public/activity",
+    "/api/tools/ip", "/api/tools/domain", "/api/tools/url", "/api/tools/hash", "/api/tools/password",
+    "/api/link/scan", "/api/link/detonate", "/api/link/detonate/async", "/api/link/status/<job_id>",
+    "/api/link/scan/stream", "/api/cowrie/stream",
+    "/v1/chat/completions", "/v1/embeddings",
+    "/api/llm-firewall/check",
+    "/api/canary-service/plans", "/api/canary-service/status", "/canary/t/<public_id>",
+    "/api/canary-service/webhook/paystack", "/api/canary-service/webhook/btcpay",
+    "/auth/google", "/auth/google/callback", "/auth/reset-password", "/auth/verify-email",
+    "/api/demo/request", "/api/newsletter/signup",
+    "/api/telegram/webhook"
+  ],
+  "authenticated_routes": [
+    "/home", "/logout", "/auth/2fa", "/auth/setup-2fa", "/auth/device/verify",
+    "/api/keys", "/api/keys/<key_id>",
+    "/api/link/status/<job_id>",
+    "/api/incident/playbook",
+    "/api/llm/honeypot/stats", "/api/llm/honeypot/sessions", "/api/llm/honeypot/session/<session_id>",
+    "/api/llm/honeypot/budget", "/api/llm/honeypot/alerts",
+    "/api/corpus/stats", "/api/corpus/techniques", "/api/corpus/countries", "/api/corpus/tools",
+    "/api/corpus/ja3/<ja3_hash>", "/api/corpus/hassh/<hassh_hash>", "/api/corpus/recent",
+    "/api/cowrie/recent", "/api/cowrie/sessions", "/api/cowrie/sessions/<session_id>",
+    "/api/cowrie/stats", "/api/cowrie/labels", "/api/cowrie/actors", "/api/cowrie/actor/<actor_uuid>",
+    "/api/cowrie/ip/<ip>", "/api/cowrie/top-ips", "/api/cowrie/top-commands", "/api/cowrie/alerts",
+    "/api/cowrie/replay/<session_id>", "/api/cowrie/replay/<session_id>/log",
+    "/api/campaign/active", "/api/campaign/<campaign_id>", "/api/campaign/<campaign_id>/sessions", "/api/campaign/stats",
+    "/api/credential-propagation/lures", "/api/credential-propagation/lure/<lure_id>",
+    "/api/credential-propagation/stats", "/api/credential-propagation/triggers",
+    "/api/asn/leaderboard", "/api/asn/high-risk", "/api/asn/<asn>", "/api/asn/countries", "/api/asn/stats",
+    "/api/supply-chain/tokens", "/api/supply-chain/token/<token>", "/api/supply-chain/triggers", "/api/supply-chain/stats",
+    "/api/bgp/status", "/api/bgp/routes", "/api/bgp/alerts", "/api/bgp/hijacks/active", "/api/bgp/route-changes", "/api/bgp/stats",
+    "/api/canary-service/tokens", "/api/canary-service/token/<public_id>",
+    "/api/canary-service/hits", "/api/canary-service/hit/<hit_id>", "/api/canary-service/stats",
+    "/api/canary-service/subscription", "/api/canary-service/subscription/cancel",
+    "/api/canary-service/trial", "/api/canary-service/triggers",
+    "/api/canary-service/usage", "/api/canary-service/alerts",
+    "/api/llm-firewall/stats", "/api/llm-firewall/events/<api_key>", "/api/llm-firewall/blocks/<api_key>",
+    "/api/llm-firewall/categories", "/api/llm-firewall/keys", "/api/llm-firewall/key/<api_key>",
+    "/api/llm-firewall/dashboard",
+    "/api/sandbox/active", "/api/sandbox/history", "/api/sandbox/status/<uid>",
+    "/api/sandbox/release/<uid>", "/api/sandbox/stats",
+    "/api/detonate", "/api/detonate/<job_id>", "/api/detonate/recent", "/api/detonate/stats", "/api/detonate/queue",
+    "/api/terminal/ws", "/api/terminal/sessions",
+    "/api/airs/check", "/api/airs/stats", "/api/airs/detections", "/api/airs/detection/<detection_id>",
+    "/api/airs/actors", "/api/airs/actor/<actor_id>", "/api/airs/policy", "/api/airs/policy/<owner>", "/api/airs/health",
+    "/api/health/detailed", "/api/platform/health",
+    "/api/canary/plant", "/api/canary/list", "/api/canary/stats", "/api/canary/triggers",
+    "/api/honeytokens", "/api/honeytokens/<token_id>", "/api/honeytokens/events", "/api/honeytokens/stats",
+    "/api/immutable-log/verify", "/api/immutable-log/entries",
+    "/api/dna/status", "/api/dna/alerts",
+    "/api/provenance/check",
+    "/gateway/status",
+    "/api/attacker-profile/<ip>"
+  ],
+  "admin_routes": [
+    "/admin", "/admin/users", "/admin/logs", "/admin/sessions"
+  ],
+  "webhook_endpoints": [
+    { "path": "/api/canary-service/webhook/paystack", "provider": "Paystack", "auth": "HMAC-SHA256", "subsystem": "canary_service" },
+    { "path": "/api/canary-service/webhook/btcpay", "provider": "BTCPay", "auth": "BTCPay-Sig HMAC", "subsystem": "canary_service" },
+    { "path": "/api/telegram/webhook", "provider": "Telegram", "auth": "TELEGRAM_WEBHOOK_SECRET", "subsystem": "notifications" }
+  ],
+  "sse_endpoints": [
+    { "path": "/api/cowrie/stream", "source": "cowrie_sessions:recent (Redis)", "poll_interval": "5s", "subsystem": "cowrie_intel" },
+    { "path": "/api/link/scan/stream", "source": "Inline scan progress", "poll_interval": "real-time", "subsystem": "detonation" },
+    { "path": "/api/stream/events", "source": "Ops-dashboard poller thread", "poll_interval": "~1s", "subsystem": "ops_dashboard" }
+  ],
+  "static_routes": [
+    { "path": "/static/", "description": "Flask static file serving", "subsystem": "core" },
+    { "path": "/static/app/", "description": "Built SOC console bundle (frontend/)", "subsystem": "core" },
+    { "path": "/static/home_dist/", "description": "Built user home bundle (frontend-home/)", "subsystem": "core" },
+    { "path": "/static/auth_dist/", "description": "Built auth bundle (frontend-auth/)", "subsystem": "core" },
+    { "path": "/static/landing_dist/", "description": "Built landing page bundle (frontend-landing/)", "subsystem": "core" },
+    { "path": "/static/blog_dist/", "description": "Built blog bundle (frontend-blog/)", "subsystem": "core" },
+    { "path": "/static/css/", "description": "Legacy shared CSS", "subsystem": "core" },
+    { "path": "/static/img/", "description": "Static images/icons", "subsystem": "core" }
+  ],
+  "confidence": 0.92
+}

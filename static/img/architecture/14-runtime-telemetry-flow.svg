@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-label="Runtime Telemetry Flow">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2332" stroke-width="0.6" opacity="0.45"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#00e5ff" opacity="0.9"/>
+    </marker>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#ff2d95"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#080c14"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <rect x="0" y="0" width="1920" height="72" fill="#0a1018" opacity="0.92"/>
+  <line x1="48" y1="72" x2="1872" y2="72" stroke="#2a3a52" stroke-width="1"/>
+  <text x="56" y="38" fill="url(#titleGrad)" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="22" font-weight="700">Runtime Telemetry Flow</text>
+  <text x="56" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11" letter-spacing="1.2">Health endpoints · pipeline metrics · Redis counters</text>
+  <text x="1864" y="44" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="10" text-anchor="end">WRAITHWALL · PHASE 8 CORPUS</text>
+  <text x="1864" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="9" text-anchor="end">observability.json · api_runtime_contract.json · RUNTIME_TELEMETRY_PLAN.md</text>
+<rect x="80" y="160" width="460" height="72" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="310.0" y="190.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">/api/health</text>
+  <text x="310.0" y="210.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">app_running</text>
+  <rect x="580" y="160" width="460" height="72" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="810.0" y="190.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">/api/health/detailed</text>
+  <text x="810.0" y="210.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">redis_ping, db_connectivity, engine_heartbeat</text>
+  <rect x="1080" y="160" width="460" height="72" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1310.0" y="190.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">/api/platform/health</text>
+  <text x="1310.0" y="210.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">redis_ping, db_query</text>
+  <rect x="40" y="300" width="900" height="240" rx="6" fill="#ffb020" opacity="0.08" stroke="#ffb020" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="322" fill="#ffb020" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">REQUEST METRICS</text>
+  <rect x="60" y="350" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="370.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">request_count_per_second</text>
+  <rect x="60" y="398" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="418.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">middleware_latency_per_layer</text>
+  <rect x="60" y="446" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="466.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">403_rate_by_endpoint</text>
+  <rect x="60" y="494" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">413_rate_by_ip</text>
+  <rect x="980" y="300" width="900" height="240" rx="6" fill="#ffb020" opacity="0.08" stroke="#ffb020" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="994" y="322" fill="#ffb020" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">PIPELINE METRICS</text>
+  <rect x="1000" y="350" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="370.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie_event_queue_depth</text>
+  <rect x="1000" y="398" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="418.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie_worker_active_count</text>
+  <rect x="1000" y="446" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="466.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie_alert_queue_depth</text>
+  <rect x="1000" y="494" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="514.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie_llm_budget_daily_remaining</text>
+  <rect x="40" y="580" width="900" height="240" rx="6" fill="#ffb020" opacity="0.08" stroke="#ffb020" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="602" fill="#ffb020" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">REDIS METRICS</text>
+  <rect x="60" y="630" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="650.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cowrie_sessions:recent_list_length</text>
+  <rect x="60" y="678" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="698.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">bgp_monitor:alerts_list_length</text>
+  <rect x="60" y="726" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="746.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">recent_fingerprints_list_length</text>
+  <rect x="60" y="774" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="490.0" y="794.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">detonate:queue_length</text>
+  <rect x="980" y="580" width="900" height="240" rx="6" fill="#ffb020" opacity="0.08" stroke="#ffb020" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="994" y="602" fill="#ffb020" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">BUSINESS METRICS</text>
+  <rect x="1000" y="630" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="650.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">canary_service_active_subscriptions</text>
+  <rect x="1000" y="678" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="698.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">canary_service_hits_per_day</text>
+  <rect x="1000" y="726" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="746.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">canary_trial_conversion_rate</text>
+  <rect x="1000" y="774" width="860" height="40" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1430.0" y="794.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">canary_tokens_minted_per_day</text>
+  <line x1="960.0" y1="232" x2="960.0" y2="300" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="960.0" y="258.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scrape</text>
+  <rect x="760" y="920" width="400" height="64" rx="4" fill="#0f1520" stroke="#ff2d95" stroke-width="1.5" filter="url(#glow)"/>
+  <text x="960.0" y="946.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">/api/live/events</text>
+  <text x="960.0" y="966.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">SSE multiplex · Phase 9</text>
+  <text x="56" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10">Public stats via public_api.py — operator overlay via platform/health</text>
+  <text x="1864" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10" text-anchor="end">Validated architecture · No inferred components</text>
+</svg>

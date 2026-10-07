@@ -134,8 +134,11 @@ All secrets and infrastructure endpoints come from environment variables
 on your own machine with synthetic telemetry:
 
 ```bash
-./sandbox.sh up --profile app-only   # T0: app + synthetic telemetry only
-./sandbox.sh verify                  # security checklist against the running sandbox
+./sandbox.sh up --profile app-only       # T0: gates + state only, no containers
+./sandbox.sh destroy --yes               # profiles don't switch in place — clean T0 first
+./sandbox.sh up --profile local-sandbox  # T1: build, boot, self-check (one-time ack)
+./sandbox.sh verify                      # score the RUNNING sandbox against the checklist
+./sandbox.sh destroy --yes               # stop services and delete all sandbox state
 ```
 
 Read **[docs/sandbox/security-model.md](https://github.com/niffyhunt/wraithwall/blob/main/docs/sandbox/security-model.md)**

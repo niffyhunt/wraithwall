@@ -14,8 +14,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import re
-import struct
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
@@ -28,11 +26,19 @@ REDIS_URL = os.environ.get("REDIS_URL", "")
 TTYLOG_BASE_PATH = os.environ.get(
     "TTYLOG_BASE_PATH", "/var/log/cowrie/tty"
 )
-SANITIZE_CSI = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
-SANITIZE_OSC = re.compile(r"\x1b\][^\x07\x1b]*(\x07|\x1b\\)")
-SANITIZE_DCS = re.compile(r"\x1bP[^\x1b]*\x1b\\")
-SANITIZE_OTHER = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
-SANITIZE_BELL = re.compile(r"\x07")
+
+# Parser lives in sandbox_kit (pure stdlib) so `python -m sandbox_kit replay`
+# works without the web stack; re-exported here so existing
+# `from wraithwall.replay_tty import parse_ttylog` callers keep working.
+from sandbox_kit.ttylog import (  # noqa: F401
+    SANITIZE_BELL,
+    SANITIZE_CSI,
+    SANITIZE_DCS,
+    SANITIZE_OSC,
+    SANITIZE_OTHER,
+    parse_ttylog,
+    sanitize_for_terminal,
+)
 
 replay_bp = Blueprint("replay", __name__)
 
@@ -72,63 +78,6 @@ def _require_logged_in():
         return jsonify({"error": "Login required"}), 401
     return None
 
-def parse_ttylog(file_path: str) -> List[Tuple[float, str]]:
-    """Parse a Cowrie binary ttylog file (authoritative format).
-
-    Verified against cowrie 3.0.14 src/cowrie/core/ttylog.py:
-      TTYSTRUCT = "<iLiiLL"  ->  [op:i][tty:L][length:i][direction:i][sec:L][usec:L]
-      little-endian, 24-byte header, followed by `length` payload bytes.
-      op: 1=open 2=close 3=write 4=exec; direction: 1=input 2=output 3=interact.
-
-    Only OP_WRITE frames with direction != 2 (i.e. attacker INPUT — the
-    same rule cowrie's own input-hash uses) contribute replay frames.
-
-    Returns:
-        List of (timestamp_seconds, sanitized_text) tuples for input frames.
-    """
-    frames: List[Tuple[float, str]] = []
-    hdr = struct.Struct("<iLiiLL")
-    OP_WRITE, DIR_OUTPUT = 3, 2
-
-    try:
-        with open(file_path, "rb") as f:
-            while True:
-                header = f.read(hdr.size)
-                if len(header) < hdr.size:
-                    break
-                op, _tty, length, direction, sec, usec = hdr.unpack(header)
-                if length < 0 or length > 1024 * 1024:
-                    break
-                data = f.read(length)
-                if len(data) < length:
-                    break
-                if op == OP_WRITE and direction != DIR_OUTPUT and length:
-                    text = sanitize_for_terminal(data)
-                    if text:
-                        frames.append((sec + usec / 1_000_000.0, text))
-    except FileNotFoundError:
-        logger.debug(f"TTY log not found: {file_path}")
-    except Exception as e:
-        logger.error(f"TTY parse error for {file_path}: {e}")
-
-    return frames
-
-def sanitize_for_terminal(data: bytes) -> str:
-    """Strip terminal escape sequences and non-printable characters.
-
-    Preserves: printable ASCII, newlines, carriage returns, tabs.
-    Removes: CSI sequences, OSC sequences, DCS sequences, null bytes,
-             bell characters, and other control characters.
-    """
-    text = data.decode("utf-8", errors="replace")
-
-    text = SANITIZE_OSC.sub("", text)
-    text = SANITIZE_DCS.sub("", text)
-    text = SANITIZE_CSI.sub("", text)
-    text = SANITIZE_BELL.sub("", text)
-    text = SANITIZE_OTHER.sub("", text)
-
-    return text
 
 def generate_playback_html(session_id: str, frames: list) -> str:
     """Generate a sandboxed playback page with xterm.js.

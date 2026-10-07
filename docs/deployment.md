@@ -68,6 +68,4 @@ Long-running engines (`start_cowrie_watcher`, campaign correlator, BGP monitor, 
 
 ## More detail
 
-- [AGENTS.md](../AGENTS.md) — environment variable reference
-- [cowrie-analyzer/DEPLOYMENT_CHECKLIST.md](../cowrie-analyzer/DEPLOYMENT_CHECKLIST.md)
-- [docs/architecture/deployment_notes.md](architecture/deployment_notes.md)
+- [`.env.example`](../.env.example) — environment variable reference

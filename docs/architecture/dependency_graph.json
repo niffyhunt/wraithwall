@@ -1,0 +1,1300 @@
+{
+  "nodes": [
+    {
+      "id": "middleware-chain",
+      "subsystem_type": "middleware",
+      "runtime_type": "sync",
+      "category": "core",
+      "labels": ["request-lifecycle", "before-request", "after-request", "xhr-enforcement", "size-limiting", "honey-token-check", "ip-blocklist", "corpus-fingerprint", "session-activity", "https-enforce", "request-id", "security-headers"],
+      "metadata": {"file": "main.py", "handlers": 12, "short-circuit": true}
+    },
+    {
+      "id": "gateway",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "security",
+      "labels": ["pow", "challenge", "blocklist", "rate-limit", "verification"],
+      "metadata": {"file": "gateway.py", "routes": 4, "visualization": "Sankey"}
+    },
+    {
+      "id": "auth-sessions",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "core",
+      "labels": ["login", "2fa", "session", "api-key", "password-reset", "registration", "logout", "device-verification", "oauth"],
+      "metadata": {"file": "main.py", "models": 12, "threads": 8}
+    },
+    {
+      "id": "session-dna",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "intelligence",
+      "labels": ["behavioral-baseline", "deviation-scoring", "anomaly-detection", "user-tracking"],
+      "metadata": {"file": "main.py", "models": 3, "visualization": "Timeline+Graph"}
+    },
+    {
+      "id": "fingerprint-corpus",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "intelligence",
+      "labels": ["ja3", "hassh", "user-agent", "tool-signatures", "techniques", "country-scores"],
+      "metadata": {"file": "fingerprint_corpus.py", "routes": 7, "redis-keys": 14, "visualization": "Heatmap+Sankey"}
+    },
+    {
+      "id": "honeytokens",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["honey-token", "api-key-honey", "trigger", "response-action"],
+      "metadata": {"file": "main.py", "models": 2, "visualization": "Timeline"}
+    },
+    {
+      "id": "timing-canaries",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["timing-probe", "credential-delay", "stolen-credential-detection"],
+      "metadata": {"file": "main.py", "redis-keys": 3, "visualization": "Timeline"}
+    },
+    {
+      "id": "dns-canaries",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["dns-token", "canarytoken-org", "resolver-tracking"],
+      "metadata": {"file": "main.py", "visualization": "Timeline"}
+    },
+    {
+      "id": "quantum-canaries",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["fake-user", "adaptive-deception", "fake-records"],
+      "metadata": {"file": "main.py", "models": 0}
+    },
+    {
+      "id": "reverse-canaries",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["beacon", "tracking-pixel", "planted-intelligence"],
+      "metadata": {"file": "main.py", "visualization": "Timeline"}
+    },
+    {
+      "id": "hall-of-mirrors",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["mirror-layer", "depth-tracking", "psychological-deception"],
+      "metadata": {"file": "main.py", "redis-keys": 2, "visualization": "State+Timeline"}
+    },
+    {
+      "id": "canary-service",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["canary-token-saas", "subscription", "billing", "webhook", "hit-tracking"],
+      "metadata": {"file": "canary_service.py", "routes": 16, "redis-keys": 8, "threads": 3, "visualization": "Timeline"}
+    },
+    {
+      "id": "supply-chain-canary",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["beacon", "supply-chain", "code-embed", "env-hash"],
+      "metadata": {"file": "supply_chain_canary.py", "routes": 4, "redis-keys": 6, "visualization": "Force+Timeline"}
+    },
+    {
+      "id": "dml-engine",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["deception-markup-language", "dml-trap", "component-diagram"],
+      "metadata": {"file": "dml_engine.py", "visualization": "Component"}
+    },
+    {
+      "id": "credential-propagation",
+      "subsystem_type": "engine",
+      "runtime_type": "scheduled",
+      "category": "deception",
+      "labels": ["lure-network", "auto-rotate", "fake-credentials", "platform-planting"],
+      "metadata": {"file": "credential_propagation.py", "routes": 4, "redis-keys": 5, "threads": 1, "visualization": "Force+Timeline"}
+    },
+    {
+      "id": "cowrie-pipeline",
+      "subsystem_type": "pipeline",
+      "runtime_type": "event-driven",
+      "category": "intelligence",
+      "labels": ["ssh-honeypot", "crystal-classifier", "event-queue", "log-watcher", "llm-enrichment", "mitre-mapping", "hassh", "credential-attack-classification"],
+      "metadata": {"file": "cowrie_intelligence.py", "routes": 12, "redis-keys": 19, "threads": 6, "visualization": "Pipeline"}
+    },
+    {
+      "id": "campaign-correlator",
+      "subsystem_type": "engine",
+      "runtime_type": "event-driven",
+      "category": "intelligence",
+      "labels": ["fingerprint", "similarity-ensemble", "8-dimension", "clustering", "force-graph"],
+      "metadata": {"file": "campaign_correlator.py", "routes": 4, "redis-keys": 7, "threads": 1, "visualization": "Force+Timeline"}
+    },
+    {
+      "id": "cowrie-dna",
+      "subsystem_type": "engine",
+      "runtime_type": "event-driven",
+      "category": "intelligence",
+      "labels": ["behavioral-dna", "actor-tracking", "hassh-fingerprint", "session-fingerprint", "actor-merge"],
+      "metadata": {"file": "behavioral_dna.py", "models": 3, "visualization": "Force+Timeline"}
+    },
+    {
+      "id": "asn-intelligence",
+      "subsystem_type": "engine",
+      "runtime_type": "sync",
+      "category": "intelligence",
+      "labels": ["ip-enrichment", "abuseipdb", "ipinfo", "shodan", "rdap", "vanish-detection", "shift-detection", "leaderboard"],
+      "metadata": {"file": "asn_intelligence.py", "routes": 5, "redis-keys": 8, "visualization": "Heatmap+Topology"}
+    },
+    {
+      "id": "bgp-monitor",
+      "subsystem_type": "engine",
+      "runtime_type": "event-driven",
+      "category": "intelligence",
+      "labels": ["ripe-ris", "cloudflare-radar", "hijack-detection", "route-monitoring", "anomaly-alert", "dual-feed"],
+      "metadata": {"file": "bgp_monitor.py", "routes": 6, "redis-keys": 8, "threads": 1, "visualization": "Topology+Timeline"}
+    },
+    {
+      "id": "llm-honeypot",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "deception",
+      "labels": ["fake-ai", "injection-detection", "bait-serving", "sandbox-divert", "embeddings-probe", "budget-track"],
+      "metadata": {"file": "llm_honeypot.py", "routes": 7, "redis-keys": 5, "threads": 3, "visualization": "Timeline+Sequence"}
+    },
+    {
+      "id": "llm-firewall",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "security",
+      "labels": ["3-layer", "regex", "llm-classification", "heuristic-fallback", "rate-limit", "alert-routing"],
+      "metadata": {"file": "llm_firewall.py", "routes": 8, "redis-keys": 10, "threads": 2, "visualization": "Sankey+Pipeline"}
+    },
+    {
+      "id": "ai-runtime-security",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "security",
+      "labels": ["airs", "5-detectors", "injection", "jailbreak", "indirect", "rag-exfil", "tool-abuse", "actor-tracking"],
+      "metadata": {"file": "ai_runtime_security.py", "routes": 9, "redis-keys": 3, "threads": 1, "visualization": "Timeline+Sankey"}
+    },
+    {
+      "id": "link-checker",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "security",
+      "labels": ["url-scan", "domain-intel", "ip-reputation", "ssl-check", "ssrf-guard"],
+      "metadata": {"file": "link_checker.py", "routes": 5, "redis-keys": 8, "visualization": "Pipeline"}
+    },
+    {
+      "id": "detonation",
+      "subsystem_type": "blueprint",
+      "runtime_type": "async",
+      "category": "security",
+      "labels": ["url-sandbox", "container-exec", "playwright", "browserless", "threat-signals"],
+      "metadata": {"file": "detonate.py", "routes": 6, "redis-keys": 4, "threads": 2, "visualization": "Pipeline+Timeline"}
+    },
+    {
+      "id": "sandbox",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "security",
+      "labels": ["attractor-sandbox", "fake-response", "exfil-tracking", "containment", "predictive-canary", "trial-gate"],
+      "metadata": {"file": "sandbox.py", "routes": 5, "redis-keys": 4, "threads": 1, "visualization": "Timeline+State"}
+    },
+    {
+      "id": "incident-response",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "security",
+      "labels": ["playbook", "incident-tracking", "step-completion"],
+      "metadata": {"file": "incident_response.py", "routes": 1, "redis-keys": 1}
+    },
+    {
+      "id": "breach-monitor",
+      "subsystem_type": "service",
+      "runtime_type": "scheduled",
+      "category": "intelligence",
+      "labels": ["paste-monitor", "github-monitor", "hibp", "breach-finding", "proxy"],
+      "metadata": {"file": "main.py+breach-monitor/", "schedule": "6h", "visualization": "Pipeline+Timeline+Sankey"}
+    },
+    {
+      "id": "provenance",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "security",
+      "labels": ["data-provenance", "ip-mismatch", "signed-data", "violation-detection"],
+      "metadata": {"file": "main.py", "models": 1}
+    },
+    {
+      "id": "public-api",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "core",
+      "labels": ["public-stats", "threat-intel", "live-graph"],
+      "metadata": {"file": "public_api.py", "routes": 2, "redis-keys": 10, "visualization": "Graph"}
+    },
+    {
+      "id": "immutable-log",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "core",
+      "labels": ["audit-trail", "hash-chain", "sha256", "tamper-evident", "s3-archive"],
+      "metadata": {"file": "main.py", "models": 1, "event-types": 40, "visualization": "Chain"}
+    },
+    {
+      "id": "notification-routing",
+      "subsystem_type": "service",
+      "runtime_type": "async",
+      "category": "infrastructure",
+      "labels": ["telegram", "discord", "email", "webhook", "dedup", "rate-limit", "fire-and-forget"],
+      "metadata": {"channels": 4, "templates": 25, "visualization": "Sankey"}
+    },
+    {
+      "id": "ops-dashboard",
+      "subsystem_type": "service",
+      "runtime_type": "event-driven",
+      "category": "infrastructure",
+      "labels": ["sse", "terminal", "server-management", "incident-rule", "alert-ack"],
+      "metadata": {"file": "ops-dashboard/", "visualization": "Component"}
+    },
+    {
+      "id": "leader-election",
+      "subsystem_type": "service",
+      "runtime_type": "event-driven",
+      "category": "infrastructure",
+      "labels": ["redis-lock", "engine-supervisor", "heartbeat", "failover"],
+      "metadata": {"file": "main.py", "redis-key": "wraithwall:engine_leader", "lock-ttl": 45}
+    },
+    {
+      "id": "engine-supervisor",
+      "subsystem_type": "service",
+      "runtime_type": "thread",
+      "category": "infrastructure",
+      "labels": ["daemon", "leader-gated", "engine-start", "scheduler-start"],
+      "metadata": {"file": "main.py", "line": 12254}
+    },
+    {
+      "id": "terminal-replay",
+      "subsystem_type": "blueprint",
+      "runtime_type": "sync",
+      "category": "core",
+      "labels": ["tty-replay", "xterm-js", "session-playback"],
+      "metadata": {"file": "replay_tty.py", "routes": 2}
+    },
+    {
+      "id": "crystal-classifier",
+      "subsystem_type": "pipeline",
+      "runtime_type": "sync",
+      "category": "intelligence",
+      "labels": ["decision-gates", "alert-summarize-suppress", "llm-analysis", "rule-based-fallback", "mitre-mapping"],
+      "metadata": {"file": "cowrie_intelligence.py", "visualization": "Decision+Sankey"}
+    },
+    {
+      "id": "attractor-profile",
+      "subsystem_type": "service",
+      "runtime_type": "sync",
+      "category": "intelligence",
+      "labels": ["attacker-prediction", "predictive-canary", "profile-scoring"],
+      "metadata": {"file": "main.py", "line": 3527}
+    }
+  ],
+  "edges": [
+    {
+      "source": "wsgi-gunicorn",
+      "destination": "middleware-chain",
+      "direction": "inbound",
+      "protocol": "http",
+      "trigger": "request",
+      "payload_type": "request",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1-10",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "gateway",
+      "direction": "outbound",
+      "protocol": "http",
+      "trigger": "request",
+      "payload_type": "request",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7483",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "fingerprint-corpus",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "data",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1208",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "auth-sessions",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "session",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7068",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "honeytokens",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "session",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7288",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "sandbox",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "request",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7288",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "provenance",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7288",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "session-dna",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7112",
+      "inferred": false
+    },
+    {
+      "source": "middleware-chain",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7288",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "crystal-classifier",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.95,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "crystal-classifier",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 0.95,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "campaign-correlator",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.95,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "cowrie-dna",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.95,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "asn-intelligence",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.95,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "fingerprint-corpus",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.95,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "credential-propagation",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.95,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "bgp-monitor",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "detonation",
+      "destination": "campaign-correlator",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.9,
+      "evidence_location": "detonate.py:434",
+      "inferred": false
+    },
+    {
+      "source": "detonation",
+      "destination": "fingerprint-corpus",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.9,
+      "evidence_location": "detonate.py:434",
+      "inferred": false
+    },
+    {
+      "source": "detonation",
+      "destination": "public-api",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.85,
+      "evidence_location": "detonate.py:434",
+      "inferred": true
+    },
+    {
+      "source": "bgp-monitor",
+      "destination": "asn-intelligence",
+      "direction": "outbound",
+      "protocol": "redis",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 1.0,
+      "evidence_location": "bgp_monitor.py:522",
+      "inferred": false
+    },
+    {
+      "source": "bgp-monitor",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "bgp_monitor.py:522",
+      "inferred": false
+    },
+    {
+      "source": "bgp-monitor",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "http",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "bgp_monitor.py:522",
+      "inferred": false
+    },
+    {
+      "source": "bgp-monitor",
+      "destination": "cowrie-pipeline",
+      "direction": "bidirectional",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    },
+    {
+      "source": "asn-intelligence",
+      "destination": "bgp-monitor",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "asn_intelligence.py:697",
+      "inferred": false
+    },
+    {
+      "source": "sandbox",
+      "destination": "llm-firewall",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "request",
+      "payload_type": "data",
+      "confidence": 0.95,
+      "evidence_location": "sandbox.py:1",
+      "inferred": false
+    },
+    {
+      "source": "sandbox",
+      "destination": "link-checker",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "request",
+      "payload_type": "data",
+      "confidence": 0.95,
+      "evidence_location": "sandbox.py:1",
+      "inferred": false
+    },
+    {
+      "source": "sandbox",
+      "destination": "asn-intelligence",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "request",
+      "payload_type": "data",
+      "confidence": 0.95,
+      "evidence_location": "sandbox.py:1",
+      "inferred": false
+    },
+    {
+      "source": "sandbox",
+      "destination": "bgp-monitor",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "request",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "sandbox.py:1",
+      "inferred": false
+    },
+    {
+      "source": "sandbox",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "sandbox.py:1",
+      "inferred": false
+    },
+    {
+      "source": "sandbox",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "sandbox.py:1",
+      "inferred": false
+    },
+    {
+      "source": "llm-honeypot",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "llm_honeypot.py:1",
+      "inferred": false
+    },
+    {
+      "source": "llm-honeypot",
+      "destination": "sandbox",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "llm_honeypot.py:1",
+      "inferred": false
+    },
+    {
+      "source": "llm-honeypot",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "llm_honeypot.py:1",
+      "inferred": false
+    },
+    {
+      "source": "llm-firewall",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "http",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "llm_firewall.py:1",
+      "inferred": false
+    },
+    {
+      "source": "ai-runtime-security",
+      "destination": "llm-honeypot",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.95,
+      "evidence_location": "ai_runtime_security.py:1",
+      "inferred": false
+    },
+    {
+      "source": "ai-runtime-security",
+      "destination": "asn-intelligence",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "ai_runtime_security.py:1",
+      "inferred": false
+    },
+    {
+      "source": "ai-runtime-security",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "ai_runtime_security.py:1",
+      "inferred": false
+    },
+    {
+      "source": "ai-runtime-security",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "ai_runtime_security.py:1",
+      "inferred": false
+    },
+    {
+      "source": "link-checker",
+      "destination": "public-api",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "request",
+      "payload_type": "data",
+      "confidence": 0.85,
+      "evidence_location": "link_checker.py:1",
+      "inferred": false
+    },
+    {
+      "source": "link-checker",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "link_checker.py:1",
+      "inferred": false
+    },
+    {
+      "source": "canary-service",
+      "destination": "asn-intelligence",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.85,
+      "evidence_location": "canary_service.py:1",
+      "inferred": true
+    },
+    {
+      "source": "canary-service",
+      "destination": "campaign-correlator",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.85,
+      "evidence_location": "canary_service.py:1",
+      "inferred": true
+    },
+    {
+      "source": "canary-service",
+      "destination": "cowrie-pipeline",
+      "direction": "inbound",
+      "protocol": "redis",
+      "trigger": "request",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "canary_service.py:1",
+      "inferred": false
+    },
+    {
+      "source": "canary-service",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "canary_service.py:1",
+      "inferred": false
+    },
+    {
+      "source": "canary-service",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "canary_service.py:1",
+      "inferred": false
+    },
+    {
+      "source": "supply-chain-canary",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "supply_chain_canary.py:1",
+      "inferred": false
+    },
+    {
+      "source": "supply-chain-canary",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "supply_chain_canary.py:1",
+      "inferred": false
+    },
+    {
+      "source": "timing-canaries",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1660",
+      "inferred": false
+    },
+    {
+      "source": "timing-canaries",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1660",
+      "inferred": false
+    },
+    {
+      "source": "dns-canaries",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1",
+      "inferred": false
+    },
+    {
+      "source": "dns-canaries",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1",
+      "inferred": false
+    },
+    {
+      "source": "quantum-canaries",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.9,
+      "evidence_location": "main.py:1",
+      "inferred": true
+    },
+    {
+      "source": "reverse-canaries",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1",
+      "inferred": false
+    },
+    {
+      "source": "reverse-canaries",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "main.py:1",
+      "inferred": false
+    },
+    {
+      "source": "hall-of-mirrors",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:2993",
+      "inferred": false
+    },
+    {
+      "source": "hall-of-mirrors",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "main.py:2993",
+      "inferred": false
+    },
+    {
+      "source": "honeytokens",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:5700",
+      "inferred": false
+    },
+    {
+      "source": "honeytokens",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "main.py:5700",
+      "inferred": false
+    },
+    {
+      "source": "breach-monitor",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 0.9,
+      "evidence_location": "main.py:1",
+      "inferred": true
+    },
+    {
+      "source": "breach-monitor",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.9,
+      "evidence_location": "main.py:1",
+      "inferred": true
+    },
+    {
+      "source": "session-dna",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7112",
+      "inferred": false
+    },
+    {
+      "source": "provenance",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:4950",
+      "inferred": false
+    },
+    {
+      "source": "incident-response",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.85,
+      "evidence_location": "incident_response.py:1",
+      "inferred": true
+    },
+    {
+      "source": "dml-engine",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 0.9,
+      "evidence_location": "dml_engine.py:1",
+      "inferred": true
+    },
+    {
+      "source": "dml-engine",
+      "destination": "honeytokens",
+      "direction": "outbound",
+      "protocol": "redis",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "dml_engine.py:1",
+      "inferred": false
+    },
+    {
+      "source": "credential-propagation",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "http",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "credential_propagation.py:660",
+      "inferred": false
+    },
+    {
+      "source": "cowrie-dna",
+      "destination": "cowrie-pipeline",
+      "direction": "bidirectional",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.95,
+      "evidence_location": "behavioral_dna.py:1",
+      "inferred": false
+    },
+    {
+      "source": "campaign-correlator",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "http",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 0.95,
+      "evidence_location": "campaign_correlator.py:815",
+      "inferred": false
+    },
+    {
+      "source": "auth-sessions",
+      "destination": "session-dna",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7068",
+      "inferred": false
+    },
+    {
+      "source": "auth-sessions",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7710",
+      "inferred": false
+    },
+    {
+      "source": "auth-sessions",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7710",
+      "inferred": false
+    },
+    {
+      "source": "gateway",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "event",
+      "confidence": 1.0,
+      "evidence_location": "gateway.py:1",
+      "inferred": false
+    },
+    {
+      "source": "public-api",
+      "destination": "immutable-log",
+      "direction": "outbound",
+      "protocol": "db",
+      "trigger": "request",
+      "payload_type": "event",
+      "confidence": 0.85,
+      "evidence_location": "public_api.py:1",
+      "inferred": true
+    },
+    {
+      "source": "ops-dashboard",
+      "destination": "cowrie-pipeline",
+      "direction": "inbound",
+      "protocol": "redis",
+      "trigger": "scheduled",
+      "payload_type": "data",
+      "confidence": 0.9,
+      "evidence_location": "ops-dashboard/app.py:216",
+      "inferred": false
+    },
+    {
+      "source": "leader-election",
+      "destination": "engine-supervisor",
+      "direction": "outbound",
+      "protocol": "redis",
+      "trigger": "startup",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:12254",
+      "inferred": false
+    },
+    {
+      "source": "engine-supervisor",
+      "destination": "cowrie-pipeline",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "startup",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:12254",
+      "inferred": false
+    },
+    {
+      "source": "engine-supervisor",
+      "destination": "campaign-correlator",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "startup",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:12254",
+      "inferred": false
+    },
+    {
+      "source": "engine-supervisor",
+      "destination": "credential-propagation",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "startup",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:12254",
+      "inferred": false
+    },
+    {
+      "source": "engine-supervisor",
+      "destination": "asn-intelligence",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "startup",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:12254",
+      "inferred": false
+    },
+    {
+      "source": "engine-supervisor",
+      "destination": "bgp-monitor",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "startup",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:12254",
+      "inferred": false
+    },
+    {
+      "source": "engine-supervisor",
+      "destination": "apscheduler",
+      "direction": "outbound",
+      "protocol": "thread",
+      "trigger": "startup",
+      "payload_type": "command",
+      "confidence": 1.0,
+      "evidence_location": "main.py:12254",
+      "inferred": false
+    },
+    {
+      "source": "auth-sessions",
+      "destination": "gateway",
+      "direction": "outbound",
+      "protocol": "http",
+      "trigger": "request",
+      "payload_type": "session",
+      "confidence": 1.0,
+      "evidence_location": "main.py:7483",
+      "inferred": false
+    },
+    {
+      "source": "honeytokens",
+      "destination": "timing-canaries",
+      "direction": "bidirectional",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.8,
+      "evidence_location": "main.py:5700",
+      "inferred": true
+    },
+    {
+      "source": "asn-intelligence",
+      "destination": "notification-routing",
+      "direction": "outbound",
+      "protocol": "http",
+      "trigger": "event",
+      "payload_type": "alert",
+      "confidence": 0.9,
+      "evidence_location": "asn_intelligence.py:697",
+      "inferred": false
+    },
+    {
+      "source": "attractor-profile",
+      "destination": "sandbox",
+      "direction": "outbound",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "command",
+      "confidence": 0.9,
+      "evidence_location": "main.py:3527",
+      "inferred": false
+    },
+    {
+      "source": "campaign-correlator",
+      "destination": "cowrie-pipeline",
+      "direction": "inbound",
+      "protocol": "redis",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.95,
+      "evidence_location": "campaign_correlator.py:815",
+      "inferred": false
+    },
+    {
+      "source": "canary-service",
+      "destination": "honeytokens",
+      "direction": "bidirectional",
+      "protocol": "db",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.8,
+      "evidence_location": "canary_service.py:1",
+      "inferred": true
+    },
+    {
+      "source": "supply-chain-canary",
+      "destination": "credential-propagation",
+      "direction": "bidirectional",
+      "protocol": "redis",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.8,
+      "evidence_location": "supply_chain_canary.py:1",
+      "inferred": true
+    },
+    {
+      "source": "cowrie-pipeline",
+      "destination": "credential-propagation",
+      "direction": "bidirectional",
+      "protocol": "rpc",
+      "trigger": "event",
+      "payload_type": "data",
+      "confidence": 0.85,
+      "evidence_location": "cowrie_intelligence.py:1746",
+      "inferred": false
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "$id": "https://wraithwall.online/schema/dossier-contract-v1.json",
+  "title": "DOSSIER_CONTRACT",
+  "description": "Case-file JSON projected from a campaign record the linker already emitted. schema_version is contract metadata, not a linker field.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "status",
+    "threat_level",
+    "campaign_confidence",
+    "session_count",
+    "first_seen",
+    "last_seen",
+    "identity",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1" },
+    "campaign_id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string" },
+    "threat_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "campaign_confidence": { "type": ["number", "null"] },
+    "session_count": { "type": "integer", "minimum": 0 },
+    "first_seen": { "type": ["string", "null"] },
+    "last_seen": { "type": ["string", "null"] },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command_pattern_hash",
+        "tools",
+        "tool_sequence",
+        "session_pacing",
+        "human_confidence",
+        "normalized_commands",
+        "actor_uuids"
+      ],
+      "properties": {
+        "command_pattern_hash": { "type": ["string", "null"] },
+        "tools": { "type": "array", "items": { "type": "string" } },
+        "tool_sequence": { "type": "array", "items": { "type": "string" } },
+        "session_pacing": { "type": "string" },
+        "human_confidence": { "type": ["number", "null"] },
+        "normalized_commands": { "type": "array", "items": { "type": "string" } },
+        "actor_uuids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session_ids"],
+      "properties": {
+        "session_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "mitre_techniques": { "type": "array" },
+    "mitre_stages": { "type": "array", "items": { "type": "string" } },
+    "deception_events": { "type": "integer", "minimum": 0 }
+  }
+}

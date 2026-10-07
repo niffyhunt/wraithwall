@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-label="Runtime Architecture">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2332" stroke-width="0.6" opacity="0.45"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#00e5ff" opacity="0.9"/>
+    </marker>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#ff2d95"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#080c14"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <rect x="0" y="0" width="1920" height="72" fill="#0a1018" opacity="0.92"/>
+  <line x1="48" y1="72" x2="1872" y2="72" stroke="#2a3a52" stroke-width="1"/>
+  <text x="56" y="38" fill="url(#titleGrad)" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="22" font-weight="700">Runtime Architecture</text>
+  <text x="56" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11" letter-spacing="1.2">Gunicorn workers · middleware · daemon threads · engine supervisor</text>
+  <text x="1864" y="44" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="10" text-anchor="end">WRAITHWALL · PHASE 8 CORPUS</text>
+  <text x="1864" y="58" fill="#7a8ba3" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="9" text-anchor="end">runtime_graph.json · live_nodes.json</text>
+<rect x="40" y="96" width="1840" height="200" rx="6" fill="#6b7cff" opacity="0.08" stroke="#6b7cff" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="118" fill="#6b7cff" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">PROCESS LAYER — GUNICORN</text>
+  <rect x="80" y="140" width="380" height="56" rx="4" fill="#0f1520" stroke="#6b7cff" stroke-width="1.5"/>
+  <text x="270.0" y="162.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">wsgi-gunicorn</text>
+  <text x="270.0" y="182.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">infrastructure</text>
+  <rect x="500" y="140" width="380" height="56" rx="4" fill="#0f1520" stroke="#6b7cff" stroke-width="1.5"/>
+  <text x="690.0" y="162.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">middleware-chain</text>
+  <text x="690.0" y="182.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">core</text>
+  <rect x="40" y="310" width="1840" height="280" rx="6" fill="#00e5ff" opacity="0.08" stroke="#00e5ff" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="332" fill="#00e5ff" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">RUNTIME SERVICES — BLUEPRINTS &amp; ENGINES</text>
+  <rect x="56" y="350" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="266.0" y="368.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">wsgi-gunicorn</text>
+  <text x="266.0" y="388.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">gunicorn</text>
+  <rect x="506" y="350" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="716.0" y="368.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">gateway</text>
+  <text x="716.0" y="388.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">gateway</text>
+  <rect x="956" y="350" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1166.0" y="368.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">auth-sessions</text>
+  <text x="1166.0" y="388.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">auth-sessions</text>
+  <rect x="1406" y="350" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1616.0" y="368.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">session-dna</text>
+  <text x="1616.0" y="388.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">session-dna</text>
+  <rect x="56" y="412" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="266.0" y="430.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">fingerprint-corpus</text>
+  <text x="266.0" y="450.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">fingerprint-corpus</text>
+  <rect x="506" y="412" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="716.0" y="430.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">honeytokens</text>
+  <text x="716.0" y="450.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">honeytokens</text>
+  <rect x="956" y="412" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1166.0" y="430.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">timing-canaries</text>
+  <text x="1166.0" y="450.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">timing-canaries</text>
+  <rect x="1406" y="412" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1616.0" y="430.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">dns-canaries</text>
+  <text x="1616.0" y="450.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">dns-canaries</text>
+  <rect x="56" y="474" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="266.0" y="492.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">quantum-canaries</text>
+  <text x="266.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">quantum-canaries</text>
+  <rect x="506" y="474" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="716.0" y="492.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">reverse-canaries</text>
+  <text x="716.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">reverse-canaries</text>
+  <rect x="956" y="474" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1166.0" y="492.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">hall-of-mirrors</text>
+  <text x="1166.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">hall-of-mirrors</text>
+  <rect x="1406" y="474" width="420" height="48" rx="4" fill="#0f1520" stroke="#00e5ff" stroke-width="1.5"/>
+  <text x="1616.0" y="492.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">canary-service</text>
+  <text x="1616.0" y="512.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">canary-service</text>
+  <rect x="40" y="610" width="1840" height="200" rx="6" fill="#3dff9a" opacity="0.08" stroke="#3dff9a" stroke-width="1" stroke-opacity="0.35"/>
+  <text x="54" y="632" fill="#3dff9a" font-family="ui-monospace,monospace" font-size="11" font-weight="600" letter-spacing="1.5">BACKGROUND — DAEMON THREADS &amp; SCHEDULER</text>
+  <rect x="56" y="650" width="420" height="48" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="266.0" y="668.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">credential-propagation</text>
+  <text x="266.0" y="688.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scheduled</text>
+  <rect x="506" y="650" width="420" height="48" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="716.0" y="668.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">cloudflare-radar-poller</text>
+  <text x="716.0" y="688.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scheduled</text>
+  <rect x="956" y="650" width="420" height="48" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1166.0" y="668.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">detonate-worker</text>
+  <text x="1166.0" y="688.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scheduled</text>
+  <rect x="1406" y="650" width="420" height="48" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="1616.0" y="668.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">breach-monitor</text>
+  <text x="1616.0" y="688.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scheduled</text>
+  <rect x="56" y="712" width="420" height="48" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="266.0" y="730.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">apscheduler</text>
+  <text x="266.0" y="750.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scheduled</text>
+  <rect x="506" y="712" width="420" height="48" rx="4" fill="#0f1520" stroke="#3dff9a" stroke-width="1.5"/>
+  <text x="716.0" y="730.0" fill="#e8edf5" font-family="ui-monospace,monospace" font-size="12" text-anchor="middle" font-weight="600">breach-dashboard-pinger</text>
+  <text x="716.0" y="750.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">scheduled</text>
+  <line x1="960.0" y1="296" x2="960.0" y2="310" stroke="#ffb020" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="960.0" y="295.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">import-time startup</text>
+  <line x1="960.0" y1="590" x2="960.0" y2="610" stroke="#ffb020" stroke-width="1.5" marker-end="url(#arrow)" opacity="0.85"/>
+  <text x="960.0" y="592.0" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="9" text-anchor="middle">APScheduler + threads</text>
+  <text x="56" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10">66 runtime nodes catalogued</text>
+  <text x="1864" y="1052" fill="#7a8ba3" font-family="ui-monospace,monospace" font-size="10" text-anchor="end">Validated architecture · No inferred components</text>
+</svg>

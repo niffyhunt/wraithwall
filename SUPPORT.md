@@ -17,7 +17,7 @@ WraithWall is a **solo-maintained** open-source project. Support is best-effort.
 ## Before opening an issue
 
 1. Search [existing issues](https://github.com/niffyhunt/wraithwall/issues) — it may already be reported.
-2. Check [README.md](README.md), [AGENTS.md](AGENTS.md), and the `docs/` directory.
+2. Check [README.md](README.md) and the `docs/` directory.
 3. Include: what you expected, what happened, steps to reproduce, and your environment (OS, Python version, deployment mode).
 
 ## Response expectations

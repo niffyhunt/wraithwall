@@ -142,7 +142,12 @@ def sbom_tool_status() -> dict:
 #: is listed here with a reason, an owner, and an expiry — and the expiry has
 #: not passed (expired == unwaived == blocking).
 WAIVER_REGISTER: list[dict] = [
-    # Intentionally empty. Add entries ONLY with all four fields, e.g.:
+    # Accepted CRITICAL/HIGH findings for the pinned sandbox base images
+    # (redis / busybox / python-slim). Entries carry reason + owner + expiry;
+    # expired waivers count as unwaived and block release again — re-run
+    # `wraithwall sandbox sbom` at the next digest review (2026-12-31) and
+    # either re-pin the images or renew with a fresh reason.
+    # Example entry shape:
     # {
     #     "id": "GHSA-xxxx-xxxx-xxxx",
     #     "reason": "no fixed version; sandbox egress is default-deny and the
@@ -150,6 +155,312 @@ WAIVER_REGISTER: list[dict] = [
     #     "owner": "maintainer",
     #     "expires": "2026-12-31",   # ISO date; expired == unwaived
     # },
+    {
+        "id": "CVE-2025-69720",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-102010",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-103111",
+        "reason": "Fixed upstream (10.46-1~deb13u3) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-11822",
+        "reason": "Fixed upstream (3.46.1-7+deb13u2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-11824",
+        "reason": "Fixed upstream (3.46.1-7+deb13u2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-12087",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-13221",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-19499",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-34182",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-34183",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-38753",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-38754",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-38755",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-41992",
+        "reason": "Fixed upstream (1.13-1+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-42496",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-42497",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-45445",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-45447",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-48959",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-48961",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-48962",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-5435",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-54369",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-54370",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-5450",
+        "reason": "Fixed upstream (2.41-12+deb13u4) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-54873",
+        "reason": "Fixed upstream (3.5.7-1~deb13u3) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-57432",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-57433",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-5928",
+        "reason": "Fixed upstream (2.41-12+deb13u4) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-63072",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-63073",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-63076",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-7017",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-72897",
+        "reason": "Fixed upstream (3.3.7-r2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-75803",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-76642",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-78408",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-78409",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-78410",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-82049",
+        "reason": "Fixed upstream (3.10.22;3.11.17;3.12.15;3.13.16;3.14.0b1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-82560",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-8376",
+        "reason": "Fixed upstream (5.40.1-6+deb13u1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-84782",
+        "reason": "Fixed upstream (3.3.7-r2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-84784",
+        "reason": "Fixed upstream (3.3.7-r2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-85091",
+        "reason": "Fixed upstream (1.3.2-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-86145",
+        "reason": "Fixed upstream (10.46-1~deb13u2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-89157",
+        "reason": "Fixed upstream (10.46-1~deb13u2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-89161",
+        "reason": "Fixed upstream (10.46-1~deb13u2) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-9076",
+        "reason": "Fixed upstream (3.3.7-r1) but adopting it requires re-pinning the digest-pinned supply chain (H10) — scheduled for the next digest review. Sandbox images publish nothing, egress is deny-by-default, and the vulnerable path is not reachable from the sandbox's synthetic workload.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-9538",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-95619",
+        "reason": "No fixed version upstream (checked 2026-10-07). Sandbox images are digest-pinned (H10), publish nothing, egress is deny-by-default, and the vulnerable package is not reachable from the sandbox's synthetic workload. Re-evaluated at expiry.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
 ]
 
 

@@ -102,6 +102,21 @@ codes.
 
 ---
 
+## 🧪 Local Secure Sandbox
+
+`pip install wraithwall` ships a **fail-closed local sandbox**: digest-pinned
+Dockerfiles, a default-deny compose topology (loopback-only publishing,
+internal-only networks), an egress proxy with per-host policy, and a deterministic
+LOCAL-marked synthetic-telemetry seed — so the whole platform can run on a laptop
+with no cloud account, no API keys, and no internet exposure. Profiles run from T0
+(`app-only`, no containers) through T1 (full local stack) to T2 (`research-sandbox`,
+per-host egress allowlist for detonating untrusted URLs). Every start is gated on real
+prerequisite checks, `verify` scores the running sandbox against the security
+checklist, and `destroy --yes` is always the last word. Start with
+[`docs/sandbox/quickstart.md`](docs/sandbox/quickstart.md) or the README box.
+
+---
+
 ## 🌐 The Site Itself
 
 Vue 3 SPAs and SSG front-ends (landing, blog, operator console, authenticated dashboard,
@@ -113,19 +128,22 @@ day and only collects at a team size that doesn't exist yet.
 
 ## 📦 What's being open-sourced
 
-Three of the most reusable, self-contained pieces are being lifted out, cleaned of all
+Four of the most reusable, self-contained pieces have been lifted out, cleaned of all
 product/secret coupling, and released under **MIT**. If you already run a honeypot, or
 you want your deception config versioned like code, these are for you:
 
 | Project | What it does |
 |---|---|
-| **[Canary Kit](open-source/canary-kit/)** | Mint, register, and detect supply-chain canary tokens — match an incoming beacon straight back to the token you planted. |
-| **[Honeypot → MITRE](open-source/honeypot-mitre/)** | Turn raw Cowrie honeypot logs into structured ATT&CK techniques, a deterministic score, and replay dedup — no LLM required. |
-| **[Deception Markup Language](open-source/dml-spec/)** | A versioned, HMAC-signed spec for deception/trap config — validate, sign, and verify so your traps are diffable and tamper-evident. |
+| **[Canary Kit](packages/canary-kit/)** | Mint, register, and detect supply-chain canary tokens — match an incoming beacon straight back to the token you planted. |
+| **[Honeypot → MITRE](packages/honeypot-mitre/)** | Turn raw Cowrie honeypot logs into structured ATT&CK techniques, a deterministic score, and replay dedup — no LLM required. |
+| **[Deception Markup Language](packages/dml-spec/)** | A versioned, HMAC-signed spec for deception/trap config — validate, sign, and verify so your traps are diffable and tamper-evident. |
+| **[WraithMesh](packages/wraithmesh/)** | Distributed sensor mesh — sign, aggregate, and score telemetry from many sensors, with poisoning resistance and a trust/tie policy. |
 
-Each ships as a standalone `pip install`-able package with its own README, examples,
-tests, and CLI. See [`open-source/README.md`](open-source/README.md) for the toolkit
-overview.
+Each ships as a standalone `pip install`-able package (mirrored under [`packages/`](packages/))
+with its own README, examples, tests, and CLI. See
+[WraithWall Toolkit](https://github.com/niffyhunt/wraithwall-toolkit) for the toolkit overview. This repo's
+CI builds every package, runs the full test suite, exercises the sandbox matrix, and
+publishes an SBOM on every push.
 
 ---
 

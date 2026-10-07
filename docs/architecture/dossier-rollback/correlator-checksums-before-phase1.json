@@ -1,0 +1,43 @@
+{
+  "captured_at": "2026-09-02T07:00:49.363454+00:00",
+  "phase": "before_phase_1",
+  "files": [
+    {
+      "path": "campaign_correlator.py",
+      "exists": true,
+      "sha256": "f47f8ba30532f70b6d78e41894c92c36ff5f71fe2162b8170f2e77dafedb494f",
+      "bytes": 61798,
+      "mtime": "2026-08-08T11:32:10.401280+00:00"
+    },
+    {
+      "path": "src/wraithwall/campaign_correlator.py",
+      "exists": true,
+      "sha256": "2db9128cbd5752466933718622904a63158759f3898343ed44322a89c0e84f89",
+      "bytes": 39017,
+      "mtime": "2026-08-08T11:16:40.253531+00:00"
+    },
+    {
+      "path": "campaign_intel.py",
+      "exists": true,
+      "sha256": "5f0d526558d8e3dd8d4da5e1ed85e1ad5157cc52a892199d7c8719226a810143",
+      "bytes": 5180,
+      "mtime": "2026-07-18T21:47:42.947983+00:00"
+    },
+    {
+      "path": "webhooks.py",
+      "exists": true,
+      "sha256": "e0a1a420bff94381ba0c4777ab4967d7bb92a02f2e653c7a1d28a27faeaa53c9",
+      "bytes": 50074,
+      "mtime": "2026-08-20T08:31:53.347147+00:00"
+    }
+  ],
+  "env_threshold_defaults_in_source": {
+    "CAMPAIGN_ALERT_THRESHOLD": "3",
+    "MIN_SIMILARITY_SCORE": "0.60",
+    "HIGH_CONFIDENCE_THRESHOLD": "0.85",
+    "SESSION_TIMING_WINDOW": "300",
+    "CAMPAIGN_TTL": "604800",
+    "FINGERPRINT_CACHE_TTL": "259200",
+    "MAX_CANDIDATES": "50"
+  }
+}

@@ -1,0 +1,197 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-07-09T00:00:00Z",
+  "description": "Replayable initial state for the live runtime graph visualizer. Defines node positions, cluster groups, collapsed/expanded defaults, color coding, and layout hints.",
+  "viewport": {
+    "center": [0, 0],
+    "zoom": 1.0,
+    "layout": "dagre",
+    "direction": "LR"
+  },
+  "clusters": [
+    {
+      "id": "cluster_intake",
+      "label": "Intake & Gateway",
+      "color": "#e74c3c",
+      "nodes": ["37ff6202", "44a15b3a", "280151c1"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_canary",
+      "label": "Canary & Deception",
+      "color": "#f39c12",
+      "nodes": ["54713b41", "96904075", "cdea7e10", "9d487397", "dns_canary_30", "quantum_canary_31", "reverse_canary_32"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_fingerprint",
+      "label": "Fingerprint & Session",
+      "color": "#9b59b6",
+      "nodes": ["bee89df8", "dccf032e"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_cowrie",
+      "label": "Cowrie & Campaigns",
+      "color": "#2ecc71",
+      "nodes": ["d95445c2", "c5de21e5", "c96f524c"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_intel",
+      "label": "Threat Intelligence",
+      "color": "#3498db",
+      "nodes": ["b2e90a78", "4d7a10be", "4c477350"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_llm",
+      "label": "LLM Security",
+      "color": "#1abc9c",
+      "nodes": ["aade65c5", "b23751bb", "f2e70df8"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_propagation",
+      "label": "Propagation & Detonation",
+      "color": "#e67e22",
+      "nodes": ["8d9782c9", "c31e66ac"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_monitoring",
+      "label": "Monitoring & Response",
+      "color": "#95a5a6",
+      "nodes": ["bae0e9c3", "3ea7c9eb", "9c88d0d6", "5c9ec19f", "da42e99d", "c534ffe2"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_auth",
+      "label": "Auth & Session Management",
+      "color": "#8e44ad",
+      "nodes": ["4910baa2"],
+      "collapsed": false
+    },
+    {
+      "id": "cluster_orphan",
+      "label": "Uncatalogued Blueprints",
+      "color": "#7f8c8d",
+      "nodes": ["replay_bp_orphan", "terminal_bp_orphan"],
+      "collapsed": true
+    }
+  ],
+  "node_positions": {
+    "37ff6202": {"x": -800, "y": 0, "pinned": false},
+    "44a15b3a": {"x": -600, "y": 0, "pinned": false},
+    "280151c1": {"x": -400, "y": 0, "pinned": false},
+    "54713b41": {"x": -800, "y": -200, "pinned": false},
+    "96904075": {"x": -600, "y": -200, "pinned": false},
+    "cdea7e10": {"x": -400, "y": -200, "pinned": false},
+    "9d487397": {"x": -200, "y": -200, "pinned": false},
+    "dns_canary_30": {"x": -350, "y": -300, "pinned": false},
+    "quantum_canary_31": {"x": -200, "y": -300, "pinned": false},
+    "reverse_canary_32": {"x": -50, "y": -300, "pinned": false},
+    "bee89df8": {"x": -800, "y": 200, "pinned": false},
+    "dccf032e": {"x": -600, "y": 200, "pinned": false},
+    "d95445c2": {"x": -800, "y": 400, "pinned": false},
+    "c5de21e5": {"x": -600, "y": 400, "pinned": false},
+    "c96f524c": {"x": -400, "y": 400, "pinned": false},
+    "b2e90a78": {"x": -800, "y": 600, "pinned": false},
+    "4d7a10be": {"x": -600, "y": 600, "pinned": false},
+    "4c477350": {"x": -400, "y": 600, "pinned": false},
+    "aade65c5": {"x": -800, "y": 800, "pinned": false},
+    "b23751bb": {"x": -600, "y": 800, "pinned": false},
+    "f2e70df8": {"x": -400, "y": 800, "pinned": false},
+    "8d9782c9": {"x": -800, "y": 1000, "pinned": false},
+    "c31e66ac": {"x": -600, "y": 1000, "pinned": false},
+    "bae0e9c3": {"x": 200, "y": -200, "pinned": false},
+    "3ea7c9eb": {"x": 200, "y": 0, "pinned": false},
+    "9c88d0d6": {"x": 200, "y": 200, "pinned": false},
+    "5c9ec19f": {"x": -200, "y": 200, "pinned": false},
+    "da42e99d": {"x": -200, "y": 0, "pinned": false},
+    "c534ffe2": {"x": 400, "y": 0, "pinned": false},
+    "4910baa2": {"x": 0, "y": 0, "pinned": false},
+    "replay_bp_orphan": {"x": 600, "y": -200, "pinned": false},
+    "terminal_bp_orphan": {"x": 600, "y": 0, "pinned": false}
+  },
+  "redis_external_node": {
+    "id": "redis_instance",
+    "label": "Redis",
+    "position": {"x": 600, "y": 400},
+    "color": "#c0392b"
+  },
+  "external_outbound_nodes": [
+    {"id": "ext_resend", "label": "Resend API", "position": {"x": 800, "y": -200}, "color": "#e74c3c"},
+    {"id": "ext_telegram", "label": "Telegram Bot", "position": {"x": 800, "y": 0}, "color": "#3498db"},
+    {"id": "ext_discord", "label": "Discord Webhook", "position": {"x": 800, "y": 200}, "color": "#9b59b6"},
+    {"id": "ext_slack", "label": "Slack Webhook", "position": {"x": 800, "y": 400}, "color": "#2ecc71"},
+    {"id": "ext_virustotal", "label": "VirusTotal", "position": {"x": 1000, "y": 600}, "color": "#e67e22"},
+    {"id": "ext_urlscan", "label": "URLScan", "position": {"x": 1000, "y": 700}, "color": "#e67e22"},
+    {"id": "ext_abuseipdb", "label": "AbuseIPDB", "position": {"x": 1000, "y": 800}, "color": "#e67e22"},
+    {"id": "ext_shodan", "label": "Shodan", "position": {"x": 1000, "y": 900}, "color": "#e67e22"},
+    {"id": "ext_ripe", "label": "RIPE RIS", "position": {"x": 1000, "y": 1000}, "color": "#e67e22"},
+    {"id": "ext_cloudflare", "label": "Cloudflare Radar", "position": {"x": 1000, "y": 1100}, "color": "#e67e22"},
+    {"id": "ext_github", "label": "GitHub API", "position": {"x": 1000, "y": 1200}, "color": "#e67e22"},
+    {"id": "ext_gitlab", "label": "GitLab API", "position": {"x": 1000, "y": 1300}, "color": "#e67e22"},
+    {"id": "ext_breach_monitor", "label": "Breach Monitor", "position": {"x": 1000, "y": 1400}, "color": "#e67e22"}
+  ],
+  "node_defaults": {
+    "shape": "rounded_rect",
+    "size": "160x60",
+    "font_size": 12,
+    "border_width": 2,
+    "opacity": 1.0,
+    "highlight_on_hover": true
+  },
+  "edge_defaults": {
+    "arrow": "target",
+    "style": "solid",
+    "width": 1.5,
+    "color": "#bdc3c7",
+    "animated": false,
+    "label_font_size": 10
+  },
+  "edge_overrides": [
+    {
+      "edge_ids": ["redis_log_001"],
+      "color": "#e74c3c",
+      "width": 3,
+      "animated": true,
+      "label": "UNBOUNDED GROWTH",
+      "dash": "5,5"
+    },
+    {
+      "edge_ids": ["redis_canary_001"],
+      "color": "#f39c12",
+      "width": 2,
+      "animated": false,
+      "label": "NO TTL"
+    },
+    {
+      "edge_ids": ["notif_telegram", "notif_discord", "notif_email", "notif_slack"],
+      "color": "#2ecc71",
+      "width": 1.5,
+      "animated": true,
+      "label": "notification"
+    }
+  ],
+  "status_colors": {
+    "active": "#2ecc71",
+    "degraded": "#f39c12",
+    "down": "#e74c3c",
+    "missing_from_architecture": "#7f8c8d",
+    "codebase_match": "#2ecc71",
+    "partial_mismatch": "#f39c12",
+    "route_mismatch": "#e74c3c"
+  },
+  "legend": {
+    "items": [
+      {"color": "#2ecc71", "label": "Verified match (codebase_match)"},
+      {"color": "#f39c12", "label": "Partial mismatch (route/name drift)"},
+      {"color": "#e74c3c", "label": "Route mismatch or stale data"},
+      {"color": "#7f8c8d", "label": "Missing from architecture.json"},
+      {"color": "#e74c3c", "label": "Unbounded Redis growth (no TTL)"},
+      {"color": "#f39c12", "label": "Redis no TTL (low risk)"}
+    ]
+  }
+}

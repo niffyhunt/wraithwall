@@ -524,7 +524,7 @@ def register_dml_routes(app):
             "response_types": list(RESPONSE_TYPES),
             "severity_levels": list(SEVERITY_LEVELS),
             "mitre_tactics": list(MITRE_TACTICS),
-            "spec_url": "https://github.com/niffyhunt/dml-spec",
+            "spec_url": "https://github.com/niffyhunt/wraithwall/tree/main/packages/dml-spec",
         })
 
     @app.route('/api/dml/export', methods=['GET'])

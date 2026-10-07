@@ -1,0 +1,4610 @@
+{
+  "events": [
+    {
+      "event_id": "G-01",
+      "name": "gateway.challenge_issued",
+      "producer": "Gateway",
+      "consumers": [
+        "Client",
+        "Redis"
+      ],
+      "payload_schema": "nonce, difficulty, timestamp",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "CHALLENGE_TTL (Redis key)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Legitimate visitor must re-fetch challenge; minor UX friction",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "G-02",
+      "name": "gateway.challenge_solved",
+      "producer": "Gateway",
+      "consumers": [
+        "Gateway verify",
+        "Redis"
+      ],
+      "payload_schema": "nonce, solution",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Valid solver must retry; minor UX friction",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "G-03",
+      "name": "gateway.challenge_failed",
+      "producer": "Gateway",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "nonce, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "TTL on gateway:fails:{ip}",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Lost failure tracking delays blocklisting; minor security gap",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "G-04",
+      "name": "gateway.ip_blocklisted",
+      "producer": "Gateway",
+      "consumers": [
+        "Gateway",
+        "IP blocklist",
+        "Redis"
+      ],
+      "payload_schema": "ip, reason, score",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "BLOCK_TTL (Redis key)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier0",
+      "failure_consequence": "Malicious IP not blocked; attacker continues probing",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "G-05",
+      "name": "gateway.verify_rl_hit",
+      "producer": "Gateway",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "INCR+EXPIRE on gateway:verify_rl:{ip}",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Rate limit state lost; brute-force may proceed unimpeded",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-01",
+      "name": "xhr_origin_enforced",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Middleware"
+      ],
+      "payload_schema": "method, path, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "CSRF-style bypass if not enforced; request rejected with 403",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-02",
+      "name": "request_size_limited",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Middleware"
+      ],
+      "payload_schema": "ip, size",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Oversized request reaches handler; potential DoS vector",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-03",
+      "name": "corpus_fingerprint_collected",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "fp_hash, ja3, headers, techniques",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "30d (Redis key)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Lost fingerprint data; decreased attacker profiling ability",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-04",
+      "name": "request_id_assigned",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Request context"
+      ],
+      "payload_schema": "uuid4[:8]",
+      "serialization_format": "string",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Request loses correlation ID; debugging and log tracing degraded",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-05",
+      "name": "session_activity_updated",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Database"
+      ],
+      "payload_schema": "user_id, session_token, last_activity",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Session timeout tracking drifts; potential premature expiry or stale sessions",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-06",
+      "name": "session_idle_expired",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Middleware",
+        "Background thread (_finalize_session_dna)"
+      ],
+      "payload_schema": "user_id, session_token",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_request",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier1",
+      "failure_consequence": "Session not terminated; takeover window remains open",
+      "visualization_importance": "high",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-07",
+      "name": "honey_token_checked",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Middleware"
+      ],
+      "payload_schema": "ip, path, method, headers",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "Honey token trigger missed; attacker goes undetected",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-08",
+      "name": "sandbox_diverted",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Attractor Sandbox",
+        "ImmutableLog",
+        "Redis",
+        "Database"
+      ],
+      "payload_schema": "ip, reason, threat_score",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis attractor_sandbox:{ip}",
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Attacker not contained; continues probing real application",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-09",
+      "name": "api_key_honey_hit",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Discord",
+        "ImmutableLog",
+        "Database"
+      ],
+      "payload_schema": "ip, key_prefix, path",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Fake API key usage goes unalerted; attacker activity missed",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-10",
+      "name": "reverse_canary_hit",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Discord",
+        "ImmutableLog"
+      ],
+      "payload_schema": "ip, token_path, narrative",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Attacker reads planted intelligence without detection; high-value intel lost",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-11",
+      "name": "provenance_violation",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Database (DataProvenance)",
+        "ImmutableLog"
+      ],
+      "payload_schema": "signature, original_ip, current_ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Stolen credential abuse goes undetected; data provenance chain broken",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-12",
+      "name": "ip_blocked_access",
+      "producer": "Request Middleware",
+      "consumers": [
+        "AuditLog"
+      ],
+      "payload_schema": "ip, reason, remaining_ttl",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Blocklisted IP access not audited; compliance gap",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-13",
+      "name": "sql_pattern_detected",
+      "producer": "Request Middleware",
+      "consumers": [
+        "AuditLog"
+      ],
+      "payload_schema": "ip, pattern",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "SQL injection attempt not logged; attacker probing undetected",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-14",
+      "name": "suspicious_technique_detected",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Redis",
+        "Database",
+        "Background thread"
+      ],
+      "payload_schema": "ip, technique",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Automation tool fingerprinting missed; predictive scoring degraded",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-15",
+      "name": "security_headers_injected",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Response headers"
+      ],
+      "payload_schema": "csp, hsts, xfo, etc",
+      "serialization_format": "string",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "Response lacks security headers; browser security posture degraded",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-16",
+      "name": "dna_event_recorded",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Database (SessionEvent)",
+        "Background thread"
+      ],
+      "payload_schema": "user_id, endpoint, method, status_code, time_since_last",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_session",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Session behavioral baseline not updated; deviation detection quality degrades",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "R-17",
+      "name": "dna_deviation_detected",
+      "producer": "Request Middleware",
+      "consumers": [
+        "Database (DNAAlert)",
+        "Discord",
+        "Telegram"
+      ],
+      "payload_schema": "user_id, score, deviations",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Account takeover attempt missed; attacker may maintain access",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-01",
+      "name": "login_attempt",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (LoginAttempt)"
+      ],
+      "payload_schema": "email, ip, success, user_agent",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Login audit trail incomplete; brute-force detection gaps",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-02",
+      "name": "login_bot_detected",
+      "producer": "Authentication",
+      "consumers": [
+        "AuditLog"
+      ],
+      "payload_schema": "email, ip, user_agent",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Automated credential attack not flagged; rate limiting may not trigger",
+      "visualization_importance": "high",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-03",
+      "name": "login_blocked",
+      "producer": "Authentication",
+      "consumers": [
+        "AuditLog"
+      ],
+      "payload_schema": "email, ip, reason",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Blocked login not audited; compliance gap",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-04",
+      "name": "login_success",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (LoginAttempt, ActiveSession, UserBehavior)",
+        "Telegram"
+      ],
+      "payload_schema": "email, ip, user_agent, session_token",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Successful login not recorded; session tracking and audit compromised",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-05",
+      "name": "login_failed",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (LoginAttempt)",
+        "Rate limiter"
+      ],
+      "payload_schema": "email, ip, user_agent, attempt_count",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Failed login not tracked; brute-force detection and rate limiting weakened",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-06",
+      "name": "mfa_required",
+      "producer": "Authentication",
+      "consumers": [
+        "AuditLog",
+        "Response"
+      ],
+      "payload_schema": "email, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "2FA step skipped silently; account security downgraded",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-07",
+      "name": "mfa_success",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (ActiveSession, LoginAttempt)"
+      ],
+      "payload_schema": "email, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "MFA success not persisted; session may be created without 2FA audit",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-08",
+      "name": "mfa_failed",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (LoginAttempt)",
+        "Rate limiter"
+      ],
+      "payload_schema": "email, ip, attempts",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "2FA brute-force undetected; attacker can bypass MFA",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-09",
+      "name": "otp_generated",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (EmailVerification)"
+      ],
+      "payload_schema": "email, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "OTP not generated; user cannot verify email or complete recovery",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-10",
+      "name": "otp_login_success",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (ActiveSession)"
+      ],
+      "payload_schema": "email, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "OTP login session not created; user cannot authenticate",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-11",
+      "name": "device_verification_sent",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (TrustedDevice)",
+        "Email (Resend)"
+      ],
+      "payload_schema": "email, device_fingerprint, ip",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "New device verification email not sent; user cannot trust device",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-12",
+      "name": "device_verified",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (TrustedDevice)"
+      ],
+      "payload_schema": "email, device_fingerprint",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Trusted device not persisted; user must re-verify on next login",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-13",
+      "name": "password_reset_requested",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (PasswordReset)",
+        "Email (Resend)"
+      ],
+      "payload_schema": "email, ip",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Password reset email not sent; user cannot recover account",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-14",
+      "name": "password_reset_completed",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (PasswordReset)"
+      ],
+      "payload_schema": "email, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Password reset not persisted; user cannot authenticate with new password",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-15",
+      "name": "logout",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (ActiveSession)"
+      ],
+      "payload_schema": "email, session_token",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Session not terminated; session token remains valid",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-16",
+      "name": "session_expired",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (ActiveSession)",
+        "_finalize_session_dna"
+      ],
+      "payload_schema": "user_id, session_token",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Expired session not cleaned up; stale session entries in DB",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-17",
+      "name": "user_registered",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (User)",
+        "Email",
+        "Discord",
+        "Telegram"
+      ],
+      "payload_schema": "email, ip, provider (local/google)",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "New user not registered; verification email and notifications not sent",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-18",
+      "name": "google_oauth_success",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (User, ActiveSession)",
+        "AuditLog"
+      ],
+      "payload_schema": "email, google_id",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "OAuth authentication not recorded; unauthorized access via Google SSO possible without audit",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-19",
+      "name": "api_key_created",
+      "producer": "Authentication",
+      "consumers": [
+        "Database (APIKey)",
+        "AuditLog"
+      ],
+      "payload_schema": "user_id, key_name, permissions",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "API key not persisted; user cannot authenticate via API",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "A-20",
+      "name": "api_key_authenticated",
+      "producer": "Authentication",
+      "consumers": [
+        "Rate limiter",
+        "Database (APIKeyUsage)"
+      ],
+      "payload_schema": "key_prefix, endpoint",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier1",
+      "failure_consequence": "API key usage not tracked; abuse detection and rate limiting blind to key",
+      "visualization_importance": "high",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-01",
+      "name": "dna_baseline_created",
+      "producer": "Session DNA",
+      "consumers": [
+        "Database (SessionDNA)"
+      ],
+      "payload_schema": "user_id, avg_requests, avg_duration, common_endpoints",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_session",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "No behavioral baseline for user; DNA deviation detection cannot function",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-02",
+      "name": "dna_baseline_updated",
+      "producer": "Session DNA",
+      "consumers": [
+        "Database (SessionDNA)"
+      ],
+      "payload_schema": "user_id, session_count, new_avg, new_endpoints",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_session",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Behavioral baseline becomes stale; false positives increase over time",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-03",
+      "name": "dna_deviation_scored",
+      "producer": "Session DNA",
+      "consumers": [
+        "In-memory score accumulator"
+      ],
+      "payload_schema": "user_id, session_token, endpoint, deviation_score",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Transient deviation lost; score accumulator misses threshold for alert",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-04",
+      "name": "dna_alert_created",
+      "producer": "Session DNA",
+      "consumers": [
+        "Database (DNAAlert)",
+        "Discord",
+        "Telegram"
+      ],
+      "payload_schema": "user_id, session_token, deviation_score, details",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Account takeover alert never created; attacker activity proceeds unnoticed",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-05",
+      "name": "dna_alert_resolved",
+      "producer": "Session DNA",
+      "consumers": [
+        "Database (DNAAlert)"
+      ],
+      "payload_schema": "alert_id, admin_email",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Alert remains in unresolved state; operators may waste time on stale alerts",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-06",
+      "name": "dna_actor_identified",
+      "producer": "Session DNA",
+      "consumers": [
+        "Database (BehavioralActor)",
+        "Redis"
+      ],
+      "payload_schema": "actor_uuid, session_id, confidence",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis dna:actor_sessions:{uuid}",
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Actor identity not linked to new session; cross-session correlation lost",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-07",
+      "name": "dna_actor_merged",
+      "producer": "Session DNA",
+      "consumers": [
+        "Database (MergeLog, BehavioralActor)"
+      ],
+      "payload_schema": "source_uuid, target_uuid, confidence, triggers",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Duplicate actor records persist; fragmented view of attacker behavior",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "D-08",
+      "name": "dna_fingerprint_registered",
+      "producer": "Session DNA",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "hash_type, hash_value, actor_uuid",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis SETEX TTL",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Fingerprint not indexed; future actor identification degraded",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "T-01",
+      "name": "timing_canary_planted",
+      "producer": "Timing Canary",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "canary_name, ip, delay_ms, user_agent",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "7d (Redis SETEX)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Timing canary not planted; delay-based deception not active",
+      "visualization_importance": "medium",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "T-02",
+      "name": "timing_canary_hit",
+      "producer": "Timing Canary",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "canary_name, ip, actual_delay, count",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier0",
+      "failure_consequence": "Stolen credential timing mismatch not alerted; attacker use of creds undetected",
+      "visualization_importance": "critical",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "T-03",
+      "name": "timing_canary_delay_rotated",
+      "producer": "Timing Canary",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "old_delay_ms, new_delay_ms",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Delay rotation not audited; old delay still expected by detection logic",
+      "visualization_importance": "high",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "N-01",
+      "name": "dns_canary_planted",
+      "producer": "DNS Canary",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "hostname, ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "DNS canary hostname not recorded; cannot correlate credential usage",
+      "visualization_importance": "high",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "N-02",
+      "name": "dns_canary_triggered",
+      "producer": "DNS Canary",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "resolver_ip, token_id, country, timestamp",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier0",
+      "failure_consequence": "Credential reuse verification lost; attacker credential usage goes unconfirmed",
+      "visualization_importance": "critical",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "S-01",
+      "name": "sandbox_entered",
+      "producer": "Attractor Sandbox",
+      "consumers": [
+        "Database (SandboxSession, ImmutableLog)",
+        "Telegram",
+        "Discord",
+        "Redis"
+      ],
+      "payload_schema": "ip, reason, threat_score, attacker_profile",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis attractor_sandbox:{ip}",
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier0",
+      "failure_consequence": "Attacker not contained; continues probing real infrastructure",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "S-02",
+      "name": "sandbox_request",
+      "producer": "Attractor Sandbox",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "SandboxSession.actions"
+      ],
+      "payload_schema": "ip, method, path, exfil_attempts",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Sandbox attacker action not logged; intelligence on attacker behavior lost",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "S-03",
+      "name": "sandbox_shell_command",
+      "producer": "Attractor Sandbox",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "ip, cmd, exfil_attempts",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Attacker command execution not recorded; TTP intelligence lost",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "S-04",
+      "name": "sandbox_exfil",
+      "producer": "Attractor Sandbox",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "ip, path, request_count, milestone",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier0",
+      "failure_consequence": "Exfiltration evidence lost; legal/adversarial value destroyed",
+      "visualization_importance": "critical",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "S-05",
+      "name": "sandbox_predictive_canary_deployed",
+      "producer": "Attractor Sandbox",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Discord"
+      ],
+      "payload_schema": "ip, technique, paths",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Predictive canary not deployed; decreased chance of catching attacker follow-up",
+      "visualization_importance": "high",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "S-06",
+      "name": "sandbox_released",
+      "producer": "Attractor Sandbox",
+      "consumers": [
+        "Database (ImmutableLog, SandboxSession)"
+      ],
+      "payload_schema": "ip, released_by",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Containment release not audited; IP may be incorrectly sandboxed or released silently",
+      "visualization_importance": "high",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "S-07",
+      "name": "sandbox_status_changed",
+      "producer": "Attractor Sandbox",
+      "consumers": [
+        "Email",
+        "Telegram"
+      ],
+      "payload_schema": "uid, status, reason",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": "Redis sandbox:active:{uid} TTL",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Sandbox status change not notified; operator unaware of TTL expiry or state change",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "M-01",
+      "name": "mirror_layer_created",
+      "producer": "Hall of Mirrors",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Redis"
+      ],
+      "payload_schema": "depth, attacker_ip, layer_type",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "1h (Redis SETEX)",
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Mirror layer not created; attacker deception depth tracking lost",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "M-02",
+      "name": "mirror_layer_accessed",
+      "producer": "Hall of Mirrors",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "depth, attacker_ip, layer_type",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Mirror navigation not logged; deception depth analysis blind",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "M-03",
+      "name": "mirror_deep_penetration",
+      "producer": "Hall of Mirrors",
+      "consumers": [
+        "Discord"
+      ],
+      "payload_schema": "ip, depth, layer",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier0",
+      "failure_consequence": "Deep deception layer penetration not alerted; attacker moves freely through mirror",
+      "visualization_importance": "critical",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "C-01",
+      "name": "canary_planted",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanaryRecord, ImmutableLog)"
+      ],
+      "payload_schema": "table_name, record_id, canary_type",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Canary record not planted; intrusion detection via canary access blind",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-02",
+      "name": "canary_triggered",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanaryAlert, ImmutableLog)",
+        "Telegram",
+        "Discord",
+        "Email"
+      ],
+      "payload_schema": "canary_id, type, ip, email, access_method",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier0",
+      "failure_consequence": "Highest-confidence intrusion detection missed; attacker accesses sensitive data undetected",
+      "visualization_importance": "critical",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-03",
+      "name": "canary_deactivated",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanaryRecord)"
+      ],
+      "payload_schema": "canary_id",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Canary remains active after deactivation; potential false positive triggers",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-04",
+      "name": "honey_token_planted",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (HoneyToken, ImmutableLog)"
+      ],
+      "payload_schema": "token_type, token_value, severity, response_action",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Honey token not planted; credential-based attacker detection not deployed",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-05",
+      "name": "honey_token_triggered",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (HoneyTokenEvent, ImmutableLog)",
+        "Discord"
+      ],
+      "payload_schema": "token_type, token_value, attacker_ip, full_headers, body_hash",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Fake credential use not alerted; attacker credential brute-force missed",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-06",
+      "name": "honey_token_deactivated",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (HoneyToken)"
+      ],
+      "payload_schema": "token_id, is_active",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Honey token remains active after toggle; potential false positive",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-07",
+      "name": "canary_service_token_minted",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanaryServiceToken)",
+        "Email"
+      ],
+      "payload_schema": "public_id, token_type, label, owner",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Canary token not minted; user SaaS experience degraded",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-08",
+      "name": "canary_service_hit",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanaryServiceHit)",
+        "Telegram",
+        "Discord",
+        "Email",
+        "Webhook"
+      ],
+      "payload_schema": "token_id, source_ip, user_agent, method, geo",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Canary token SaaS trigger missed; customer-facing detection failure",
+      "visualization_importance": "critical",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-09",
+      "name": "canary_subscription_activated",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanarySubscription)",
+        "AuditLog",
+        "Email"
+      ],
+      "payload_schema": "user_id, plan, processor",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Subscription not activated; user cannot access canary service",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-10",
+      "name": "canary_subscription_cancelled",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanarySubscription)",
+        "AuditLog"
+      ],
+      "payload_schema": "user_id, reason",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Subscription cancellation not recorded; billing may continue incorrectly",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-11",
+      "name": "canary_trial_started",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanarySubscription)",
+        "Telegram",
+        "Email"
+      ],
+      "payload_schema": "user_id, trial_days",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Trial not started; user cannot evaluate canary service",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-12",
+      "name": "canary_trial_ending",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Telegram",
+        "Email"
+      ],
+      "payload_schema": "user_id",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Trial ending reminder not sent; user may lose access without warning",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-13",
+      "name": "canary_trial_expired",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanarySubscription)",
+        "AuditLog",
+        "Email"
+      ],
+      "payload_schema": "user_id",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Trial expiration not processed; user retains access without payment",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-14",
+      "name": "canary_trial_billed",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (CanarySubscription)",
+        "AuditLog"
+      ],
+      "payload_schema": "user_id, amount, processor",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Trial-to-paid conversion not recorded; revenue tracking lost",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "C-15",
+      "name": "dml_trap_deployed",
+      "producer": "Canary / Honey Token",
+      "consumers": [
+        "Database (ImmutableLog, CanaryRecord/HoneyToken)",
+        "Redis"
+      ],
+      "payload_schema": "trap_id, trigger_type, path",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis deployed_traps:all, dml_trap:{fqid}",
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "DML trap not deployed; deception markup language integration lost",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "Q-01",
+      "name": "quantum_canary_planted",
+      "producer": "Quantum Canary",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "email, months_back, records_created",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Fake user not created; quantum canary deception layer not deployed",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "Q-02",
+      "name": "quantum_canary_adapted",
+      "producer": "Quantum Canary",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "user_id, email, changed_fields",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Active defense adaptation not recorded; fake user may appear suspicious",
+      "visualization_importance": "high",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "Q-03",
+      "name": "quantum_canary_triggered",
+      "producer": "Quantum Canary",
+      "consumers": [
+        "Database (CanaryAlert)"
+      ],
+      "payload_schema": "canary_id, attacker_ip",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Fake user access not alerted; deep-cover deception detection fails",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "V-01",
+      "name": "reverse_canary_planted",
+      "producer": "Reverse Canary",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "type, path, tracking_mechanism",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Reverse beacon not planted; attacker-targeted intelligence gathering not deployed",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "V-02",
+      "name": "reverse_canary_triggered",
+      "producer": "Reverse Canary",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Discord"
+      ],
+      "payload_schema": "ip, token_path, narrative",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Attacker reads planted intelligence without detection; high-value intel lost",
+      "visualization_importance": "critical",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "SC-01",
+      "name": "supply_chain_canary_planted",
+      "producer": "Supply Chain Canary",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "token, version, location",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "365d (Redis SETEX)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Supply chain beacon not planted; software supply chain tracking blind",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "SC-02",
+      "name": "supply_chain_beacon_fired",
+      "producer": "Supply Chain Canary",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "token, version, env_hash, ip, user_agent",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Supply chain attack confirmation missed; unauthorized code execution undetected",
+      "visualization_importance": "critical",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "SC-03",
+      "name": "supply_chain_lure_planted",
+      "producer": "Supply Chain Canary",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "lure_id, platform, url",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis ZADD + SETEX",
+      "ordering_guarantees": "per_key",
+      "persistence": "redis",
+      "criticality": "tier1",
+      "failure_consequence": "Supply chain lure not planted; attacker credential harvesting not tracked",
+      "visualization_importance": "high",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "SC-04",
+      "name": "supply_chain_lure_triggered",
+      "producer": "Supply Chain Canary",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram"
+      ],
+      "payload_schema": "lure_id, source_ip, matched_credential",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier3",
+      "failure_consequence": "Planted lure credential use not alerted; supply chain attacker not identified",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "CP-01",
+      "name": "lure_credential_planted",
+      "producer": "Credential Propagation",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "lure_id, platform, url, username",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis ZADD + SETEX",
+      "ordering_guarantees": "per_key",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Lure credential not planted on external platform; attacker never picks up trail",
+      "visualization_importance": "medium",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "CP-02",
+      "name": "lure_credential_evicted",
+      "producer": "Credential Propagation",
+      "consumers": [
+        "Redis"
+      ],
+      "payload_schema": "lure_id, platform, age",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Old lure not evicted; capacity limit prevents new lure planting",
+      "visualization_importance": "low",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "CP-03",
+      "name": "lure_credential_triggered",
+      "producer": "Credential Propagation",
+      "consumers": [
+        "Redis",
+        "Telegram"
+      ],
+      "payload_schema": "lure_id, matched_username, source_ip, session_id",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier1",
+      "failure_consequence": "Planted credential detected in Cowrie not alerted; attacker identity not linked",
+      "visualization_importance": "high",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "W-01",
+      "name": "cowrie_log_line",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Internal event_queue"
+      ],
+      "payload_schema": "raw JSON: {event, src_ip, session, timestamp, message}",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Cowrie log line not consumed; honeypot intelligence pipeline stalls",
+      "visualization_importance": "medium",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-02",
+      "name": "cowrie_connect",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Event workers",
+        "Redis",
+        "Handlers"
+      ],
+      "payload_schema": "session_id, src_ip, ssh_version, kex, hassh",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis cowrie_session:{sid}, cowrie_sessions:recent",
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier1",
+      "failure_consequence": "SSH connection intelligence lost; baseline honeypot metrics incomplete",
+      "visualization_importance": "high",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-03",
+      "name": "cowrie_login",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Event workers",
+        "Redis",
+        "Database"
+      ],
+      "payload_schema": "session_id, username, password, success",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Credential intelligence lost; attacker TTP analysis incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-04",
+      "name": "cowrie_command",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Event workers",
+        "CRYSTAL triage",
+        "Campaign enrichment"
+      ],
+      "payload_schema": "session_id, cmd, timestamp",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Command execution intelligence lost; attacker capability assessment degraded",
+      "visualization_importance": "medium",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-05",
+      "name": "cowrie_download",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Event workers",
+        "File enrichment",
+        "Redis",
+        "Pipeline signals"
+      ],
+      "payload_schema": "session_id, url, shasum, filename",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "both",
+      "criticality": "tier1",
+      "failure_consequence": "Malware delivery intelligence lost; file IoCs not captured",
+      "visualization_importance": "high",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-06",
+      "name": "cowrie_session_closed",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Event workers",
+        "Session finalization"
+      ],
+      "payload_schema": "session_id, duration, total_commands, threat_score",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis cowrie_completed:{sid}",
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Session summary not computed; threat scoring and analytics incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-07",
+      "name": "cowrie_alert_high_risk_command",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "alert_queue",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "session_id, cmd, risk_score, src_ip",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "High-risk command alert not sent; real-time threat notification lost",
+      "visualization_importance": "medium",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-08",
+      "name": "cowrie_alert_high_threat_session",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "alert_queue",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "session_id, threat_score, total_commands, src_ip",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier0",
+      "failure_consequence": "Active threat actor session alert not sent; real-time response opportunity lost",
+      "visualization_importance": "critical",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-09",
+      "name": "cowrie_alert_suppressed",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "alert_queue",
+        "Summary log"
+      ],
+      "payload_schema": "session_id, reason, window_stats",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Suppressed alert not logged; rate-limiting visibility lost",
+      "visualization_importance": "low",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-10",
+      "name": "cowrie_session_enriched",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Campaign correlator",
+        "ASN engine",
+        "Redis",
+        "Database"
+      ],
+      "payload_schema": "session_id, asn, geo, bgp_status, campaign_ids",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Session enrichment not completed; downstream campaign correlation blind",
+      "visualization_importance": "medium",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "W-11",
+      "name": "cowrie_session_labeled",
+      "producer": "Cowrie Pipeline",
+      "consumers": [
+        "Redis (cowrie:labeled_sessions)"
+      ],
+      "payload_schema": "session_id, label, confidence",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Session classification not persisted; downstream analytics miss label",
+      "visualization_importance": "low",
+      "confidence_score": 0.92
+    },
+    {
+      "event_id": "CM-01",
+      "name": "session_fingerprint_ingested",
+      "producer": "Campaign Correlator",
+      "consumers": [
+        "Redis (recent_fingerprints)",
+        "Campaign engine"
+      ],
+      "payload_schema": "fingerprint (SimHash, n-gram, tool_set, credentials, rhythm, typing, feature_vector, operator)",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis LPUSH + LTRIM",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Session fingerprint not indexed; campaign correlation cannot match",
+      "visualization_importance": "medium",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "CM-02",
+      "name": "campaign_cluster_found",
+      "producer": "Campaign Correlator",
+      "consumers": [
+        "Redis (campaign:{id}, active_campaigns)"
+      ],
+      "payload_schema": "campaign_id, similarity_score, matched_dimensions, new_sessions",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis SETEX + ZADD with CAMPAIGN_TTL",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier0",
+      "failure_consequence": "Multi-actor campaign correlation lost; attacker linking not identified",
+      "visualization_importance": "critical",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "CM-03",
+      "name": "new_campaign_detected",
+      "producer": "Campaign Correlator",
+      "consumers": [
+        "Redis (campaign:{id}, campaigns:active)",
+        "Telegram"
+      ],
+      "payload_schema": "campaign_id, session_ids, ip_set, sensor_count, technique_set",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis SETEX + Telegram alert",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "New campaign detection not alerted; emerging threat cluster unseen",
+      "visualization_importance": "medium",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "CM-04",
+      "name": "campaign_updated",
+      "producer": "Campaign Correlator",
+      "consumers": [
+        "Redis (campaign:{id})",
+        "Telegram"
+      ],
+      "payload_schema": "campaign_id, new_session_count, new_ips, new_sensors, total_sessions",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": "Redis SETEX + Telegram",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Campaign growth not tracked; ongoing campaign monitoring blind",
+      "visualization_importance": "medium",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "BD-01",
+      "name": "actor_identified",
+      "producer": "Behavioral DNA (Cowrie)",
+      "consumers": [
+        "Database (BehavioralActor)",
+        "Redis"
+      ],
+      "payload_schema": "actor_uuid, fingerprint_hash, session_id",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Known actor not linked to session; repeat attacker intelligence lost",
+      "visualization_importance": "medium",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "BD-02",
+      "name": "actor_created",
+      "producer": "Behavioral DNA (Cowrie)",
+      "consumers": [
+        "Database (BehavioralActor)"
+      ],
+      "payload_schema": "actor_uuid, fingerprint_hash, src_ip",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "New actor profile not created; actor intelligence database incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "BD-03",
+      "name": "actor_confidence_updated",
+      "producer": "Behavioral DNA (Cowrie)",
+      "consumers": [
+        "Database (BehavioralActor)"
+      ],
+      "payload_schema": "actor_uuid, new_confidence, session_count",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Actor confidence not updated; stale confidence scores degrade correlation",
+      "visualization_importance": "low",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "BD-04",
+      "name": "actor_merged",
+      "producer": "Behavioral DNA (Cowrie)",
+      "consumers": [
+        "Database (MergeLog, BehavioralActor)"
+      ],
+      "payload_schema": "source_uuid, target_uuid, confidence, triggers",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Duplicate actor records persist; fragmented attacker view",
+      "visualization_importance": "medium",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "BD-05",
+      "name": "actor_retired",
+      "producer": "Behavioral DNA (Cowrie)",
+      "consumers": [
+        "Database (BehavioralActor)"
+      ],
+      "payload_schema": "actor_uuid, last_seen",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Inactive actor not retired; stale profiles pollute actor intelligence",
+      "visualization_importance": "high",
+      "confidence_score": 0.9
+    },
+    {
+      "event_id": "AI-01",
+      "name": "ip_enrichment_requested",
+      "producer": "ASN Intelligence",
+      "consumers": [
+        "ThreadPoolExecutor"
+      ],
+      "payload_schema": "ip",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": "30s (API timeout)",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "IP enrichment not queued; intelligence enrichment pipeline stalls",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AI-02",
+      "name": "ip_enriched",
+      "producer": "ASN Intelligence",
+      "consumers": [
+        "Redis (ip_enrich:{hash})",
+        "ASN analytics"
+      ],
+      "payload_schema": "ip, asn, country, isp, risk_score, bgp_status",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "IP_ENRICHMENT_TTL (Redis SETEX)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "IP enrichment cache not updated; stale data served to consumers",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AI-03",
+      "name": "asn_daily_recorded",
+      "producer": "ASN Intelligence",
+      "consumers": [
+        "Redis (asn:daily, leaderboards)"
+      ],
+      "payload_schema": "asn, attack_count, country, is_hosting",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "per_key",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "ASN daily stats not recorded; leaderboard and trending analytics incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AI-04",
+      "name": "asn_abuse_report_sent",
+      "producer": "ASN Intelligence",
+      "consumers": [
+        "Email (Resend)",
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "asn, abuse_email, incident_count, evidence",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Abuse report not sent; legal/compliance action not initiated against hosting ASN",
+      "visualization_importance": "high",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AI-05",
+      "name": "asn_high_risk_scored",
+      "producer": "ASN Intelligence",
+      "consumers": [
+        "Redis (asn:high_risk)"
+      ],
+      "payload_schema": "asn, risk_score",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "High-risk ASN classification lost; automated blocking and prioritization blind",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "B-01",
+      "name": "bgp_route_updated",
+      "producer": "BGP Monitor",
+      "consumers": [
+        "BGP state tracker",
+        "Redis (bgp_monitor:route_state)"
+      ],
+      "payload_schema": "prefix, origin_as, path, timestamp",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "BGP route state not updated; hijack detection baseline incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "B-02",
+      "name": "bgp_hijack_detected",
+      "producer": "BGP Monitor",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord",
+        "Redis (bgp_alert_sent:{hash})"
+      ],
+      "payload_schema": "anomaly_type, prefix, expected_as, observed_as, severity",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis SETEX bgp_alert_sent:{hash}",
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier0",
+      "failure_consequence": "Network infrastructure attack missed; BGP hijack proceeds undetected",
+      "visualization_importance": "critical",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "B-03",
+      "name": "bgp_route_change_anomaly",
+      "producer": "BGP Monitor",
+      "consumers": [
+        "Redis (bgp_monitor:route_changes)"
+      ],
+      "payload_schema": "prefix, old_as, new_as, change_count",
+      "serialization_format": "Redis format",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis ZADD + ZREMRANGEBYSCORE",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Route change anomaly not recorded; BGP hijack detection sensitivity reduced",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "B-04",
+      "name": "bgp_cloudflare_poll_completed",
+      "producer": "BGP Monitor",
+      "consumers": [
+        "BGP analysis engine"
+      ],
+      "payload_schema": "prefix, is_hijack, is_leak, is_misorigin",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "scheduled",
+      "retry_policy": "fire_and_forget",
+      "timeout": "30s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Cloudflare poll result lost; secondary hijack verification unavailable",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "B-05",
+      "name": "bgp_anomaly_alert_sent",
+      "producer": "BGP Monitor",
+      "consumers": [
+        "Redis (bgp_alert_sent:{hash})"
+      ],
+      "payload_schema": "anomaly_hash, channels (Telegram, Discord)",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "1h (Redis SETEX)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Dedup state not persisted; duplicate alerts sent for same anomaly",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "LH-01",
+      "name": "llm_honeypot_prompt_received",
+      "producer": "LLM Honeypot",
+      "consumers": [
+        "LLM injection classifier",
+        "Redis (llm_rl:*)"
+      ],
+      "payload_schema": "ip, prompt, model, user_agent",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "LLM honeypot prompt not classified; injection attempt unanalyzed",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LH-02",
+      "name": "llm_injection_classified",
+      "producer": "LLM Honeypot",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "ip, technique, threat_level, confidence, matched_pattern",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "AI-specific attacker injection not classified; engagement with attacker lost",
+      "visualization_importance": "critical",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LH-03",
+      "name": "llm_honeypot_bait_served",
+      "producer": "LLM Honeypot",
+      "consumers": [
+        "Redis (llm_honeypot:{ip}:{ts})"
+      ],
+      "payload_schema": "ip, bait_type, response_snippet",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "7d (Redis SETEX)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Fake credentials in LLM response not tracked; bait attribution lost",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LH-04",
+      "name": "llm_honeypot_sandbox_diverted",
+      "producer": "LLM Honeypot",
+      "consumers": [
+        "Sandbox system (_bg_enter_sandbox)",
+        "Redis",
+        "Database"
+      ],
+      "payload_schema": "ip, reason, technique",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier2",
+      "failure_consequence": "Injection attacker not diverted to sandbox; continues probing LLM endpoint",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LH-05",
+      "name": "llm_embed_accessed",
+      "producer": "LLM Honeypot",
+      "consumers": [
+        "Database (ImmutableLog)"
+      ],
+      "payload_schema": "ip, text_hash",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Embedding endpoint probe not logged; reconnaissance activity missed",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LH-06",
+      "name": "llm_honeypot_daily_budget_hit",
+      "producer": "LLM Honeypot",
+      "consumers": [
+        "Rate limiter (silent)"
+      ],
+      "payload_schema": "ip, budget_used",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Daily LLM honeypot budget exhausted silently; further prompts rejected",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-01",
+      "name": "llmfw_request_received",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Rate limiter",
+        "Redis (llmfw:rl:{ak}:{hour})"
+      ],
+      "payload_schema": "api_key, model, prompt_length",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "LLM firewall request not rate-limited; API key may exceed quota",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-02",
+      "name": "llmfw_regex_detection",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Pipeline (to LLM check)"
+      ],
+      "payload_schema": "api_key, category, technique, risk_score",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "Regex detection layer not evaluated; prompt injection first-pass filter missed",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-03",
+      "name": "llmfw_llm_classification",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Pipeline (to heuristic)"
+      ],
+      "payload_schema": "api_key, prompt_snippet, verdict, confidence",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": "10s (LLM API timeout)",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "LLM-based classification not performed; heuristic-only fallback reduces accuracy",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-04",
+      "name": "llmfw_heuristic_fallback",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Final verdict"
+      ],
+      "payload_schema": "api_key, reason, heuristic_score",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Heuristic fallback bypass; LLM firewall may allow or block incorrectly",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-05",
+      "name": "llmfw_allowed",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Upstream (pass-through)",
+        "Redis (llmfw:events:{ak})"
+      ],
+      "payload_schema": "api_key, risk_score, latency_ms",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Allowed prompt event not logged; per-key event history incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-06",
+      "name": "llmfw_blocked",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Redis (llmfw:blocks:{ak})",
+        "Telegram",
+        "Discord",
+        "Email",
+        "Webhook"
+      ],
+      "payload_schema": "api_key, category, technique, risk_score, prompt_hash",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "both",
+      "criticality": "tier0",
+      "failure_consequence": "Prompt injection prevention not alerted; blocked attack undetected",
+      "visualization_importance": "critical",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-07",
+      "name": "llmfw_flagged",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Redis (llmfw:events:{ak})"
+      ],
+      "payload_schema": "api_key, category, technique, risk_score",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Flagged prompt not recorded; suspicious but allowed prompt analysis blind",
+      "visualization_importance": "medium",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-08",
+      "name": "llmfw_rate_limited",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Response (429)"
+      ],
+      "payload_schema": "api_key, limit, window",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Rate-limited API key served request; quota enforcement bypassed",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "LF-09",
+      "name": "llmfw_daily_stats_updated",
+      "producer": "LLM Firewall",
+      "consumers": [
+        "Redis (llmfw:stats:{ak}:{day})"
+      ],
+      "payload_schema": "api_key, requests, blocks, flags, categories",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "per_key",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Per-key daily stats not updated; dashboard analytics and trending blind",
+      "visualization_importance": "low",
+      "confidence_score": 0.97
+    },
+    {
+      "event_id": "AR-01",
+      "name": "airs_request_received",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Rate limiter",
+        "Redis (airs:rl:{key.id})"
+      ],
+      "payload_schema": "api_key, owner, endpoint, input_length",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "AIRS request not rate-limited; API abuse may go undetected",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AR-02",
+      "name": "airs_detector_pipeline",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Pipeline aggregation"
+      ],
+      "payload_schema": "endpoint, verdicts: [injection, jailbreak, indirect, rag_exfil, tool_abuse]",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "Detector pipeline not evaluated; AI runtime attack unclassified",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AR-03",
+      "name": "airs_detection_high",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Database (AIRSDetection)",
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "endpoint, verdict, risk_score, technique, input_preview",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "High-risk AI attack not blocked or alerted; runtime protection gap",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AR-04",
+      "name": "airs_detection_critical",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Database (AIRSDetection)",
+        "Database (ImmutableLog)",
+        "Telegram",
+        "Discord"
+      ],
+      "payload_schema": "endpoint, verdict, risk_score, technique, input_preview",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier0",
+      "failure_consequence": "Critical AI runtime attack not immediately blocked; active exploitation possible",
+      "visualization_importance": "critical",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AR-05",
+      "name": "airs_detection_flagged",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Database (AIRSDetection)"
+      ],
+      "payload_schema": "endpoint, verdict, risk_score, technique",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Flagged AIRS detection not persisted; monitoring and trend analysis blind",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AR-06",
+      "name": "airs_actor_tracked",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Database (AIRSActor)"
+      ],
+      "payload_schema": "owner, fingerprint, client_ip, detection_count",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Repeat AI attacker not tracked; actor-based blocking not possible",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AR-07",
+      "name": "airs_actor_blocked",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Database (AIRSActor)"
+      ],
+      "payload_schema": "owner, fingerprint, detection_count, max_risk",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Repeat AI attacker not auto-blocked; continued abuse of AI endpoints",
+      "visualization_importance": "high",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "AR-08",
+      "name": "airs_policy_applied",
+      "producer": "AI Runtime Security",
+      "consumers": [
+        "Response headers",
+        "Database"
+      ],
+      "payload_schema": "owner, mode (allow/flag/block), block_threshold",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier3",
+      "failure_consequence": "Per-owner AIRS policy not enforced; runtime security posture degraded",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "DP-01",
+      "name": "detonate_job_enqueued",
+      "producer": "Detonation Pipeline",
+      "consumers": [
+        "Redis (detonate:queue)"
+      ],
+      "payload_schema": "job_id, url, timestamp",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "URL detonation job not enqueued; threat intelligence not generated",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "DP-02",
+      "name": "detonate_job_dequeued",
+      "producer": "Detonation Pipeline",
+      "consumers": [
+        "Worker loop",
+        "Redis (detonate:job:{job_id})"
+      ],
+      "payload_schema": "job_id, url",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Detonation job not properly picked up; worker state tracking lost",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "DP-03",
+      "name": "detonate_job_started",
+      "producer": "Detonation Pipeline",
+      "consumers": [
+        "Redis (detonate:job:{job_id}) status update"
+      ],
+      "payload_schema": "job_id, container_id",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Sandbox container launch state not tracked; job monitoring blind",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "DP-04",
+      "name": "detonate_url_screenshot",
+      "producer": "Detonation Pipeline",
+      "consumers": [
+        "Report generator"
+      ],
+      "payload_schema": "job_id, screenshot_path",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": "30s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "filesystem",
+      "criticality": "tier2",
+      "failure_consequence": "URL screenshot not captured; visual evidence missing from report",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "DP-05",
+      "name": "detonate_url_network",
+      "producer": "Detonation Pipeline",
+      "consumers": [
+        "Report generator"
+      ],
+      "payload_schema": "job_id, requests[], domains[]",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Network requests from detonation not captured; IoC extraction blind",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "DP-06",
+      "name": "detonate_threat_signals",
+      "producer": "Detonation Pipeline",
+      "consumers": [
+        "Report generator",
+        "_pipeline_detonation_signals"
+      ],
+      "payload_schema": "job_id, signals[], risk_score",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier1",
+      "failure_consequence": "Threat indicators from detonation not extracted; risk assessment incomplete",
+      "visualization_importance": "high",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "DP-07",
+      "name": "detonate_job_completed",
+      "producer": "Detonation Pipeline",
+      "consumers": [
+        "Redis (detonate:job:{job_id})",
+        "detonation:recent",
+        "detonation:domain:{hash}"
+      ],
+      "payload_schema": "job_id, summary, risk_score, domains, ips",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis SETEX",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier1",
+      "failure_consequence": "Detonation report not persisted; URL threat intelligence lost",
+      "visualization_importance": "high",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "BM-01",
+      "name": "breach_scan_cycle_started",
+      "producer": "Breach Monitor",
+      "consumers": [
+        "Breach monitor internal API"
+      ],
+      "payload_schema": "assets_scanned, timestamp",
+      "serialization_format": "JSON",
+      "transport": "http",
+      "frequency": "scheduled",
+      "retry_policy": "fire_and_forget",
+      "timeout": "60s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Breach scan cycle not started; organizational exposure not checked",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "BM-02",
+      "name": "breach_found",
+      "producer": "Breach Monitor",
+      "consumers": [
+        "Telegram",
+        "Discord",
+        "Email",
+        "Database (BreachFinding in breach-monitor)"
+      ],
+      "payload_schema": "asset, source (pastebin/github/hibp), severity, url, content_preview",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier1",
+      "failure_consequence": "Organizational breach exposure not alerted; data leak goes unaddressed",
+      "visualization_importance": "high",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "BM-03",
+      "name": "github_exposure_found",
+      "producer": "Breach Monitor",
+      "consumers": [
+        "Database (ImmutableLog)",
+        "Telegram"
+      ],
+      "payload_schema": "query, repo, file, url",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "GitHub code exposure not alerted; domain/key leak unmitigated",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "BM-04",
+      "name": "paste_monitor_hit",
+      "producer": "Breach Monitor",
+      "consumers": [
+        "Telegram"
+      ],
+      "payload_schema": "query, source, snippet",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier3",
+      "failure_consequence": "Paste site content match not alerted; data leak discovery delayed",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "SCH-01",
+      "name": "model_retrained",
+      "producer": "Scheduler / Maintenance",
+      "consumers": [
+        "Filesystem (joblib models)"
+      ],
+      "payload_schema": "user_count, model_sizes",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "scheduled",
+      "retry_policy": "fire_and_forget",
+      "timeout": "300s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "filesystem",
+      "criticality": "tier2",
+      "failure_consequence": "IsolationForest model not retrained; anomaly detection degrades with stale model",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "SCH-02",
+      "name": "mimicry_cycle",
+      "producer": "Scheduler / Maintenance",
+      "consumers": [
+        "Database (canary activity audit)"
+      ],
+      "payload_schema": "canary_count, actions_simulated",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "scheduled",
+      "retry_policy": "fire_and_forget",
+      "timeout": "120s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Canary user simulation not run; deception layer might appear static",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "SCH-03",
+      "name": "daily_digest_sent",
+      "producer": "Scheduler / Maintenance",
+      "consumers": [
+        "Telegram"
+      ],
+      "payload_schema": "canary_triggers, sandbox_sessions, ip_blocks, dna_alerts, logins",
+      "serialization_format": "JSON",
+      "transport": "async",
+      "frequency": "scheduled",
+      "retry_policy": "fire_and_forget",
+      "timeout": "30s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "none",
+      "criticality": "tier2",
+      "failure_consequence": "Daily security summary not sent; operator morning review incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "SCH-04",
+      "name": "canarytoken_poll",
+      "producer": "Scheduler / Maintenance",
+      "consumers": [
+        "Redis (canarytoken_last_hit:*)"
+      ],
+      "payload_schema": "poll_count, new_hits",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "scheduled",
+      "retry_policy": "fire_and_forget",
+      "timeout": "30s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Canarytoken poll not completed; canarytokens.org hits not fetched",
+      "visualization_importance": "low",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "SCH-05",
+      "name": "trial_billing_cycle",
+      "producer": "Scheduler / Maintenance",
+      "consumers": [
+        "Database (CanarySubscription)",
+        "Email",
+        "Telegram"
+      ],
+      "payload_schema": "trials_charged, trials_expired, trials_reminded",
+      "serialization_format": "JSON",
+      "transport": "sync+async",
+      "frequency": "scheduled",
+      "retry_policy": "at_least_once",
+      "timeout": "60s",
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "postgresql",
+      "criticality": "tier2",
+      "failure_consequence": "Trial billing not processed; revenue loss or user access not managed",
+      "visualization_importance": "medium",
+      "confidence_score": 1.0
+    },
+    {
+      "event_id": "LE-01",
+      "name": "leader_elected",
+      "producer": "Leader Election",
+      "consumers": [
+        "All workers (implicit)"
+      ],
+      "payload_schema": "hostname, pid, acquired_at",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": "Redis SET NX + TTL (wraithwall:engine_leader)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Leader not elected; engine scheduler and background jobs do not start",
+      "visualization_importance": "medium",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "LE-02",
+      "name": "leader_heartbeat",
+      "producer": "Leader Election",
+      "consumers": [
+        "Redis (TTL refresh)"
+      ],
+      "payload_schema": "hostname, pid, ttl_remaining",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "scheduled",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "15s renewal interval",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Leader heartbeat lost; false failover trigger if TTL expires",
+      "visualization_importance": "low",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "LE-03",
+      "name": "leader_released",
+      "producer": "Leader Election",
+      "consumers": [
+        "Standby workers"
+      ],
+      "payload_schema": "hostname, pid",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Leader lock not released on shutdown; standby cannot acquire lock until TTL expiry",
+      "visualization_importance": "medium",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "LE-04",
+      "name": "leader_failover",
+      "producer": "Leader Election",
+      "consumers": [
+        "Standby workers",
+        "Redis"
+      ],
+      "payload_schema": "old_leader, new_leader",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier0",
+      "failure_consequence": "Engine supervisor handoff fails; background jobs stop running",
+      "visualization_importance": "critical",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "OD-01",
+      "name": "ops_cowrie_session_broadcast",
+      "producer": "Ops-Dashboard",
+      "consumers": [
+        "SSE subscribers"
+      ],
+      "payload_schema": "session_id, src_ip, timestamp",
+      "serialization_format": "JSON",
+      "transport": "redis",
+      "frequency": "per_event",
+      "retry_policy": "fire_and_forget",
+      "timeout": null,
+      "ttl": "Redis LPUSH (transient)",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Cowrie session not broadcast to ops dashboard; operator real-time view degraded",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "OD-02",
+      "name": "ops_action_executed",
+      "producer": "Ops-Dashboard",
+      "consumers": [
+        "Redis Stream (ops:actions:log)"
+      ],
+      "payload_schema": "action, target, success, output",
+      "serialization_format": "JSON",
+      "transport": "redis",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "SSH command execution not logged; ops audit trail incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "OD-03",
+      "name": "ops_incident_triggered",
+      "producer": "Ops-Dashboard",
+      "consumers": [
+        "Redis Stream (ops:incidents:{rule_id})"
+      ],
+      "payload_schema": "rule_id, severity, condition, context",
+      "serialization_format": "JSON",
+      "transport": "redis",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Ops rule engine match not streamed; incident response delayed",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "OD-04",
+      "name": "ops_alert_acknowledged",
+      "producer": "Ops-Dashboard",
+      "consumers": [
+        "Redis Hash (ops:alerts:acknowledged)"
+      ],
+      "payload_schema": "alert_id, operator",
+      "serialization_format": "JSON",
+      "transport": "redis",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Alert acknowledgement not recorded; operator accountability lost",
+      "visualization_importance": "medium",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "OD-05",
+      "name": "ops_terminal_audit",
+      "producer": "Ops-Dashboard",
+      "consumers": [
+        "Redis Stream (ops:terminal:audit)"
+      ],
+      "payload_schema": "server_id, host, connected_at, disconnected_at, duration",
+      "serialization_format": "JSON",
+      "transport": "redis",
+      "frequency": "per_event",
+      "retry_policy": "at_least_once",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "fifo",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Terminal session lifecycle not audited; ops compliance gap",
+      "visualization_importance": "low",
+      "confidence_score": 0.95
+    },
+    {
+      "event_id": "PA-01",
+      "name": "public_activity_recorded",
+      "producer": "Public API / Stats",
+      "consumers": [
+        "Redis (public:activity)"
+      ],
+      "payload_schema": "type (ip/domain/hash), target, timestamp, location",
+      "serialization_format": "Redis format",
+      "transport": "sync",
+      "frequency": "per_request",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": "Redis LPUSH + LTRIM",
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Public tool usage not recorded; statistics and trend analysis incomplete",
+      "visualization_importance": "medium",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "PA-02",
+      "name": "public_stats_requested",
+      "producer": "Public API / Stats",
+      "consumers": [
+        "API response"
+      ],
+      "payload_schema": "total_threats, sessions, canaries, attacks, origins, tools, llm_attempts, bgp_alerts, sensors",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier2",
+      "failure_consequence": "Public stats request served stale data; dashboard accuracy degraded",
+      "visualization_importance": "medium",
+      "confidence_score": 0.98
+    },
+    {
+      "event_id": "PA-03",
+      "name": "public_cowrie_stats",
+      "producer": "Public API / Stats",
+      "consumers": [
+        "Public API"
+      ],
+      "payload_schema": "session_count, recent_sessions",
+      "serialization_format": "JSON",
+      "transport": "sync",
+      "frequency": "per_event",
+      "retry_policy": "none",
+      "timeout": null,
+      "ttl": null,
+      "ordering_guarantees": "none",
+      "persistence": "redis",
+      "criticality": "tier3",
+      "failure_consequence": "Honeypot session count read fails; public API returns incomplete data",
+      "visualization_importance": "low",
+      "confidence_score": 0.98
+    }
+  ],
+  "event_flow_edges": [
+    {
+      "source_event_id": "G-01",
+      "target_event_id": "G-02",
+      "trigger": "sequential",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "G-01",
+      "target_event_id": "G-03",
+      "trigger": "conditional",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "G-03",
+      "target_event_id": "G-04",
+      "trigger": "causal",
+      "confidence": 0.85
+    },
+    {
+      "source_event_id": "G-03",
+      "target_event_id": "G-05",
+      "trigger": "conditional",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "R-03",
+      "target_event_id": "R-14",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "R-04",
+      "target_event_id": "R-16",
+      "trigger": "causal",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "R-05",
+      "target_event_id": "R-06",
+      "trigger": "conditional",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "R-07",
+      "target_event_id": "R-08",
+      "trigger": "conditional",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "R-07",
+      "target_event_id": "R-09",
+      "trigger": "conditional",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "R-07",
+      "target_event_id": "R-10",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "R-07",
+      "target_event_id": "R-11",
+      "trigger": "conditional",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "R-07",
+      "target_event_id": "R-12",
+      "trigger": "conditional",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "R-07",
+      "target_event_id": "R-13",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "R-07",
+      "target_event_id": "R-14",
+      "trigger": "conditional",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "R-16",
+      "target_event_id": "R-17",
+      "trigger": "conditional",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "R-08",
+      "target_event_id": "S-01",
+      "trigger": "causal",
+      "confidence": 0.95
+    },
+    {
+      "source_event_id": "A-01",
+      "target_event_id": "A-04",
+      "trigger": "conditional",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "A-01",
+      "target_event_id": "A-05",
+      "trigger": "conditional",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "A-01",
+      "target_event_id": "A-02",
+      "trigger": "conditional",
+      "confidence": 0.1
+    },
+    {
+      "source_event_id": "A-01",
+      "target_event_id": "A-03",
+      "trigger": "conditional",
+      "confidence": 0.15
+    },
+    {
+      "source_event_id": "A-04",
+      "target_event_id": "A-06",
+      "trigger": "conditional",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "A-06",
+      "target_event_id": "A-07",
+      "trigger": "conditional",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "A-06",
+      "target_event_id": "A-08",
+      "trigger": "conditional",
+      "confidence": 0.1
+    },
+    {
+      "source_event_id": "A-04",
+      "target_event_id": "A-15",
+      "trigger": "sequential",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "A-04",
+      "target_event_id": "A-16",
+      "trigger": "sequential",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "A-13",
+      "target_event_id": "A-14",
+      "trigger": "sequential",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "A-17",
+      "target_event_id": "A-09",
+      "trigger": "causal",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "A-11",
+      "target_event_id": "A-12",
+      "trigger": "sequential",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "D-01",
+      "target_event_id": "D-02",
+      "trigger": "sequential",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "D-03",
+      "target_event_id": "D-04",
+      "trigger": "conditional",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "D-04",
+      "target_event_id": "D-05",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "D-06",
+      "target_event_id": "D-07",
+      "trigger": "conditional",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "D-08",
+      "target_event_id": "D-06",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "T-01",
+      "target_event_id": "T-02",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "T-03",
+      "target_event_id": "T-01",
+      "trigger": "causal",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "N-01",
+      "target_event_id": "N-02",
+      "trigger": "causal",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "S-01",
+      "target_event_id": "S-02",
+      "trigger": "causal",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "S-02",
+      "target_event_id": "S-03",
+      "trigger": "sequential",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "S-03",
+      "target_event_id": "S-04",
+      "trigger": "conditional",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "S-04",
+      "target_event_id": "S-05",
+      "trigger": "causal",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "S-01",
+      "target_event_id": "S-06",
+      "trigger": "sequential",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "S-01",
+      "target_event_id": "S-07",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "M-01",
+      "target_event_id": "M-02",
+      "trigger": "causal",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "M-02",
+      "target_event_id": "M-03",
+      "trigger": "conditional",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "C-01",
+      "target_event_id": "C-02",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "C-02",
+      "target_event_id": "C-03",
+      "trigger": "sequential",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "C-04",
+      "target_event_id": "C-05",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "C-05",
+      "target_event_id": "C-06",
+      "trigger": "sequential",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "C-07",
+      "target_event_id": "C-08",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "C-09",
+      "target_event_id": "C-10",
+      "trigger": "sequential",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "C-11",
+      "target_event_id": "C-12",
+      "trigger": "sequential",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "C-12",
+      "target_event_id": "C-13",
+      "trigger": "sequential",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "C-13",
+      "target_event_id": "C-14",
+      "trigger": "conditional",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "C-09",
+      "target_event_id": "C-11",
+      "trigger": "sequential",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "Q-01",
+      "target_event_id": "Q-02",
+      "trigger": "causal",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "Q-02",
+      "target_event_id": "Q-03",
+      "trigger": "causal",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "V-01",
+      "target_event_id": "V-02",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "SC-01",
+      "target_event_id": "SC-02",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "SC-03",
+      "target_event_id": "SC-04",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "CP-01",
+      "target_event_id": "CP-03",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "CP-01",
+      "target_event_id": "CP-02",
+      "trigger": "conditional",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "CP-03",
+      "target_event_id": "W-03",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "W-01",
+      "target_event_id": "W-02",
+      "trigger": "causal",
+      "confidence": 0.95
+    },
+    {
+      "source_event_id": "W-02",
+      "target_event_id": "W-03",
+      "trigger": "sequential",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "W-03",
+      "target_event_id": "W-04",
+      "trigger": "sequential",
+      "confidence": 0.85
+    },
+    {
+      "source_event_id": "W-04",
+      "target_event_id": "W-05",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "W-04",
+      "target_event_id": "W-07",
+      "trigger": "conditional",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "W-04",
+      "target_event_id": "W-06",
+      "trigger": "sequential",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "W-05",
+      "target_event_id": "W-06",
+      "trigger": "sequential",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "W-06",
+      "target_event_id": "W-08",
+      "trigger": "conditional",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "W-07",
+      "target_event_id": "W-09",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "W-06",
+      "target_event_id": "W-10",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "W-10",
+      "target_event_id": "W-11",
+      "trigger": "sequential",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "W-10",
+      "target_event_id": "CM-01",
+      "trigger": "causal",
+      "confidence": 0.85
+    },
+    {
+      "source_event_id": "CM-01",
+      "target_event_id": "CM-02",
+      "trigger": "conditional",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "CM-01",
+      "target_event_id": "CM-03",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "CM-02",
+      "target_event_id": "CM-04",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "CM-03",
+      "target_event_id": "CM-04",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "W-10",
+      "target_event_id": "BD-01",
+      "trigger": "causal",
+      "confidence": 0.75
+    },
+    {
+      "source_event_id": "BD-02",
+      "target_event_id": "BD-01",
+      "trigger": "causal",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "BD-01",
+      "target_event_id": "BD-03",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "BD-01",
+      "target_event_id": "BD-04",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "BD-03",
+      "target_event_id": "BD-05",
+      "trigger": "conditional",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "AI-01",
+      "target_event_id": "AI-02",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "AI-02",
+      "target_event_id": "AI-03",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "AI-03",
+      "target_event_id": "AI-04",
+      "trigger": "conditional",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "AI-03",
+      "target_event_id": "AI-05",
+      "trigger": "conditional",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "W-10",
+      "target_event_id": "AI-01",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "B-01",
+      "target_event_id": "B-02",
+      "trigger": "conditional",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "B-01",
+      "target_event_id": "B-03",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "B-04",
+      "target_event_id": "B-02",
+      "trigger": "causal",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "B-02",
+      "target_event_id": "B-05",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "B-03",
+      "target_event_id": "B-05",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "B-02",
+      "target_event_id": "AI-05",
+      "trigger": "causal",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "LH-01",
+      "target_event_id": "LH-02",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "LH-02",
+      "target_event_id": "LH-03",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "LH-02",
+      "target_event_id": "LH-04",
+      "trigger": "conditional",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "LH-01",
+      "target_event_id": "LH-05",
+      "trigger": "conditional",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "LH-01",
+      "target_event_id": "LH-06",
+      "trigger": "conditional",
+      "confidence": 0.1
+    },
+    {
+      "source_event_id": "LH-04",
+      "target_event_id": "S-01",
+      "trigger": "causal",
+      "confidence": 0.85
+    },
+    {
+      "source_event_id": "LF-01",
+      "target_event_id": "LF-02",
+      "trigger": "sequential",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "LF-02",
+      "target_event_id": "LF-03",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "LF-03",
+      "target_event_id": "LF-04",
+      "trigger": "conditional",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "LF-03",
+      "target_event_id": "LF-05",
+      "trigger": "conditional",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "LF-03",
+      "target_event_id": "LF-06",
+      "trigger": "conditional",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "LF-03",
+      "target_event_id": "LF-07",
+      "trigger": "conditional",
+      "confidence": 0.1
+    },
+    {
+      "source_event_id": "LF-01",
+      "target_event_id": "LF-08",
+      "trigger": "conditional",
+      "confidence": 0.15
+    },
+    {
+      "source_event_id": "LF-05",
+      "target_event_id": "LF-09",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "LF-06",
+      "target_event_id": "LF-09",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "LF-07",
+      "target_event_id": "LF-09",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "AR-01",
+      "target_event_id": "AR-02",
+      "trigger": "sequential",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "AR-02",
+      "target_event_id": "AR-03",
+      "trigger": "conditional",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "AR-02",
+      "target_event_id": "AR-04",
+      "trigger": "conditional",
+      "confidence": 0.2
+    },
+    {
+      "source_event_id": "AR-02",
+      "target_event_id": "AR-05",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "AR-03",
+      "target_event_id": "AR-06",
+      "trigger": "causal",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "AR-04",
+      "target_event_id": "AR-06",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "AR-06",
+      "target_event_id": "AR-07",
+      "trigger": "conditional",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "AR-01",
+      "target_event_id": "AR-08",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "DP-01",
+      "target_event_id": "DP-02",
+      "trigger": "causal",
+      "confidence": 0.95
+    },
+    {
+      "source_event_id": "DP-02",
+      "target_event_id": "DP-03",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "DP-03",
+      "target_event_id": "DP-04",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "DP-03",
+      "target_event_id": "DP-05",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "DP-04",
+      "target_event_id": "DP-06",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "DP-05",
+      "target_event_id": "DP-06",
+      "trigger": "causal",
+      "confidence": 0.7
+    },
+    {
+      "source_event_id": "DP-06",
+      "target_event_id": "DP-07",
+      "trigger": "causal",
+      "confidence": 0.9
+    },
+    {
+      "source_event_id": "BM-01",
+      "target_event_id": "BM-02",
+      "trigger": "causal",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "BM-02",
+      "target_event_id": "BM-03",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "BM-01",
+      "target_event_id": "BM-04",
+      "trigger": "conditional",
+      "confidence": 0.4
+    },
+    {
+      "source_event_id": "LE-04",
+      "target_event_id": "SCH-01",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "LE-04",
+      "target_event_id": "SCH-02",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "LE-04",
+      "target_event_id": "SCH-03",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "LE-04",
+      "target_event_id": "SCH-04",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "LE-04",
+      "target_event_id": "SCH-05",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "LE-01",
+      "target_event_id": "LE-02",
+      "trigger": "causal",
+      "confidence": 1.0
+    },
+    {
+      "source_event_id": "LE-01",
+      "target_event_id": "LE-04",
+      "trigger": "conditional",
+      "confidence": 0.3
+    },
+    {
+      "source_event_id": "LE-03",
+      "target_event_id": "LE-04",
+      "trigger": "causal",
+      "confidence": 0.8
+    },
+    {
+      "source_event_id": "OD-02",
+      "target_event_id": "OD-03",
+      "trigger": "causal",
+      "confidence": 0.6
+    },
+    {
+      "source_event_id": "OD-03",
+      "target_event_id": "OD-04",
+      "trigger": "sequential",
+      "confidence": 0.5
+    },
+    {
+      "source_event_id": "PA-02",
+      "target_event_id": "PA-03",
+      "trigger": "sequential",
+      "confidence": 0.6
+    }
+  ],
+  "event_statistics": {
+    "total_events": 173,
+    "tier0_count": 23,
+    "tier1_count": 18,
+    "tier2_count": 94,
+    "tier3_count": 38,
+    "total_producers": 27,
+    "total_consumers": 12
+  }
+}

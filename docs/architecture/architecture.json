@@ -1,0 +1,4035 @@
+{
+  "metadata": {
+    "document_title": "WraithWall Canonical Architecture Specification \u2014 Phase 4",
+    "version": "4.0",
+    "date": "2026-07-09",
+    "source_files": [
+      "RUNTIME_BEHAVIORAL_MODEL.txt",
+      "RUNTIME_BEHAVIORAL_RESUME.txt",
+      "RUNTIME_EVENT_SPECIFICATION",
+      "VISUALIZATION_ARCHITECTURE.md"
+    ],
+    "total_subsystems": 34,
+    "total_events_cataloged": 187,
+    "namespace_uuid": "uuid5(Namespace.DNS, subsystem_name)"
+  },
+  "subsystems": [
+    {
+      "subsystem_id": "37ff6202-d741-5588-b187-c4f774a5fdda",
+      "display_name": "Gateway / Proof-of-Work",
+      "responsibility": "Challenge-response PoW gate that filters automated/scraping traffic before reaching application routes",
+      "description": "Issues proof-of-work challenges to unauthenticated visitors on /gateway, verifies solutions, tracks failures, and auto-blocks IPs that exceed score thresholds. Used as a pre-auth gating mechanism for /signup and /admin paths. Has 4 Redis keys (gateway:fails:{ip}, gateway:blocked:{ip}, gateway:verify_rl:{ip}, gateway:challenge:{nonce}). Rate limiter fail-open (availability over security).",
+      "owner_files": [
+        "gateway.py"
+      ],
+      "blueprints": [
+        {
+          "name": "gateway_bp",
+          "url_prefix": "/gateway"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/gateway",
+          "methods": [
+            "GET"
+          ],
+          "description": "Serve PoW challenge page"
+        },
+        {
+          "path": "/gateway/solve",
+          "methods": [
+            "POST"
+          ],
+          "description": "Submit PoW solution for verification"
+        },
+        {
+          "path": "/gateway/blocked",
+          "methods": [
+            "GET"
+          ],
+          "description": "Show blocked page when IP is blocklisted"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "gateway.challenge_issued",
+        "gateway.challenge_solved",
+        "gateway.challenge_failed",
+        "gateway.ip_blocklisted",
+        "gateway.verify_rl_hit"
+      ],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "gateway:challenge:{nonce}",
+          "gateway:fails:{ip}",
+          "gateway:blocked:{ip}",
+          "gateway:verify_rl:{ip}"
+        ],
+        "purpose": "Challenge storage, IP failure tracking, blocklist state, rate-limit counters"
+      },
+      "redis_keys": [
+        "gateway:challenge:{nonce}",
+        "gateway:fails:{ip}",
+        "gateway:blocked:{ip}",
+        "gateway:verify_rl:{ip}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "gateway.challenge_issued",
+        "gateway.challenge_solved",
+        "gateway.challenge_failed",
+        "gateway.ip_blocklisted",
+        "gateway.verify_rl_hit"
+      ],
+      "health_indicators": [
+        "Redis connectivity for challenge state"
+      ],
+      "metrics": [
+        "PoW pass rate",
+        "failure count per IP",
+        "blocked IP count",
+        "verify rate-limit hits"
+      ],
+      "logging_sources": [
+        "gateway.py audit log calls",
+        "immutable log for blocklist events"
+      ],
+      "failure_modes": [
+        "Redis failure: fail-open (no rate limit)",
+        "gateway:blocked:{ip} TTL expiry: blocked IPs regain access"
+      ],
+      "recovery_behavior": "Automatic via Redis TTL; blocklist entries expire after BLOCK_TTL",
+      "latency_expectation": "<50ms for challenge issue, <100ms for verify",
+      "scalability_concerns": [
+        "PoW computation may be slow on constrained clients"
+      ],
+      "confidence_score": 1.0
+    },
+    {
+      "subsystem_id": "44a15b3a-9049-59ac-9bfd-8032612f47f9",
+      "display_name": "Attractor Sandbox",
+      "responsibility": "Contain suspicious IPs in a fake environment that serves deceptive responses, tracks attacker behavior, and reports exfiltration milestones",
+      "description": "When the honey_token_check middleware diverts suspicious IPs, the Attractor Sandbox produces fake shell/API/key responses, logs every action to the immutable log, tracks attacker profiles, and alerts on exfiltration milestones (1/5/10/25). Stateful via Redis (attractor_sandbox:{ip}, 48h TTL) and PostgreSQL (SandboxSession table, IsolatedForest models). Can be entered automatically (fingerprint >=0.85) or manually via admin API. Sandbox actions include shell commands, request tracking, fake data exfil, and predictive canary deployment.",
+      "owner_files": [
+        "main.py",
+        "sandbox.py"
+      ],
+      "blueprints": [
+        {
+          "name": "sandbox_bp",
+          "url_prefix": "/api/sandbox"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/sandbox/status",
+          "methods": [
+            "GET"
+          ],
+          "description": "Get sandbox status for current IP or all sandboxed IPs"
+        },
+        {
+          "path": "/api/sandbox/history",
+          "methods": [
+            "GET"
+          ],
+          "description": "View sandbox history for a given IP"
+        },
+        {
+          "path": "/api/sandbox/release",
+          "methods": [
+            "POST"
+          ],
+          "description": "Manually release IP from sandbox"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "sandbox_entered",
+        "sandbox_request",
+        "sandbox_shell_command",
+        "sandbox_exfil",
+        "sandbox_predictive_canary_deployed",
+        "sandbox_released",
+        "sandbox_status_changed"
+      ],
+      "outbound_events": [
+        "sandbox_entered",
+        "sandbox_exfil",
+        "sandbox_released"
+      ],
+      "redis_usage": {
+        "keys": [
+          "attractor_sandbox:{ip}",
+          "sandbox:active:{uid}",
+          "sandbox:used:{uid}"
+        ],
+        "purpose": "Sandbox containment state (48h TTL), trial-based sandbox state, trial gate"
+      },
+      "redis_keys": [
+        "attractor_sandbox:{ip}",
+        "sandbox:active:{uid}",
+        "sandbox:used:{uid}"
+      ],
+      "sqlalchemy_models": [
+        "SandboxSession"
+      ],
+      "database_tables": [
+        "SandboxSession",
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "_bg_enter_sandbox(ip, reason) \u2014 fingerprint score >=0.85 trigger",
+        "_bg_enter_sandbox(ip, reason) \u2014 admin API",
+        "sandbox notification _send() \u2192 Telegram + Email"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord",
+        "Email"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "low",
+      "authentication_requirements": "session",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "both",
+      "observability_signals": [
+        "sandbox_entered",
+        "sandbox_request",
+        "sandbox_shell_command",
+        "sandbox_exfil",
+        "sandbox_released"
+      ],
+      "health_indicators": [
+        "attractor_sandbox:{ip} Redis key count \u2014 active sandboxed IPs"
+      ],
+      "metrics": [
+        "Active sandboxed IPs",
+        "Exfil milestone counts",
+        "Time-in-sandbox per IP",
+        "Sandbox entry trigger source"
+      ],
+      "logging_sources": [
+        "Immutable log (sandbox_action, sandbox_entered, sandbox_exfil)",
+        "SandboxSession table"
+      ],
+      "failure_modes": [
+        "attractor_sandbox:{ip} TTL expiry (48h): attacker escapes containment",
+        "TOCTOU race on sandbox entry: concurrent requests bypass check",
+        "Thread-per-request under scan: 1000+ daemon threads"
+      ],
+      "recovery_behavior": "Manual re-entry via admin API if TTL expires; auto-block as secondary containment",
+      "latency_expectation": "<50ms for middleare check, variable for fake response generation",
+      "scalability_concerns": [
+        "Thread-per-request sandbox entry under attack traffic",
+        "Synchronous immutable log writes per sandbox action"
+      ],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "280151c1-d182-5aa6-aa2f-485022873a7f",
+      "display_name": "Hall of Mirrors",
+      "responsibility": "Psychological deception maze that presents layered fake environments to attackers and tracks penetration depth",
+      "description": "When an attacker accesses mirror layers, each layer is tracked via Redis (mirror:{ip}:{sid}, mirror_depth:{ip}). Depth >=3 triggers mirror_deep_penetration Discord alert. Hall of Mirrors operates as a stateful, event-driven subsystem with Redis-backed session tracking and immutable log persistence.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/mirror/status",
+          "methods": [
+            "GET"
+          ],
+          "description": "View mirror maze depth for an IP"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "mirror_layer_created",
+        "mirror_layer_accessed",
+        "mirror_deep_penetration"
+      ],
+      "outbound_events": [
+        "mirror_deep_penetration"
+      ],
+      "redis_usage": {
+        "keys": [
+          "mirror:{ip}:{sid}",
+          "mirror_depth:{ip}"
+        ],
+        "purpose": "Mirror session state per IP and current penetration depth counter"
+      },
+      "redis_keys": [
+        "mirror:{ip}:{sid}",
+        "mirror_depth:{ip}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [
+        "Discord"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "mirror_layer_created",
+        "mirror_layer_accessed",
+        "mirror_deep_penetration"
+      ],
+      "health_indicators": [
+        "mirror_depth:{ip} key existence"
+      ],
+      "metrics": [
+        "Mirror layer accesses",
+        "Deep penetration count (depth >=3)"
+      ],
+      "logging_sources": [
+        "Immutable log for mirror events"
+      ],
+      "failure_modes": [
+        "mirror:{ip}:{sid} TTL expiry (1h): session loss",
+        "mirror_depth:{ip} Redis key expiration"
+      ],
+      "recovery_behavior": "Automatic \u2014 new mirror layer created on next access",
+      "latency_expectation": "<50ms per mirror access",
+      "scalability_concerns": [],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "54713b41-9c02-5a4e-983d-15b908af32b2",
+      "display_name": "Timing Canaries",
+      "responsibility": "Detect credential reuse by embedding intentional timing delays in fake credentials, alerting on mismatches",
+      "description": "When planted credentials are used with incorrect timing (stolen credential used with wrong delay), an immutable log entry is created and Telegram/Discord alerts fire. Each hit spawns _bg_alerts thread (Discord + Telegram). 120s dedup per IP+canary. Has 3 Redis key patterns.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/canary/timing/plant",
+          "methods": [
+            "POST"
+          ],
+          "description": "Plant a timing canary credential"
+        },
+        {
+          "path": "/api/canary/timing/status",
+          "methods": [
+            "GET"
+          ],
+          "description": "View timing canary hit status"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "timing_canary_planted",
+        "timing_canary_hit",
+        "timing_canary_delay_rotated"
+      ],
+      "outbound_events": [
+        "timing_canary_hit"
+      ],
+      "redis_usage": {
+        "keys": [
+          "timing_canary:{name}:{ip}:{ts}",
+          "timing_canary_hits:*",
+          "timing_canary_delays"
+        ],
+        "purpose": "Canary planting state (7d TTL), hit counter, delay configuration"
+      },
+      "redis_keys": [
+        "timing_canary:{name}:{ip}:{ts}",
+        "timing_canary_hits:*",
+        "timing_canary_delays"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "_bg_alerts \u2014 spawned per timing canary hit for Discord + Telegram"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "low",
+      "authentication_requirements": "session",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "timing_canary_hit"
+      ],
+      "health_indicators": [
+        "Timing canary hit count",
+        "Redis key presence for planted canaries"
+      ],
+      "metrics": [
+        "Timing canary hit rate",
+        "Hits per canary",
+        "Delay mismatch distribution"
+      ],
+      "logging_sources": [
+        "Immutable log for timing_canary_hit"
+      ],
+      "failure_modes": [
+        "Redis keys expire (7d): planted canary state lost",
+        "Dedup TTL too short: alert storm under scan"
+      ],
+      "recovery_behavior": "Automatic replanting via admin",
+      "latency_expectation": "<50ms per check, alert sent within seconds",
+      "scalability_concerns": [
+        "Per-hit thread spawn \u2014 High risk under scan traffic"
+      ],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "96904075-b146-5a4b-ac8a-f130b050dfbb",
+      "display_name": "Honeytokens",
+      "responsibility": "Decoy API keys, credentials, and sensitive data values that trigger alerts when used in requests",
+      "description": "Admin-planted fake values (API keys, passwords, tokens) monitored in the honey_token_check middleware. When a request contains a honeytoken value, handle_honey_hit() fires: DB writes (HoneyTokenEvent), auto-block, Discord thread, and execute_honey_response(). Every trigger spawns send_honey_alert thread (Telegram/Discord/Email). 5min dedup per canary+IP.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/honeytokens",
+          "methods": [
+            "GET"
+          ],
+          "description": "List all honeytokens"
+        },
+        {
+          "path": "/api/honeytokens/create",
+          "methods": [
+            "POST"
+          ],
+          "description": "Create a new honeytoken"
+        },
+        {
+          "path": "/api/honeytokens/delete",
+          "methods": [
+            "POST"
+          ],
+          "description": "Deactivate a honeytoken"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "honey_token_planted",
+        "honey_token_triggered",
+        "honey_token_deactivated"
+      ],
+      "outbound_events": [
+        "honey_token_triggered"
+      ],
+      "redis_usage": {
+        "keys": [
+          "alert_dedup:{dedup_key}"
+        ],
+        "purpose": "Alert dedup via Redis SETNX on honey hit"
+      },
+      "redis_keys": [
+        "alert_dedup:{dedup_key}"
+      ],
+      "sqlalchemy_models": [
+        "HoneyToken",
+        "HoneyTokenEvent"
+      ],
+      "database_tables": [
+        "HoneyToken",
+        "HoneyTokenEvent",
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "send_honey_alert(token, event, request) \u2014 spawned per honeytoken hit for Telegram/Discord"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord",
+        "Email"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "low",
+      "authentication_requirements": "session",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "both",
+      "observability_signals": [
+        "honey_token_triggered"
+      ],
+      "health_indicators": [
+        "Honeytoken active count",
+        "Honeytoken trigger rate"
+      ],
+      "metrics": [
+        "Honeytoken hit count per token",
+        "Auto-block actions triggered"
+      ],
+      "logging_sources": [
+        "Immutable log for honey_token_triggered",
+        "HoneyTokenEvent table"
+      ],
+      "failure_modes": [
+        "Thread-per-hit under attack traffic",
+        "Flask request object captured by daemon thread (gunicorn context recycled)"
+      ],
+      "recovery_behavior": "Automatic via dedup; no recovery needed for individual hits",
+      "latency_expectation": "<100ms per middleware check, alert thread fire-and-forget",
+      "scalability_concerns": [
+        "Per-hit thread spawn \u2014 medium risk",
+        "Flask request object in daemon thread is unsafe"
+      ],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "cdea7e10-27ee-5ff7-94f8-6acbaf658a6f",
+      "display_name": "Canary Service",
+      "responsibility": "SaaS-style canary token service that mints, tracks, and alerts on canary tokens with subscription/payment management",
+      "description": "User-facing canary token service with 16 API routes, Paystack/BTCPay webhook integration for subscriptions, and trial/billing lifecycle. Consumes cowrie_sessions:recent for enrichment. Alerts on token hits via Telegram, Discord, Email, and custom webhooks. Has 8 Redis key patterns and 3+ background threads.",
+      "owner_files": [
+        "canary_service.py"
+      ],
+      "blueprints": [
+        {
+          "name": "canary_service_bp",
+          "url_prefix": "/api/canary-service"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/canary-service/tokens",
+          "methods": [
+            "GET"
+          ],
+          "description": "List user's canary tokens"
+        },
+        {
+          "path": "/api/canary-service/tokens/mint",
+          "methods": [
+            "POST"
+          ],
+          "description": "Mint a new canary token"
+        },
+        {
+          "path": "/api/canary-service/tokens/{id}",
+          "methods": [
+            "DELETE"
+          ],
+          "description": "Delete a canary token"
+        },
+        {
+          "path": "/api/canary-service/webhook/paystack",
+          "methods": [
+            "POST"
+          ],
+          "description": "Paystack subscription webhook (HMAC-SHA256)"
+        },
+        {
+          "path": "/api/canary-service/webhook/btcpay",
+          "methods": [
+            "POST"
+          ],
+          "description": "BTCPay subscription webhook (HMAC)"
+        },
+        {
+          "path": "/api/canary-service/subscription",
+          "methods": [
+            "GET"
+          ],
+          "description": "Get user's subscription status"
+        },
+        {
+          "path": "/api/canary-service/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "Get canary service statistics"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [
+        "Paystack API",
+        "BTCPay API",
+        "canarytokens.org"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [
+        "canary_service_token_minted",
+        "canary_service_hit",
+        "canary_subscription_activated",
+        "canary_subscription_cancelled",
+        "canary_trial_started",
+        "canary_trial_ending",
+        "canary_trial_expired",
+        "canary_trial_billed",
+        "canary:triggers:total"
+      ],
+      "outbound_events": [
+        "canary_service_hit"
+      ],
+      "redis_usage": {
+        "keys": [
+          "canary:rl:hit:{token}",
+          "cowrie_sessions:recent",
+          "canary:triggers:total",
+          "canarytoken_last_hit:*"
+        ],
+        "purpose": "Rate limit per token hit, reads Cowrie sessions for enrichment, total trigger counter, canarytoken.org poll state"
+      },
+      "redis_keys": [
+        "canary:rl:hit:{token}",
+        "cowrie_sessions:recent",
+        "canary:triggers:total",
+        "canarytoken_last_hit:*"
+      ],
+      "sqlalchemy_models": [
+        "CanaryServiceToken",
+        "CanaryServiceHit",
+        "CanarySubscription"
+      ],
+      "database_tables": [
+        "CanaryServiceToken",
+        "CanaryServiceHit",
+        "CanarySubscription",
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [
+        "canarytokens_poll \u2014 every 15 min poll canarytokens.org for new hits",
+        "trial_billing_cycle \u2014 hourly trial billing run via Paystack API"
+      ],
+      "daemon_threads": [],
+      "background_workers": [
+        "_enrich_and_alert \u2014 per canary token hit",
+        "_send_canary_alerts \u2014 per trigger",
+        "canarytokens_poll background processing"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord",
+        "Email",
+        "Webhook"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [
+        "Paystack",
+        "BTCPay Server",
+        "canarytokens.org"
+      ],
+      "third_party_apis": [
+        "Paystack API",
+        "BTCPay API",
+        "canarytokens.org API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "medium",
+      "authentication_requirements": "session",
+      "authorization_model": "role_based",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "database",
+        "redis"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "both",
+      "observability_signals": [
+        "canary_service_hit",
+        "canary_subscription_activated"
+      ],
+      "health_indicators": [
+        "Canary token hit rate",
+        "Active subscription count"
+      ],
+      "metrics": [
+        "Tokens minted",
+        "Token hits",
+        "Active subscriptions",
+        "Trial conversions"
+      ],
+      "logging_sources": [
+        "Immutable log for canary_service_hit",
+        "AuditLog for subscription events"
+      ],
+      "failure_modes": [
+        "Fail-open on canary creation rate limit (user experience over abuse)",
+        "Redis dedup expiry can cause duplicate alerts"
+      ],
+      "recovery_behavior": "Automatic via Redis TTL; manual re-creation on token expiry",
+      "latency_expectation": "<100ms per token check, alerts within seconds",
+      "scalability_concerns": [],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "9d487397-ea3f-5645-ac4a-4783acf94778",
+      "display_name": "Supply Chain Canary",
+      "responsibility": "Embed beacons in code/artifacts to detect unauthorized execution environments and planted credentials on external platforms",
+      "description": "Supply-chain canary beacons are planted in code repositories and artifacts with 365-day Redis TTL. When the beacon fires in an unauthorized environment, alerts fire via Telegram/Discord. Also manages external lure credential planting with Redis-backed active/tiggered sets. Has 4 API routes and 6 Redis key patterns.",
+      "owner_files": [
+        "supply_chain_canary.py"
+      ],
+      "blueprints": [
+        {
+          "name": "supply_chain_bp",
+          "url_prefix": "/api/supply-chain"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/supply-chain/beacons",
+          "methods": [
+            "GET"
+          ],
+          "description": "List supply chain beacons"
+        },
+        {
+          "path": "/api/supply-chain/beacons/plant",
+          "methods": [
+            "POST"
+          ],
+          "description": "Plant a new supply chain canary beacon"
+        },
+        {
+          "path": "/api/supply-chain/beacons/{token}",
+          "methods": [
+            "GET"
+          ],
+          "description": "Get beacon status and hit history"
+        },
+        {
+          "path": "/api/supply-chain/lures",
+          "methods": [
+            "GET"
+          ],
+          "description": "List planted supply chain lures"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "supply_chain_canary_planted",
+        "supply_chain_beacon_fired",
+        "supply_chain_lure_planted",
+        "supply_chain_lure_triggered"
+      ],
+      "outbound_events": [
+        "supply_chain_beacon_fired"
+      ],
+      "redis_usage": {
+        "keys": [
+          "supply_chain_canary:{token}",
+          "lures:active",
+          "lure:{lid}",
+          "lures:triggered",
+          "canaries:active",
+          "canaries:triggered"
+        ],
+        "purpose": "Beacon registry (365d TTL), active lure set (ZADD), lure detail, triggered set, canary active/triggered sets"
+      },
+      "redis_keys": [
+        "supply_chain_canary:{token}",
+        "lures:active",
+        "lure:{lid}",
+        "lures:triggered",
+        "canaries:active",
+        "canaries:triggered"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "Supply chain beacon alert thread \u2014 Telegram + Discord per trigger"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "authenticated",
+      "trust_level": "medium",
+      "authentication_requirements": "session",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "supply_chain_beacon_fired"
+      ],
+      "health_indicators": [
+        "supply_chain_canary:{token} key existence"
+      ],
+      "metrics": [
+        "Active beacon count",
+        "Beacon firings",
+        "Lure triggers"
+      ],
+      "logging_sources": [
+        "Immutable log for beacon/lure trigger events"
+      ],
+      "failure_modes": [
+        "supply_chain_canary:{token} Redis TTL expiry (365d): beacon state lost",
+        "No PostgreSQL persistence for campaign state"
+      ],
+      "recovery_behavior": "Re-planting required on expiry",
+      "latency_expectation": "<50ms per check",
+      "scalability_concerns": [],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "bee89df8-24dd-5d2d-9b86-990a433e3097",
+      "display_name": "Fingerprint Corpus",
+      "responsibility": "Collect and analyze attacker fingerprints (JA3, HASSH, User-Agent, headers) from every request and Cowrie session for threat scoring and tool identification",
+      "description": "Every HTTP request passes through corpus_middleware which writes to Redis: corpus:fp:{hash}:data, corpus:fp:{hash}:count, corpus:ja3:{ja3}, corpus:tool:{tool}, corpus:country_scores, corpus:techniques, corpus:total_entries, fingerprint:recent_events. Cowrie SSH sessions contribute HASSH fingerprints via store_hassh_entry(). The Fingerprint Engine computes threat_score 0-1 used for sandbox entry decisions. 7 API routes.",
+      "owner_files": [
+        "fingerprint_corpus.py",
+        "main.py"
+      ],
+      "blueprints": [
+        {
+          "name": "corpus_bp",
+          "url_prefix": "/api/corpus"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/corpus/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "Global corpus statistics"
+        },
+        {
+          "path": "/api/corpus/techniques",
+          "methods": [
+            "GET"
+          ],
+          "description": "MITRE technique distribution in corpus"
+        },
+        {
+          "path": "/api/corpus/countries",
+          "methods": [
+            "GET"
+          ],
+          "description": "Country score distribution"
+        },
+        {
+          "path": "/api/corpus/ja3",
+          "methods": [
+            "GET"
+          ],
+          "description": "JA3 fingerprint breakdown"
+        },
+        {
+          "path": "/api/corpus/hassh",
+          "methods": [
+            "GET"
+          ],
+          "description": "HASSH fingerprint breakdown"
+        },
+        {
+          "path": "/api/corpus/tools",
+          "methods": [
+            "GET"
+          ],
+          "description": "Tool fingerprint sets"
+        },
+        {
+          "path": "/api/corpus/recent",
+          "methods": [
+            "GET"
+          ],
+          "description": "Recent fingerprint events live feed"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "corpus_fingerprint_collected"
+      ],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "corpus:fp:{hash}:data",
+          "corpus:fp:{hash}:count",
+          "corpus:ja3:{ja3}",
+          "corpus:tool:{tool}",
+          "corpus:country_scores",
+          "corpus:techniques",
+          "corpus:total_entries",
+          "corpus:hassh:*",
+          "fingerprint:recent_events",
+          "corpus:total_entries"
+        ],
+        "purpose": "Per-fingerprint data (30d TTL), JA3 sets via SADD, tool sets, country sorted scores, MITRE technique sorted scores, global counter, HASSH sets, live event feed"
+      },
+      "redis_keys": [
+        "corpus:fp:{hash}:data",
+        "corpus:fp:{hash}:count",
+        "corpus:ja3:{ja3}",
+        "corpus:tool:{tool}",
+        "corpus:country_scores",
+        "corpus:techniques",
+        "corpus:total_entries",
+        "corpus:hassh:*",
+        "fingerprint:recent_events"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [
+        "Redis SETEX 30d for fingerprint data",
+        "Redis INCR counters for techniques and countries"
+      ],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "corpus_fingerprint_collected"
+      ],
+      "health_indicators": [
+        "corpus:total_entries counter",
+        "Redis memory usage for corpus keys"
+      ],
+      "metrics": [
+        "Fingerprints collected per minute",
+        "Unique JA3 count",
+        "Technique distribution",
+        "Tool signature counts"
+      ],
+      "logging_sources": [
+        "Debug logs only"
+      ],
+      "failure_modes": [
+        "Redis failure: fingerprint collection silently lost",
+        "30d TTL: old fingerprints expire"
+      ],
+      "recovery_behavior": "Automatic \u2014 new entries written on next request",
+      "latency_expectation": "<5ms per middleware write (Redis SET/INCR)",
+      "scalability_concerns": [
+        "Redis write load per request",
+        "corpus:total_entries INCR contention"
+      ],
+      "confidence_score": 1.0
+    },
+    {
+      "subsystem_id": "dccf032e-9aae-5412-ba0d-4d48da96f4f7",
+      "display_name": "Session DNA",
+      "responsibility": "Build behavioral baselines for authenticated web users and detect anomalous deviations indicating account takeover",
+      "description": "Session DNA tracks authenticated user behavior patterns via SessionEvent records (every 5th request) and deviation scoring. Deviation >=0.65 creates a DNAAlert and fires Discord notification. Operates via after_request middleware (track_dna_event, line 7112) that spawns _record_and_score_dna thread every 5th event. Session expiry triggers _finalize_session_dna thread. Stateful in PostgreSQL (SessionDNA, SessionEvent, DNAAlert models).",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/dna/baseline",
+          "methods": [
+            "GET"
+          ],
+          "description": "Get user behavioral baseline"
+        },
+        {
+          "path": "/api/dna/alerts",
+          "methods": [
+            "GET"
+          ],
+          "description": "List DNA alerts for user"
+        },
+        {
+          "path": "/api/dna/events",
+          "methods": [
+            "GET"
+          ],
+          "description": "List Session DNA events"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "dna_event_recorded",
+        "dna_baseline_created",
+        "dna_baseline_updated",
+        "dna_deviation_scored",
+        "dna_alert_created",
+        "dna_alert_resolved"
+      ],
+      "outbound_events": [
+        "dna_deviation_detected"
+      ],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "Session DNA does not use Redis (PostgreSQL only for baseline, events, alerts)"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [
+        "SessionDNA",
+        "SessionEvent",
+        "DNAAlert"
+      ],
+      "database_tables": [
+        "SessionDNA",
+        "SessionEvent",
+        "DNAAlert"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [
+        "_finalize_session_dna \u2014 spawned on session expiry"
+      ],
+      "background_workers": [
+        "_record_and_score_dna \u2014 spawned every 5th authenticated request"
+      ],
+      "notification_channels": [
+        "Discord",
+        "Telegram"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "authenticated",
+      "trust_level": "high",
+      "authentication_requirements": "session",
+      "authorization_model": "permission_based",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "postgresql",
+      "observability_signals": [
+        "dna_deviation_detected"
+      ],
+      "health_indicators": [
+        "Active user baselines count",
+        "Deviation score thresholds hit",
+        "DNAAlert count"
+      ],
+      "metrics": [
+        "User baselines",
+        "Deviation scores",
+        "DNA alerts created/resolved",
+        "Thread spawn rate (every 5th request)"
+      ],
+      "logging_sources": [
+        "Immutable log for DNS-related events",
+        "DNAAlert table"
+      ],
+      "failure_modes": [
+        "High deviation false positives under new usage patterns",
+        "DB write contention on SessionEvent per-5th-request"
+      ],
+      "recovery_behavior": "Baseline auto-updates after enough session data",
+      "latency_expectation": "<100ms per event recording, async thread for deviation scoring",
+      "scalability_concerns": [
+        "Async thread per 5th request for every authenticated user can accumulate"
+      ],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "d95445c2-841c-5c22-99fe-f297d1038990",
+      "display_name": "Cowrie Behavioral DNA",
+      "responsibility": "Track persistent threat actors across Cowrie SSH sessions using behavioral biometrics (HASSH, commands, timing)",
+      "description": "Cowrie Behavioral DNA (distinct from Session DNA) tracks SSH attackers across Cowrie sessions using fingerprint matching. Processes sessions synchronously via process_session() called from the Cowrie pipeline. Maintains BehavioralActor table in PostgreSQL plus Redis dna:actor_sessions:{uuid} and dna:hassh:/cmdhash: keys. Supports actor identification, creation, confidence updates, merging, and retirement.",
+      "owner_files": [
+        "behavioral_dna.py"
+      ],
+      "blueprints": [],
+      "routes": [],
+      "inbound_apis": [
+        "process_session() \u2014 called synchronously by Cowrie pipeline _cross_module_enrich"
+      ],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "dna_actor_identified",
+        "dna_actor_created",
+        "dna_actor_confidence_updated",
+        "dna_actor_merged",
+        "dna_actor_retired",
+        "dna_fingerprint_registered"
+      ],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "dna:actor_sessions:{uuid}",
+          "dna:hassh:*",
+          "dna:cmdhash:*",
+          "dna:session_actor:{sid}"
+        ],
+        "purpose": "Actor-to-session mapping, HASSH registry (SETEX with TTL), command hash registry, session-to-actor lookup"
+      },
+      "redis_keys": [
+        "dna:actor_sessions:{uuid}",
+        "dna:hassh:*",
+        "dna:cmdhash:*",
+        "dna:session_actor:{sid}"
+      ],
+      "sqlalchemy_models": [
+        "BehavioralActor",
+        "MergeLog"
+      ],
+      "database_tables": [
+        "behavioral_actor",
+        "behavioral_merge_log"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "critical",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "both",
+      "observability_signals": [
+        "dna_actor_identified",
+        "dna_actor_merged"
+      ],
+      "health_indicators": [
+        "BehavioralActor table count",
+        "Redis actor session key count"
+      ],
+      "metrics": [
+        "Unique actors tracked",
+        "Actor merging events",
+        "Confidence distributions"
+      ],
+      "logging_sources": [
+        "Immutable log for actor-related events"
+      ],
+      "failure_modes": [
+        "Redis key TTL expiry: actor session mapping lost",
+        "False positive actor merges"
+      ],
+      "recovery_behavior": "New sessions rebuild actor state",
+      "latency_expectation": "Synchronous call from pipeline, sub-second",
+      "scalability_concerns": [
+        "Runs in sync enrichment chain (blocks event worker)"
+      ],
+      "confidence_score": 0.92
+    },
+    {
+      "subsystem_id": "c5de21e5-ed2b-59d3-91b6-26ac67f1172e",
+      "display_name": "Cowrie Intelligence Pipeline",
+      "responsibility": "Ingest, analyze, enrich, and alert on SSH honeypot sessions from Cowrie sensors through CRYSTAL triage and cross-module enrichment",
+      "description": "Long-running intelligence pipeline started by engine supervisor. Tails /var/log/cowrie/cowrie.json, pushes raw events to an internal event_queue (maxsize=5000), N event workers (ceil(cpu/2), max 4) process events through handlers (connect, login, command, download, close). The close handler performs full analysis: EIDETIC burst detection, credential attack classification, mirage fidelity, LLM enrichment (Groq\u2192DeepSeek\u2192Anthropic, budget 300/day), rule-based fallback, behavioral overrides, and response determination (EMERGENCY\u2192NEGLIGIBLE). Results stored in cowrie_completed:{sid} (30d TTL) and pushed to cowrie_sessions:recent (capped 1000). Cross-module enrichment (async campaign correlation, sync DNA/ASN/fingerprint/credential/BGP). CRYSTRIX triage fires via alert_queue (maxsize 1000) to alert_worker (Telegram+Discord).",
+      "owner_files": [
+        "cowrie_intelligence.py"
+      ],
+      "blueprints": [
+        {
+          "name": "cowrie_intel_bp",
+          "url_prefix": "/api/cowrie"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/cowrie/sessions",
+          "methods": [
+            "GET"
+          ],
+          "description": "Recent Cowrie sessions (reads cowrie_sessions:recent)"
+        },
+        {
+          "path": "/api/cowrie/sessions/{id}",
+          "methods": [
+            "GET"
+          ],
+          "description": "Detailed Cowrie session intelligence"
+        },
+        {
+          "path": "/api/cowrie/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "Cowrie pipeline and session statistics"
+        },
+        {
+          "path": "/api/cowrie/stream",
+          "methods": [
+            "GET"
+          ],
+          "description": "SSE stream polling cowrie_sessions:recent every 5s"
+        },
+        {
+          "path": "/api/cowrie/threats",
+          "methods": [
+            "GET"
+          ],
+          "description": "High-threat session list"
+        },
+        {
+          "path": "/api/cowrie/actors",
+          "methods": [
+            "GET"
+          ],
+          "description": "Identified threat actors from Cowrie"
+        }
+      ],
+      "inbound_apis": [
+        "file tail of cowrie.json",
+        "Redis Pub/Sub cowrie:connect, cowrie:hassh, cowrie:downloads, cowrie:commands"
+      ],
+      "outbound_apis": [
+        "Groq API",
+        "DeepSeek API",
+        "Anthropic API",
+        "Telegram API",
+        "Discord API"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [
+        "cowrie_log_line",
+        "cowrie_connect",
+        "cowrie_login",
+        "cowrie_command",
+        "cowrie_download",
+        "cowrie_session_closed",
+        "cowrie_alert_high_risk_command",
+        "cowrie_alert_high_threat_session",
+        "cowrie_alert_suppressed",
+        "cowrie_session_enriched",
+        "cowrie_session_labeled"
+      ],
+      "outbound_events": [
+        "cowrie_alert_high_threat_session",
+        "cowrie_session_enriched"
+      ],
+      "redis_usage": {
+        "keys": [
+          "cowrie_session:{sid}",
+          "cowrie_completed:{sid}",
+          "cowrie_sessions:recent",
+          "cowrie:log_pos",
+          "cowrie_llm:global:{day}",
+          "cowrie_alert_dedup:{sig}",
+          "cowrie:alert_rate:global",
+          "cowrie:suppressed",
+          "cowrie:labeled_sessions",
+          "ioc:*",
+          "cowrie_campaign_ips:{sig}"
+        ],
+        "purpose": "Session state (24h TTL), completed session analysis (30d TTL), session feed (capped 1000), log file position tracking, LLM budget (300/day), alert dedup (900s), rate limiting (INCR), suppressed alerts, labeled sessions via SADD, IOC storage, campaign IP signature sets"
+      },
+      "redis_keys": [
+        "cowrie_session:{sid}",
+        "cowrie_completed:{sid}",
+        "cowrie_sessions:recent",
+        "cowrie:log_pos",
+        "cowrie_llm:global:{day}",
+        "cowrie_alert_dedup:{sig}",
+        "cowrie:alert_rate:global",
+        "cowrie:suppressed",
+        "cowrie:labeled_sessions",
+        "ioc:*",
+        "cowrie_campaign_ips:{sig}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [
+        "_watch_cowrie_log \u2014 file tail, daemon, push to event_queue",
+        "N x _event_worker (ceil(cpu/2), max 4) \u2014 daemon, consume event_queue",
+        "_alert_worker \u2014 daemon, consume alert_queue (maxsize 1000)"
+      ],
+      "background_workers": [],
+      "notification_channels": [
+        "Telegram",
+        "Discord"
+      ],
+      "queues": [
+        "event_queue (Queue, maxsize=5000)",
+        "alert_queue (Queue, maxsize=1000)"
+      ],
+      "cache_usage": [
+        "Redis cowrie_completed:{sid} 30d TTL for session intelligence caching"
+      ],
+      "external_services": [],
+      "third_party_apis": [
+        "Groq API",
+        "DeepSeek API",
+        "Anthropic API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "critical",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "Redis",
+        "Cowrie VPS log file access"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "cowrie_log_line",
+        "cowrie_session_closed",
+        "cowrie_alert_high_threat_session"
+      ],
+      "health_indicators": [
+        "event_queue.qsize()",
+        "alert_queue.qsize()",
+        "Event worker count",
+        "LLM budget remaining today",
+        "cowrie:log_pos"
+      ],
+      "metrics": [
+        "Sessions processed per minute",
+        "Events per second",
+        "LLM budget usage (daily 300 limit)",
+        "CRYSTAL triage outcomes (alert/summarize/suppress)",
+        "Alert dedup efficiency"
+      ],
+      "logging_sources": [
+        "cowrie.json file tail",
+        "event worker logs",
+        "CRYSTAL classifier output"
+      ],
+      "failure_modes": [
+        "event_queue maxsize=5000: producer blocks, stalls log watcher",
+        "_cross_module_enrich sync: blocks event worker for external API calls",
+        "LLM budget exhausted: fallback to rule-based analysis",
+        "alert_queue crash: alerts silently dropped (in-memory, no persistence)",
+        "cowrie_completed:{sid} 30d TTL: session history lost",
+        "cowrie:recent_events vs cowrie_sessions:recent drift (stale endpoint)"
+      ],
+      "recovery_behavior": "LLM budget: auto-fallback to _rule_based_analysis(); stop() method defined but never called (daemon only); auto-reconnect on file tail loss",
+      "latency_expectation": "<1s from log line to session completion; 5-30s for full analysis including LLM",
+      "scalability_concerns": [
+        "Sync enrichment chain blocks event workers for external API calls",
+        "event_queue (5000) can back up under botnet-scale attacks",
+        "cowrie_completed:{sid} 30d TTL expiration cascade for 7+ consuming subsystems"
+      ],
+      "confidence_score": 0.92
+    },
+    {
+      "subsystem_id": "c96f524c-dbd9-5e1c-ba1c-34f0d9a5e304",
+      "display_name": "Campaign Correlator",
+      "responsibility": "Cluster Cowrie SSH sessions into campaigns using multi-dimensional similarity ensemble, tracking actor groups across time, IPs, and tools",
+      "description": "Event-driven campaign correlation engine called from Cowrie pipeline (async thread) and Detonation pipeline. Builds 21-dimension fingerprints (SimHash, tool signatures, credential patterns, typing rhythm, feature vectors), stores in recent_fingerprints (capped 10000), finds candidates from last 50 fingerprints, computes 8-dimension weighted similarity ensemble. Scores >=0.85 update existing campaigns; >=0.60 may create new ones. State is Redis-only (campaign:{id} 7d TTL, active_campaigns). Campaign updates alert every 5 sessions via Telegram. No PostgreSQL persistence.",
+      "owner_files": [
+        "campaign_correlator.py"
+      ],
+      "blueprints": [
+        {
+          "name": "campaign_bp",
+          "url_prefix": "/api/campaigns"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/campaigns",
+          "methods": [
+            "GET"
+          ],
+          "description": "List active campaigns"
+        },
+        {
+          "path": "/api/campaigns/{id}",
+          "methods": [
+            "GET"
+          ],
+          "description": "Get campaign detail"
+        },
+        {
+          "path": "/api/campaigns/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "Campaign correlation statistics"
+        }
+      ],
+      "inbound_apis": [
+        "ingest_session() from Cowrie pipeline (async thread)",
+        "ingest_session() from Detonation pipeline (sync)"
+      ],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "session_fingerprint_ingested",
+        "campaign_cluster_found",
+        "new_campaign_detected",
+        "campaign_updated"
+      ],
+      "outbound_events": [
+        "new_campaign_detected",
+        "campaign_updated"
+      ],
+      "redis_usage": {
+        "keys": [
+          "recent_fingerprints",
+          "fingerprint_data:{fid}",
+          "campaign:{id}",
+          "campaigns:active",
+          "campaign_stats"
+        ],
+        "purpose": "Fingerprint queue (capped 10000), fingerprint data (3d TTL), campaign state (7d TTL), active campaign set (ZADD), aggregated stats"
+      },
+      "redis_keys": [
+        "recent_fingerprints",
+        "fingerprint_data:{fid}",
+        "campaign:{id}",
+        "campaigns:active",
+        "campaign_stats"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "Campaign correlator get_correlator() singleton \u2014 no thread, event-driven"
+      ],
+      "notification_channels": [
+        "Telegram"
+      ],
+      "queues": [],
+      "cache_usage": [
+        "Redis TTL cache for campaign data (7d), fingerprint data (3d)"
+      ],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "critical",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [
+        "Redis"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "new_campaign_detected",
+        "campaign_updated",
+        "campaign_cluster_found"
+      ],
+      "health_indicators": [
+        "Active campaign count",
+        "recent_fingerprints list length"
+      ],
+      "metrics": [
+        "Active campaigns",
+        "Sessions per campaign",
+        "Campaign creation rate",
+        "Similarity score distribution"
+      ],
+      "logging_sources": [
+        "Immutable log for campaign events"
+      ],
+      "failure_modes": [
+        "campaign:{id} 7d TTL expiry: campaign state lost (Redis-only persistence)",
+        "Redis restart: all campaign data lost (Gap 8)",
+        "campaign:active list stale pointers after campaign TTL expiry"
+      ],
+      "recovery_behavior": "Rebuilds from recent_fingerprints (capped 10000); historical campaigns are unrecoverable",
+      "latency_expectation": "10-30s per session ingest for fingerprint building and similarity search",
+      "scalability_concerns": [
+        "recent_fingerprints (capped 10000) limits long-term correlation scope",
+        "Redis-only state is a single point of failure"
+      ],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "8d9782c9-19fd-55b2-9762-4ad3b8ab4b5e",
+      "display_name": "Credential Propagation",
+      "responsibility": "Auto-rotate and track fake credential lures planted on external platforms, detecting when Cowrie logins use planted credentials",
+      "description": "Long-running engine that auto-rotates planted credential lures on external platforms. The auto_rotate() daemon thread runs only if AUTO_ROTATION env var is set. Lures are stored in Redis (lures:active via ZADD, lure:{lid} with configurable TTL). Checks Cowrie logins against planted lures via check_cowrie_login_for_lure(). Alerts on trigger to Telegram. Has a stop() method defined but never called.",
+      "owner_files": [
+        "credential_propagation.py"
+      ],
+      "blueprints": [
+        {
+          "name": "cred_prop_bp",
+          "url_prefix": "/credential-propagation"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/lures",
+          "methods": [
+            "GET"
+          ],
+          "description": "List active lures (admin)"
+        },
+        {
+          "path": "/api/lures/plant",
+          "methods": [
+            "POST"
+          ],
+          "description": "Plant new lure (admin)"
+        },
+        {
+          "path": "/api/lures/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "Lure statistics (admin)"
+        },
+        {
+          "path": "/api/lures/<lure_id>",
+          "methods": [
+            "DELETE"
+          ],
+          "description": "Delete lure (admin)"
+        }
+      ],
+      "inbound_apis": [
+        "check_cowrie_login_for_lure() from Cowrie pipeline (sync)"
+      ],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "lure_credential_planted",
+        "lure_credential_evicted",
+        "lure_credential_triggered"
+      ],
+      "outbound_events": [
+        "lure_credential_triggered"
+      ],
+      "redis_usage": {
+        "keys": [
+          "lures:active",
+          "lure:{lid}",
+          "lures:triggered"
+        ],
+        "purpose": "Active lure set (ZADD), lure detail (configurable TTL), triggered lure set (ZADD)"
+      },
+      "redis_keys": [
+        "lures:active",
+        "lure:{lid}",
+        "lures:triggered"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [
+        {
+          "target": "auto_rotate",
+          "daemon": true,
+          "condition": "AUTO_ROTATION enabled"
+        }
+      ],
+      "background_workers": [],
+      "notification_channels": [
+        "Telegram"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "high",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "Redis"
+      ],
+      "shutdown_dependency": [
+        "stop() method defined but never called (daemon only)"
+      ],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "lure_credential_triggered"
+      ],
+      "health_indicators": [
+        "Active lure count",
+        "lures:triggered count"
+      ],
+      "metrics": [
+        "Active lures",
+        "Triggered lures",
+        "Lure eviction rate",
+        "Rotation frequency"
+      ],
+      "logging_sources": [
+        "Immutable log for lure trigger events"
+      ],
+      "failure_modes": [
+        "lure:{lid} TTL expiry: planted lures lost",
+        "stop() never called: clean shutdown not possible",
+        "Redis restart: all lure state lost"
+      ],
+      "recovery_behavior": "Auto-rotation replants lures if AUTO_ROTATION enabled; no manual recovery path",
+      "latency_expectation": "Sub-second check per Cowrie login",
+      "scalability_concerns": [],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "b2e90a78-5ec1-5076-ad0a-7730e854c1f3",
+      "display_name": "ASN Intelligence",
+      "responsibility": "Enrich IP addresses with ASN, geo, ISP, hosting/VPN/Tor detection, and track attack attribution by ASN with high-risk scoring",
+      "description": "On-demand and scheduled ASN enrichment service. Uses ThreadPoolExecutor (8 workers) to query AbuseIPDB, IPInfo, Shodan, and RDAP for IP enrichment. Provides VANISH (VPN/Tor/proxy) detection and SHIFT (geo velocity) detection. Called from Cowrie pipeline (sync enrich_and_track) and from canary service, AIRS, sandbox, and others. Writes to Redis ip_enrich:{hash} (TTL controlled via IP_ENRICHMENT_TTL), asn:daily:{asn}:{date} (HINCRBY), asn:leaderboard:total (ZINCRBY), asn:high_risk (ZADD). Has a _auto_report_asn function that is a dead path (pass body).",
+      "owner_files": [
+        "asn_intelligence.py"
+      ],
+      "blueprints": [
+        {
+          "name": "asn_intel_bp",
+          "url_prefix": "/api/asn"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/asn/enrich/{ip}",
+          "methods": [
+            "GET"
+          ],
+          "description": "Get IP enrichment data"
+        },
+        {
+          "path": "/api/asn/leaderboard",
+          "methods": [
+            "GET"
+          ],
+          "description": "ASN leaderboard"
+        },
+        {
+          "path": "/api/asn/high-risk",
+          "methods": [
+            "GET"
+          ],
+          "description": "High-risk ASNs"
+        },
+        {
+          "path": "/api/asn/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "ASN intelligence statistics"
+        }
+      ],
+      "inbound_apis": [
+        "enrich_and_track() from Cowrie pipeline (sync)",
+        "lookup_ip() from Sandbox (sync)",
+        "get_service() from Canary service (sync)",
+        "get_service() from AIRS (sync)"
+      ],
+      "outbound_apis": [
+        "AbuseIPDB API",
+        "IPInfo API",
+        "Shodan API",
+        "VirusTotal API",
+        "RDAP API"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [
+        "ip_enrichment_requested",
+        "ip_enriched",
+        "asn_daily_recorded",
+        "asn_abuse_report_sent",
+        "asn_high_risk_scored"
+      ],
+      "outbound_events": [
+        "ip_enriched"
+      ],
+      "redis_usage": {
+        "keys": [
+          "ip_enrich:{hash}",
+          "asn:daily:{asn}:{date}",
+          "asn:leaderboard:total",
+          "asn:leaderboard:24h",
+          "asn:countries",
+          "asn:hosting_providers",
+          "asn:high_risk",
+          "asn:bgp_hijack:{asn}"
+        ],
+        "purpose": "IP enrichment cache (IP_ENRICHMENT_TTL), daily ASN stats (HINCRBY), all-time leaderboard, 24h rolling counts, country distribution, hosting provider distribution, high-risk ASNs (ZADD), cross-feed BGP hijack markers (30d TTL)"
+      },
+      "redis_keys": [
+        "ip_enrich:{hash}",
+        "asn:daily:{asn}:{date}",
+        "asn:leaderboard:total",
+        "asn:leaderboard:24h",
+        "asn:countries",
+        "asn:hosting_providers",
+        "asn:high_risk",
+        "asn:bgp_hijack:{asn}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "ThreadPoolExecutor (8 workers) for IP enrichment"
+      ],
+      "notification_channels": [
+        "Email (Resend) \u2014 for auto-abuse reports, but _auto_report_asn is dead code (pass body)"
+      ],
+      "queues": [],
+      "cache_usage": [
+        "Redis SETEX for IP enrichment cache with configurable TTL"
+      ],
+      "external_services": [],
+      "third_party_apis": [
+        "AbuseIPDB API",
+        "IPInfo API",
+        "Shodan API",
+        "VirusTotal API",
+        "RDAP API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "high",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "Redis"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "ip_enriched",
+        "asn_high_risk_scored"
+      ],
+      "health_indicators": [
+        "IP enrichment cache hit rate",
+        "ThreadPoolExecutor queue depth"
+      ],
+      "metrics": [
+        "IP enrichments per minute",
+        "API latency (AbuseIPDB/IPInfo/Shodan/VT)",
+        "Cache hit ratio",
+        "High-risk ASN count"
+      ],
+      "logging_sources": [
+        "Immutable log for enrichment events"
+      ],
+      "failure_modes": [
+        "External API rate limits or downtime: enrichment delayed",
+        "_auto_report_asn is dead code (pass body)",
+        "ip_enrich:{hash} TTL expiry: cache miss",
+        "AUTO_ABUSE_REPORT flag is set but never sends actual email"
+      ],
+      "recovery_behavior": "IP enrichment cache auto-refresh on TTL expiry; external API retry via ThreadPoolExecutor",
+      "latency_expectation": "5-30s for full enrichment depending on API latencies (sync calls block event workers)",
+      "scalability_concerns": [
+        "Sync enrichment calls from Cowrie pipeline block event workers for external API latency"
+      ],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "4d7a10be-636a-5344-b4e9-b5ec61253b77",
+      "display_name": "BGP Monitor",
+      "responsibility": "Monitor BGP routing security through dual-feed ingestion (RIPE RIS WebSocket and Cloudflare Radar polling) to detect hijacks, route leaks, and origin anomalies",
+      "description": "Continuous BGP monitoring with dual feeds: FEED 1 \u2014 RIPE RIS Live via wss://ris-live.ripe.net/v1/ws/ WebSocket, FEED 2 \u2014 Cloudflare Radar polling every 15 min via APScheduler. Both feeds converge at _handle_anomaly() which deduplicates via bgp_alert_sent:{hash} (1h TTL) and writes to bgp_monitor:alerts (capped 500), bgp_monitor:route_changes (ZADD, 24h trim), bgp_monitor:hijacks:active:{hash} (24h TTL). Cross-subsystem writes to asn:bgp_hijack:{asn} (30d), asn:high_risk (ZADD). Writes immutable log on anomaly. Alerts via Telegram + Discord. Has infinite WebSocket reconnect loop (no max-retry).",
+      "owner_files": [
+        "bgp_monitor.py"
+      ],
+      "blueprints": [
+        {
+          "name": "bgp_bp",
+          "url_prefix": "/api/bgp"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/bgp/status",
+          "methods": [
+            "GET"
+          ],
+          "description": "BGP monitor feed status"
+        },
+        {
+          "path": "/api/bgp/route-state",
+          "methods": [
+            "GET"
+          ],
+          "description": "BGP route state store"
+        },
+        {
+          "path": "/api/bgp/alerts",
+          "methods": [
+            "GET"
+          ],
+          "description": "BGP anomaly alerts"
+        },
+        {
+          "path": "/api/bgp/hijacks",
+          "methods": [
+            "GET"
+          ],
+          "description": "Active hijack events"
+        },
+        {
+          "path": "/api/bgp/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "BGP monitor statistics"
+        }
+      ],
+      "inbound_apis": [
+        "is_ip_from_hijacked_prefix() from Sandbox (sync)",
+        "is_ip_from_hijacked_prefix() from Cowrie pipeline (sync)"
+      ],
+      "outbound_apis": [
+        "RIPE RIS WebSocket (wss://ris-live.ripe.net/v1/ws/)",
+        "Cloudflare Radar API"
+      ],
+      "websocket_usage": [
+        "RIPE RIS Live WebSocket \u2014 continuous monitoring for UPDATE messages"
+      ],
+      "inbound_events": [
+        "bgp_route_updated",
+        "bgp_hijack_detected",
+        "bgp_route_change_anomaly",
+        "bgp_cloudflare_poll_completed",
+        "bgp_anomaly_alert_sent"
+      ],
+      "outbound_events": [
+        "bgp_hijack_detected",
+        "bgp_anomaly_alert_sent"
+      ],
+      "redis_usage": {
+        "keys": [
+          "bgp_monitor:route_state",
+          "bgp_monitor:alerts",
+          "bgp_monitor:route_changes",
+          "bgp_monitor:hijacks:active:{hash}",
+          "bgp_alert_sent:{hash}",
+          "BGP_ALERTS_KEY",
+          "BGP_STATE_KEY"
+        ],
+        "purpose": "Route state (persistent), anomaly alerts list (capped 500), time-ordered route changes (ZADD 24h trim), active hijack set (24h TTL), alert dedup (1h TTL), alert list, state tracking"
+      },
+      "redis_keys": [
+        "bgp_monitor:route_state",
+        "bgp_monitor:alerts",
+        "bgp_monitor:route_changes",
+        "bgp_monitor:hijacks:active:{hash}",
+        "bgp_alert_sent:{hash}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [
+        "run_bgp_monitor \u2014 every 15 min, polls Cloudflare Radar"
+      ],
+      "daemon_threads": [
+        "_run_ripe_ris_thread \u2014 asyncio WebSocket to RIPE RIS, daemon"
+      ],
+      "background_workers": [],
+      "notification_channels": [
+        "Telegram",
+        "Discord"
+      ],
+      "queues": [
+        "bgp_monitor:alerts \u2014 LPUSH, 3 consumers (public_api, ops-dashboard, main.py health)"
+      ],
+      "cache_usage": [],
+      "external_services": [
+        "RIPE RIS",
+        "Cloudflare Radar"
+      ],
+      "third_party_apis": [
+        "RIPE RIS WebSocket API",
+        "Cloudflare Radar API"
+      ],
+      "cloud_services": [
+        "Cloudflare"
+      ],
+      "security_boundary": "internal",
+      "trust_level": "critical",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "Redis",
+        "Internet access to RIPE/Cloudflare"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "bgp_hijack_detected"
+      ],
+      "health_indicators": [
+        "RIPE RIS WebSocket feed_status (connected/disconnected)",
+        "bgp_monitor:route_state size",
+        "APScheduler last run time"
+      ],
+      "metrics": [
+        "BGP route changes per hour",
+        "Hijack detections",
+        "Alert dedup ratio"
+      ],
+      "logging_sources": [
+        "Immutable log for BGP anomaly events"
+      ],
+      "failure_modes": [
+        "RIPE RIS WebSocket disconnect (infinite reconnect loop, no max-retry)",
+        "bgp_alert_sent:{hash} 1h TTL: dedup gap allows duplicate alert",
+        "Redis restart: route baselines reset (bgp_monitor:route_state is persistent key)"
+      ],
+      "recovery_behavior": "RIPE RIS WebSocket: infinite 30s delay reconnect loop; Cloudflare Radar polling reconnects on next schedule",
+      "latency_expectation": "Real-time via RIPE WS, 15 min via polling; alerts within 10s of detection",
+      "scalability_concerns": [],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "aade65c5-87b3-507f-99d3-04451cb0349c",
+      "display_name": "LLM Honeypot",
+      "responsibility": "Deceive attackers probing for AI capabilities by serving fake LLM endpoints that bait, track injections, and divert to sandbox",
+      "description": "Fake AI service endpoints that respond to /v1/chat/completions with fake credentials and honeytoken responses. Classifies injection attempts via classify_injection() (also called by AIRS as fallback). On critical injection, spawns _bg_enter_sandbox thread and alerts Telegram/Discord. Has 7 API routes, 5 Redis keys, 3+ background threads. Stores injection attempts in immutable log. Daily budget tracking via Redis INCR (fail-closed with rate limiting).",
+      "owner_files": [
+        "llm_honeypot.py"
+      ],
+      "blueprints": [
+        {
+          "name": "llm_honeypot_bp",
+          "url_prefix": "/api/llm"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/llm/v1/chat/completions",
+          "methods": [
+            "POST"
+          ],
+          "description": "Fake chat completions honeypot endpoint"
+        },
+        {
+          "path": "/api/llm/v1/embeddings",
+          "methods": [
+            "POST"
+          ],
+          "description": "Fake embeddings honeypot endpoint"
+        },
+        {
+          "path": "/api/llm/sessions",
+          "methods": [
+            "GET"
+          ],
+          "description": "LLM honeypot session history"
+        },
+        {
+          "path": "/api/llm/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "LLM honeypot statistics"
+        },
+        {
+          "path": "/api/llm/budget",
+          "methods": [
+            "GET"
+          ],
+          "description": "Daily LLM budget status"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "llm_honeypot_prompt_received",
+        "llm_injection_classified",
+        "llm_honeypot_bait_served",
+        "llm_honeypot_sandbox_diverted",
+        "llm_embed_accessed",
+        "llm_honeypot_daily_budget_hit"
+      ],
+      "outbound_events": [
+        "llm_injection_classified",
+        "llm_honeypot_sandbox_diverted"
+      ],
+      "redis_usage": {
+        "keys": [
+          "llm_rl:*",
+          "llm_honeypot:{ip}:{ts}",
+          "cowrie_llm:global:{day}"
+        ],
+        "purpose": "Rate limit counters, bait tracking (7d TTL), global LLM budget"
+      },
+      "redis_keys": [
+        "llm_rl:*",
+        "llm_honeypot:{ip}:{ts}",
+        "cowrie_llm:global:{day}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "_store_injection_attempt \u2014 per injection",
+        "_alert \u2014 Telegram + Discord per critical injection",
+        "_bg_enter_sandbox(ip, reason) \u2014 per critical injection"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "llm_injection_classified"
+      ],
+      "health_indicators": [
+        "Daily budget level (300/day default)",
+        "Injection attempt rate"
+      ],
+      "metrics": [
+        "Injection attempts per day",
+        "Budget consumption",
+        "Sandbox diversion rate"
+      ],
+      "logging_sources": [
+        "Immutable log for injection_classified",
+        "Redis bait tracking"
+      ],
+      "failure_modes": [
+        "Fail-closed on Redis failure (no LLM calls \u2014 cost protection)",
+        "Fail-closed on LLM budget (rule-based fallback)"
+      ],
+      "recovery_behavior": "Auto-budget reset daily",
+      "latency_expectation": "<100ms per request (no external API calls)",
+      "scalability_concerns": [],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "b23751bb-cd68-5401-88cb-2b8c8cc27879",
+      "display_name": "LLM Firewall",
+      "responsibility": "Three-layer prompt security firewall that blocks/flag/monitor AI prompts for injection, jailbreak, and encoding attacks",
+      "description": "API-key-gated 3-layer prompt analysis service. Layer 1: 20 MITRE ATLAS regex patterns (fail CLOSED). Layer 2: LLM classification via Groq\u2192DeepSeek\u2192Anthropic circuit-breaker with llm_cache (3600s TTL). Layer 3: Heuristic fallback (max confidence 0.7, never auto-block). Rate limiting at 1000/hr per key. Redis-backed state: llmfw:key:{api_key}, llmfw:rl:{key}:{hour}, events (100), blocks (500), stats hash, category breakdown. Alerts on block via Telegram, Discord, Email (Resend), and custom HMAC-signed webhook. 8 API routes.",
+      "owner_files": [
+        "llm_firewall.py"
+      ],
+      "blueprints": [
+        {
+          "name": "llm_firewall_bp",
+          "url_prefix": "/api/llm-firewall"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/llm-firewall/check",
+          "methods": [
+            "POST"
+          ],
+          "description": "Check prompt for injection (3-layer analysis)"
+        },
+        {
+          "path": "/api/llm-firewall/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "LLM firewall statistics per API key"
+        },
+        {
+          "path": "/api/llm-firewall/events",
+          "methods": [
+            "GET"
+          ],
+          "description": "Recent LLM firewall events"
+        },
+        {
+          "path": "/api/llm-firewall/blocks",
+          "methods": [
+            "GET"
+          ],
+          "description": "Blocked prompts"
+        }
+      ],
+      "inbound_apis": [
+        "analyze() from Sandbox (sync)"
+      ],
+      "outbound_apis": [
+        "Groq API",
+        "DeepSeek API",
+        "Anthropic API",
+        "Resend API (Email)"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [
+        "llmfw_request_received",
+        "llmfw_regex_detection",
+        "llmfw_llm_classification",
+        "llmfw_heuristic_fallback",
+        "llmfw_allowed",
+        "llmfw_blocked",
+        "llmfw_flagged",
+        "llmfw_rate_limited",
+        "llmfw_daily_stats_updated"
+      ],
+      "outbound_events": [
+        "llmfw_blocked"
+      ],
+      "redis_usage": {
+        "keys": [
+          "llmfw:key:{api_key}",
+          "llmfw:rl:{key}:{hour}",
+          "llm_cache",
+          "llmfw:events:{key}",
+          "llmfw:blocks:{key}",
+          "llmfw:stats:{ak}:{day}",
+          "llmfw:cat:{ak}:{day}",
+          "llmfw:alert_dedup:{hash}"
+        ],
+        "purpose": "API key registry, rate limit buckets, LLM classification cache (3600s TTL), event list (capped 100), blocked list (capped 500), daily stats (HINCRBY), technique category breakdown, alert dedup (120s TTL)"
+      },
+      "redis_keys": [
+        "llmfw:key:{api_key}",
+        "llmfw:rl:{key}:{hour}",
+        "llm_cache",
+        "llmfw:events:{key}",
+        "llmfw:blocks:{key}",
+        "llmfw:stats:{ak}:{day}",
+        "llmfw:cat:{ak}:{day}",
+        "llmfw:alert_dedup:{hash}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "_fire_alerts \u2014 spawned on block verdict, Telegram + Discord + Email + Webhook"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord",
+        "Email (Resend)",
+        "Webhook (HMAC-signed)"
+      ],
+      "queues": [],
+      "cache_usage": [
+        "llm_cache \u2014 3600s TTL for LLM classification results"
+      ],
+      "external_services": [],
+      "third_party_apis": [
+        "Groq API",
+        "DeepSeek API",
+        "Anthropic API",
+        "Resend API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "api_key",
+      "authorization_model": "permission_based",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [
+        "Redis"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "llmfw_blocked",
+        "llmfw_allowed",
+        "llmfw_flagged"
+      ],
+      "health_indicators": [
+        "LLM provider circuit-breaker state",
+        "Rate limit utilization per key"
+      ],
+      "metrics": [
+        "Requests per minute",
+        "Layer 1/2/3 pass/block rates",
+        "Provider fallbacks triggered",
+        "Cache hit rate"
+      ],
+      "logging_sources": [
+        "llmfw:events and llmfw:blocks lists in Redis"
+      ],
+      "failure_modes": [
+        "Layer 1 fail CLOSED: regex false positives block legitimate traffic",
+        "Layer 2 fallback cascade (Groq\u2192DeepSeek\u2192Anthropic): latency spike if all fail",
+        "Heuristic layer never auto-blocks (max 0.7 confidence)",
+        "alert_dedup 120s: dedup gap for fast serial injection attempts"
+      ],
+      "recovery_behavior": "Circuit-breaker fallback: Layer 3 heuristic if all LLMs unreachable (never auto-block)",
+      "latency_expectation": "Per-request seconds; longest if Layer 2 LLM chain invoked",
+      "scalability_concerns": [
+        "External LLM API latency",
+        "1000/hr rate limit per key"
+      ],
+      "confidence_score": 0.97
+    },
+    {
+      "subsystem_id": "f2e70df8-a0c8-595b-ba6a-dd9621ad28a6",
+      "display_name": "AI Runtime Security (AIRS)",
+      "responsibility": "Five-detector AI runtime security pipeline that classifies, flags, and blocks AI abuse attempts with per-owner policy enforcement",
+      "description": "AI Runtime Security blueprint with 5 detectors (injection, jailbreak, indirect prompt injection, RAG exfiltration, tool abuse). Input prompts are evaluated; verdicts of allow/flag/block are enforced based on per-owner policies. Detection results stored in AIRSDetection and AIRSActor tables. High/critical detections trigger immutable log writes and Telegram/Discord alerts via _safe_post. Actor tracking with auto-block on repeat offenses. Gated by ENABLE_AI_RUNTIME_SECURITY env var.",
+      "owner_files": [
+        "ai_runtime_security.py"
+      ],
+      "blueprints": [
+        {
+          "name": "ai_runtime_bp",
+          "url_prefix": "/api/ai-runtime"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/ai-runtime/check",
+          "methods": [
+            "POST"
+          ],
+          "description": "Evaluate LLM input through 5 detectors"
+        },
+        {
+          "path": "/api/ai-runtime/detections",
+          "methods": [
+            "GET"
+          ],
+          "description": "List AIRS detections"
+        },
+        {
+          "path": "/api/ai-runtime/actors",
+          "methods": [
+            "GET"
+          ],
+          "description": "List AIRS tracked actors"
+        },
+        {
+          "path": "/api/ai-runtime/status",
+          "methods": [
+            "GET"
+          ],
+          "description": "AIRS system status"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [
+        "LLM honeypot classify_injection() (sync)",
+        "ASN intelligence get_service() (sync)"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [
+        "airs_request_received",
+        "airs_detector_pipeline",
+        "airs_detection_high",
+        "airs_detection_critical",
+        "airs_detection_flagged",
+        "airs_actor_tracked",
+        "airs_actor_blocked",
+        "airs_policy_applied"
+      ],
+      "outbound_events": [
+        "airs_detection_critical",
+        "airs_detection_high",
+        "airs_actor_blocked"
+      ],
+      "redis_usage": {
+        "keys": [
+          "airs:rl:{key.id}",
+          "airs:alert:{email}:{technique}"
+        ],
+        "purpose": "Rate limiting per API key, alert dedup per email+technique (300s TTL)"
+      },
+      "redis_keys": [
+        "airs:rl:{key.id}",
+        "airs:alert:{email}:{technique}"
+      ],
+      "sqlalchemy_models": [
+        "AIRSDetection",
+        "AIRSActor"
+      ],
+      "database_tables": [
+        "AIRSDetection",
+        "AIRSActor",
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "_safe_post(DISCORD_WEBHOOK_URL) \u2014 per detection for Discord alerts"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "medium",
+      "authentication_requirements": "api_key",
+      "authorization_model": "permission_based",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [
+        "Redis"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "both",
+      "observability_signals": [
+        "airs_detection_critical",
+        "airs_detection_high",
+        "airs_actor_blocked"
+      ],
+      "health_indicators": [
+        "Detector availability",
+        "AIRSDetection table write rate"
+      ],
+      "metrics": [
+        "Detections per hour",
+        "Verdict distribution (allow/flag/block)",
+        "Actor block count"
+      ],
+      "logging_sources": [
+        "Immutable log for AIRS detection events",
+        "AIRSDetection and AIRSActor tables"
+      ],
+      "failure_modes": [
+        "airs:alert:{email}:{technique} 300s TTL: dedup gap for serial attacks"
+      ],
+      "recovery_behavior": "Auto-block based on repeat offense tracking; per-owner policies auto-apply",
+      "latency_expectation": "Seconds per request (5 detectors evaluate)",
+      "scalability_concerns": [
+        "5 detector pipeline per request can be CPU-intensive under high volume"
+      ],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "4c477350-e628-5c06-b0d2-e80fb774889e",
+      "display_name": "Link Checker",
+      "responsibility": "Public URL/domain/IP scanning tool that routes through full intelligence pipeline (VT, URLScan, AbuseIPDB, brand checks)",
+      "description": "Public-facing URL intelligence tool scanning domain, IP, and URL reputation. Routes through VirusTotal, URLScan, AbuseIPDB, Whois, brand matching, and link checking. Records public activity to immutable log and public activity API. Has 5 routes and 8 Redis keys (mostly rate limiting). SSE stream for scan progress.",
+      "owner_files": [
+        "link_checker.py"
+      ],
+      "blueprints": [
+        {
+          "name": "link_checker_bp",
+          "url_prefix": "/api/link"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/link/scan",
+          "methods": [
+            "POST"
+          ],
+          "description": "Scan a URL/domain/IP for intelligence"
+        },
+        {
+          "path": "/api/link/scan/stream",
+          "methods": [
+            "GET"
+          ],
+          "description": "SSE stream for scan progress"
+        },
+        {
+          "path": "/api/link/lookup",
+          "methods": [
+            "GET"
+          ],
+          "description": "Look up previously scanned URL"
+        },
+        {
+          "path": "/api/link/detonate",
+          "methods": [
+            "POST"
+          ],
+          "description": "Sync URL detonation in sandbox"
+        },
+        {
+          "path": "/api/link/detonate/async",
+          "methods": [
+            "POST"
+          ],
+          "description": "Async URL detonation in sandbox"
+        }
+      ],
+      "inbound_apis": [
+        "run_full_scan() called from Sandbox (sync)"
+      ],
+      "outbound_apis": [
+        "VirusTotal API",
+        "URLScan API",
+        "AbuseIPDB API",
+        "Whois API"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "lc_stats:{date}"
+        ],
+        "purpose": "Daily link checker stats (3 fields HINCRBY, but never queried externally \u2014 orphaned)"
+      },
+      "redis_keys": [
+        "lc_stats:{date}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [
+        "VirusTotal API",
+        "URLScan API",
+        "AbuseIPDB API",
+        "Whois API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "session",
+      "authorization_model": "none",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "filesystem",
+      "observability_signals": [],
+      "health_indicators": [
+        "Link check throughput"
+      ],
+      "metrics": [
+        "Scans per day"
+      ],
+      "logging_sources": [
+        "Immutable log for scan results"
+      ],
+      "failure_modes": [
+        "External API rate limits or downtime affect scan results"
+      ],
+      "recovery_behavior": "Retry on API failure",
+      "latency_expectation": "Seconds per full scan",
+      "scalability_concerns": [],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "c31e66ac-72c1-53b0-8bd0-f63f4972c1f9",
+      "display_name": "Detonation Engine",
+      "responsibility": "URL detonation in isolated Docker containers with Browserless Playwright, supporting sync and async execution",
+      "description": "URL sandbox detonation engine. Validates URL with SSRF guard, executes in Docker (read-only, 512MB, 1 CPU, 35s timeout) with Browserless Playwright for browser rendering. Supports sync (POST /api/link/detonate) and async (POST /api/link/detonate/async \u2192 BRPOP detonate:queue with worker). Results stored in Redis: detonate:job:{id}, detonation:recent (capped 500), detonation:domain:{hash} (24h). Cross-module signals to fingerprint corpus and campaign correlator via async thread. daemon worker loop (detonate.py:434 \u2014 BRPOP).",
+      "owner_files": [
+        "detonate.py",
+        "main.py"
+      ],
+      "blueprints": [
+        {
+          "name": "detonate_bp",
+          "url_prefix": "/api/detonate"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/detonate",
+          "methods": [
+            "POST"
+          ],
+          "description": "Submit URL for sync detonation"
+        },
+        {
+          "path": "/api/detonate/async",
+          "methods": [
+            "POST"
+          ],
+          "description": "Submit URL for async detonation"
+        },
+        {
+          "path": "/api/detonate/status/{job_id}",
+          "methods": [
+            "GET"
+          ],
+          "description": "Check detonation status"
+        },
+        {
+          "path": "/api/detonate/recent",
+          "methods": [
+            "GET"
+          ],
+          "description": "Recent detonation results"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "detonate_job_enqueued",
+        "detonate_job_dequeued",
+        "detonate_job_started",
+        "detonate_url_screenshot",
+        "detonate_url_network",
+        "detonate_threat_signals",
+        "detonate_job_completed"
+      ],
+      "outbound_events": [
+        "detonate_job_completed"
+      ],
+      "redis_usage": {
+        "keys": [
+          "detonate:queue",
+          "detonate:job:{id}",
+          "detonation:recent",
+          "detonation:domain:{hash}",
+          "detonation:recent"
+        ],
+        "purpose": "Async job queue (BRPOP consumer), job result state, recent detonations (capped 500), per-domain results (24h TTL)"
+      },
+      "redis_keys": [
+        "detonate:queue",
+        "detonate:job:{id}",
+        "detonation:recent",
+        "detonation:domain:{hash}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [
+        "_worker_loop() \u2014 BRPOP detonate:queue, daemon (detonate.py:434)"
+      ],
+      "background_workers": [
+        "_pipeline_detonation_signals \u2014 fire-and-forget thread per job for cross-subsystem signal routing"
+      ],
+      "notification_channels": [],
+      "queues": [
+        "detonate:queue \u2014 Redis list, async jobs via BRPOP, cap 10 (reject on full)"
+      ],
+      "cache_usage": [],
+      "external_services": [
+        "Docker daemon",
+        "Browserless Chrome"
+      ],
+      "third_party_apis": [
+        "Docker API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "authenticated",
+      "trust_level": "medium",
+      "authentication_requirements": "session",
+      "authorization_model": "permission_based",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "Docker daemon",
+        "Browserless Chrome"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "detonate_job_completed"
+      ],
+      "health_indicators": [
+        "detonate:queue length",
+        "Docker container availability",
+        "Worker loop alive"
+      ],
+      "metrics": [
+        "Jobs completed per hour",
+        "Average detonation time (35s max)",
+        "Queue depth"
+      ],
+      "logging_sources": [
+        "detonate:job:{id} Redis job state"
+      ],
+      "failure_modes": [
+        "Docker container failure (resource limits)",
+        "detonate:queue cap (10): async jobs rejected when full",
+        "35s timeout: long-running pages timeout"
+      ],
+      "recovery_behavior": "Worker loop auto-reconnects; jobs are at-least-once via BRPOP",
+      "latency_expectation": "35s max per sync detonation; async via queue",
+      "scalability_concerns": [
+        "Docker container resource limits (512MB, 1 CPU)",
+        "detonate:queue cap of 10 limits async throughput"
+      ],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "bae0e9c3-bb3e-5876-af18-44c5898eb145",
+      "display_name": "Breach Monitor",
+      "responsibility": "Proxy to standalone breach-monitor service for credential leak detection across Pastebin, GitHub, and HIBP sources",
+      "description": "Proxy integration to the separate breach-monitor Flask application. main.py proxies requests through BREACH_MONITOR_INTERNAL_URL. The breach monitor runs its own Flask app with scheduled scans (6h cycles), and also GitHub/paste scanning. Alerts on critical/high findings via Telegram, Discord, and Email. The keep_alive() thread in main.py pings the breach dashboard every 300s. Runs a scheduling cycle.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/breach/status",
+          "methods": [
+            "GET"
+          ],
+          "description": "Breach monitor status"
+        },
+        {
+          "path": "/api/breach/findings",
+          "methods": [
+            "GET"
+          ],
+          "description": "Breach findings list"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [
+        "Breach monitor internal API via BREACH_MONITOR_INTERNAL_URL"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [
+        "breach_scan_cycle_started",
+        "breach_found",
+        "github_exposure_found",
+        "paste_monitor_hit"
+      ],
+      "outbound_events": [
+        "breach_found"
+      ],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "Breach monitor uses its own Redis/DB; main app does not maintain breach state in local Redis"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [
+        "breach_scan_cycle \u2014 every 6h (scheduled in breach-monitor)"
+      ],
+      "daemon_threads": [
+        "keep_alive() \u2014 daemon, pings breach dashboard every 300s"
+      ],
+      "background_workers": [],
+      "notification_channels": [
+        "Telegram",
+        "Discord",
+        "Email"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [
+        "Breach monitor service",
+        "Pastebin",
+        "GitHub",
+        "HIBP"
+      ],
+      "third_party_apis": [
+        "GitHub API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "high",
+      "authentication_requirements": "api_key",
+      "authorization_model": "none",
+      "runtime_lifecycle": "scheduled",
+      "startup_dependency": [
+        "Breach monitor service"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "none",
+      "observability_signals": [
+        "breach_found"
+      ],
+      "health_indicators": [
+        "Breach monitor API reachability",
+        "keep_alive() heartbeat (300s)"
+      ],
+      "metrics": [
+        "Findings per cycle",
+        "Sources scanned"
+      ],
+      "logging_sources": [
+        "Immutable log for breach_found"
+      ],
+      "failure_modes": [
+        "Breach monitor service unreachable: proxy fails open",
+        "keep_alive() is daemon thread: silently fails"
+      ],
+      "recovery_behavior": "Proxy retries on next request; keep_alive keeps looping",
+      "latency_expectation": "Proxy adds ~50ms per request; breach scans are batch (6h cycle)",
+      "scalability_concerns": [],
+      "confidence_score": 0.9
+    },
+    {
+      "subsystem_id": "3ea7c9eb-3827-5b94-8ebe-551c5ecb6152",
+      "display_name": "Incident Response",
+      "responsibility": "Playbook-driven incident response with step completion tracking and state machine",
+      "description": "Single-route blueprint sending SOC alert emails. No incident lifecycle DB, playbook engine, or escalation logic. Uses RedisRateLimiter/MemoryRateLimiter.",
+      "owner_files": [
+        "incident_response.py"
+      ],
+      "blueprints": [
+        {
+          "name": "incident_response_bp",
+          "url_prefix": "/api/incidents"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/initiate-response",
+          "methods": [
+            "POST"
+          ],
+          "description": "Send SOC alert email via Resend"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "Minimal Redis usage \u2014 1 Redis key per incident_response.py"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "authenticated",
+      "trust_level": "high",
+      "authentication_requirements": "session",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "postgresql",
+      "observability_signals": [],
+      "health_indicators": [],
+      "metrics": [
+        "Open incidents",
+        "Playbook step completion rate"
+      ],
+      "logging_sources": [
+        "Immutable log"
+      ],
+      "failure_modes": [],
+      "recovery_behavior": "",
+      "latency_expectation": "<100ms",
+      "scalability_concerns": [],
+      "confidence_score": 0.85
+    },
+    {
+      "subsystem_id": "9c88d0d6-dd3d-52a3-b481-7d05536e684b",
+      "display_name": "Immutable Log",
+      "responsibility": "SHA-256 hash-chained audit log that provides tamper-evident event storage for all subsystems (40+ event types)",
+      "description": "Central audit subsystem called synchronously by 10+ subsystems. Every security event (40+ event types) writes a PostgreSQL INSERT with SHA-256 hash chain (previous_hash + data \u2192 hash). Also attempts S3/R2 archival (non-critical try/except, silent failure on S3 upload). ImmutableLog table has 1 model. Blocks synchronous for every write. Called unconditionally by all notification events.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/immutable-log",
+          "methods": [
+            "GET"
+          ],
+          "description": "List immutable log entries"
+        },
+        {
+          "path": "/api/immutable-log/verify",
+          "methods": [
+            "GET"
+          ],
+          "description": "Verify hash chain integrity"
+        },
+        {
+          "path": "/api/immutable-log/export",
+          "methods": [
+            "GET"
+          ],
+          "description": "Export immutable log as JSON"
+        }
+      ],
+      "inbound_apis": [
+        "write_immutable_log() \u2014 called by 10+ subsystems compris"
+      ],
+      "outbound_apis": [
+        "S3/R2 (non-critical try/except)"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "No Redis usage"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [
+        "ImmutableLog"
+      ],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [
+        "S3/R2-compatible object storage"
+      ],
+      "third_party_apis": [
+        "S3/R2 API"
+      ],
+      "cloud_services": [
+        "S3/R2 object storage"
+      ],
+      "security_boundary": "internal",
+      "trust_level": "critical",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "PostgreSQL"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "postgresql",
+      "observability_signals": [],
+      "health_indicators": [
+        "ImmutableLog table write rate",
+        "Hash chain continuity verified"
+      ],
+      "metrics": [
+        "Writes per second",
+        "Hash chain verification passes/fails",
+        "S3 upload success rate"
+      ],
+      "logging_sources": [
+        "ImmutableLog table (self-referential)"
+      ],
+      "failure_modes": [
+        "Synchronous PostgreSQL INSERT + SHA-256 is bottleneck (BLOCKING for 10+ subsystems)",
+        "S3 archive failure silently logged (no alert \u2014 Gap 4)",
+        "S3 upload in try/except: silent data loss possible"
+      ],
+      "recovery_behavior": "PostgreSQL is the canonical store; S3 failure is non-fatal but no retry",
+      "latency_expectation": "5-20ms per write (PostgreSQL INSERT + SHA-256 hash calculation)",
+      "scalability_concerns": [
+        "Synchronous write bottleneck under high event volume (botnet-scale Cowrie session closures)",
+        "Each call blocks the calling subsystem for DB INSERT + hash chain"
+      ],
+      "confidence_score": 1.0
+    },
+    {
+      "subsystem_id": "5c9ec19f-a548-52c7-9a55-621dd7c30365",
+      "display_name": "Public API / Stats",
+      "responsibility": "Public-facing statistics and activity endpoints aggregating global threat intelligence data",
+      "description": "Public API blueprint serving real-time platform statistics. Reads from Redis: public:activity (capped), cowrie_sessions:recent, bgp_monitor:alerts, and various aggregated keys to present total_threats, sessions, canary trigers, attacks, origins, tools, LLM attempts, BGP alerts, and sensor counts. Also records public tool activity via record_public_activity(). Polls cowrie_sessions:recent on per-request basis.",
+      "owner_files": [
+        "public_api.py"
+      ],
+      "blueprints": [
+        {
+          "name": "public_bp",
+          "url_prefix": "/api/public"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/public/stats",
+          "methods": [
+            "GET"
+          ],
+          "description": "Aggregated public threat intelligence stats"
+        },
+        {
+          "path": "/api/public/activity",
+          "methods": [
+            "GET"
+          ],
+          "description": "Live public tool activity feed"
+        }
+      ],
+      "inbound_apis": [
+        "record_public_activity() called from Link Checker and Detonation pipeline"
+      ],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "public_activity_recorded",
+        "public_stats_requested",
+        "public_cowrie_stats"
+      ],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "public:activity",
+          "cowrie_sessions:recent",
+          "bgp_monitor:alerts"
+        ],
+        "purpose": "Public activity LPUSH+LTRIM feed, session display, BGP alert count for public stats"
+      },
+      "redis_keys": [
+        "public:activity",
+        "cowrie_sessions:recent",
+        "bgp_monitor:alerts"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [
+        "Redis aggregated reads for public stats"
+      ],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "public_activity_recorded"
+      ],
+      "health_indicators": [
+        "public:activity list length",
+        "cowrie_sessions:recent length"
+      ],
+      "metrics": [
+        "API requests per minute",
+        "Public activity recording rate"
+      ],
+      "logging_sources": [],
+      "failure_modes": [
+        "Redis failure: stats return empty data",
+        "cowrie_sessions:recent LRANGE per-request polls add Redis load"
+      ],
+      "recovery_behavior": "Returns empty stats on Redis failure (degraded but available)",
+      "latency_expectation": "<50ms (Redis reads only)",
+      "scalability_concerns": [
+        "Per-request polling of cowrie_sessions:recent and bgp_monitor:alerts adds Redis CPU load"
+      ],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "da42e99d-6393-5c29-987b-11c1203e23d9",
+      "display_name": "DML Engine",
+      "responsibility": "Validate and deploy Deception Markup Language (DML) definitions for complex multi-l nal traps and honeytoken configurations",
+      "description": "DML (Deception Markup Language) validation and execution engine. Validates DML definitions, deploys deception traps that integrate with CanaryRecord and HoneyToken systems. Stateful in both DB and Redis with deployed_traps:all and dml_trap:{fqid} Redis keys. Can create both canary records and honeytokens from DML definitions.",
+      "owner_files": [
+        "dml_engine.py"
+      ],
+      "blueprints": [
+        {
+          "name": "dml_bp",
+          "url_prefix": "/api/dml"
+        }
+      ],
+      "routes": [
+        {
+          "path": "/api/dml/validate",
+          "methods": [
+            "POST"
+          ],
+          "description": "Validate a DML document"
+        },
+        {
+          "path": "/api/dml/schema",
+          "methods": [
+            "GET"
+          ],
+          "description": "Return DML schema info"
+        },
+        {
+          "path": "/api/dml/export",
+          "methods": [
+            "GET"
+          ],
+          "description": "Export platform DML (admin)"
+        },
+        {
+          "path": "/api/dml/import",
+          "methods": [
+            "POST"
+          ],
+          "description": "Deploy DML traps (admin)"
+        },
+        {
+          "path": "/api/dml/sign",
+          "methods": [
+            "POST"
+          ],
+          "description": "Sign a DML document (admin)"
+        },
+        {
+          "path": "/api/dml/verify",
+          "methods": [
+            "POST"
+          ],
+          "description": "Verify a DML signature"
+        },
+        {
+          "path": "/api/dml/effectiveness",
+          "methods": [
+            "GET"
+          ],
+          "description": "Deployment effectiveness report (admin)"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "dml_trap_deployed"
+      ],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "deployed_traps:all",
+          "dml_trap:{fqid}"
+        ],
+        "purpose": "Set of all deployed trap FQIDs, per-trap detail state"
+      },
+      "redis_keys": [
+        "deployed_traps:all",
+        "dml_trap:{fqid}"
+      ],
+      "sqlalchemy_models": [
+        "HoneyToken",
+        "CanaryRecord"
+      ],
+      "database_tables": [
+        "honey_tokens",
+        "canary_records"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "authenticated",
+      "trust_level": "high",
+      "authentication_requirements": "session",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "both",
+      "observability_signals": [
+        "dml_trap_deployed"
+      ],
+      "health_indicators": [
+        "Deployed trap count"
+      ],
+      "metrics": [
+        "DML traps deployed"
+      ],
+      "logging_sources": [
+        "Immutable log for deployment events"
+      ],
+      "failure_modes": [],
+      "recovery_behavior": "",
+      "latency_expectation": "<100ms per deployment",
+      "scalability_concerns": [],
+      "confidence_score": 0.92
+    },
+    {
+      "subsystem_id": "4910baa2-0f22-5d3a-8df8-7b0ea9f3da13",
+      "display_name": "Auth / Session Management",
+      "responsibility": "Authentication, session management, 2FA/TOTP, API key management, password resets, Google OAuth, trusted devices, and account security",
+      "description": "Core authentication subsystem with session-cookie auth, bcrypt password hashing, 2FA/TOTP via pyotp, API key auth via python-jose, Google OAuth, password reset flow, trusted devices, and account recovery. Has 20+ authentication event types, ~12 DB models (User, ActiveSession, APIKey, LoginAttempt, TrustedDevice, EmailVerification, PasswordReset, UserBehavior). Rate-limited via Flask-Limiter on 50+ endpoints. Login spawns 6 background threads per successful login (3 for password path, 3 for Google path).",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/auth/login",
+          "methods": [
+            "POST"
+          ],
+          "description": "Password login"
+        },
+        {
+          "path": "/auth/login/google",
+          "methods": [
+            "POST"
+          ],
+          "description": "Google OAuth login"
+        },
+        {
+          "path": "/auth/logout",
+          "methods": [
+            "POST"
+          ],
+          "description": "Terminate session"
+        },
+        {
+          "path": "/auth/register",
+          "methods": [
+            "POST"
+          ],
+          "description": "Register new account"
+        },
+        {
+          "path": "/auth/2fa",
+          "methods": [
+            "POST"
+          ],
+          "description": "Verify TOTP 2FA"
+        },
+        {
+          "path": "/auth/reset",
+          "methods": [
+            "POST"
+          ],
+          "description": "Request password reset"
+        },
+        {
+          "path": "/auth/reset/{token}",
+          "methods": [
+            "POST"
+          ],
+          "description": "Complete password reset"
+        },
+        {
+          "path": "/auth/verify",
+          "methods": [
+            "POST"
+          ],
+          "description": "Email verification code"
+        },
+        {
+          "path": "/auth/apikeys",
+          "methods": [
+            "GET"
+          ],
+          "description": "List API keys"
+        },
+        {
+          "path": "/auth/apikeys/create",
+          "methods": [
+            "POST"
+          ],
+          "description": "Create API key"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [
+        "Google OAuth API",
+        "Resend API (email)"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [
+        "login_attempt",
+        "login_bot_detected",
+        "login_blocked",
+        "login_success",
+        "login_failed",
+        "mfa_required",
+        "mfa_success",
+        "mfa_failed",
+        "otp_generated",
+        "otp_login_success",
+        "device_verification_sent",
+        "device_verified",
+        "password_reset_requested",
+        "password_reset_completed",
+        "logout",
+        "session_expired",
+        "user_registered",
+        "google_oauth_success",
+        "api_key_created",
+        "api_key_authenticated"
+      ],
+      "outbound_events": [
+        "login_success",
+        "user_registered"
+      ],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "No direct Redis usage (uses Flask-Limiter Redis and session storage in Redis if configured)"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [
+        "User",
+        "ActiveSession",
+        "APIKey",
+        "APIKeyUsage",
+        "LoginAttempt",
+        "TrustedDevice",
+        "EmailVerification",
+        "PasswordReset",
+        "UserBehavior"
+      ],
+      "database_tables": [
+        "User",
+        "ActiveSession",
+        "APIKey",
+        "APIKeyUsage",
+        "LoginAttempt",
+        "TrustedDevice",
+        "EmailVerification",
+        "PasswordReset",
+        "UserBehavior"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "_bg_sign_session \u2014 per login",
+        "_check_login_canary \u2014 per login",
+        "safe_send_login_notification \u2014 per login",
+        "safe_send_device_verification_email \u2014 per new device",
+        "safe_send_password_reset_email \u2014 per reset"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord",
+        "Email (Resend)"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [
+        "Google OAuth API",
+        "Resend API"
+      ],
+      "cloud_services": [
+        "Google (OAuth)"
+      ],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "none",
+      "authorization_model": "role_based",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "postgresql",
+      "observability_signals": [
+        "login_success",
+        "login_failed",
+        "mfa_failed",
+        "user_registered"
+      ],
+      "health_indicators": [
+        "Active session count",
+        "Failed login rate"
+      ],
+      "metrics": [
+        "Logins per minute",
+        "MFA failure rate",
+        "API key usage count",
+        "New user registrations"
+      ],
+      "logging_sources": [
+        "LoginAttempt table",
+        "UserBehavior table",
+        "ActiveSession table"
+      ],
+      "failure_modes": [
+        "Login spawns 6 threads per login (password + Google): bottleneck under high traffic",
+        "No thread pool: 1000+ daemon threads can accumulate",
+        "Flask-Limiter 2 Redis operations per state-changing /api/ request (50+ endpoints)"
+      ],
+      "recovery_behavior": "Session auto-expires after 24h; rate limiter auto-resets per window",
+      "latency_expectation": "<200ms for login, <50ms for session check",
+      "scalability_concerns": [
+        "Login thread-per-spawn (6 threads per login) is a known bottleneck",
+        "Flask-Limiter on 50+ endpoints incurs 2 Redis ops per request"
+      ],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "c534ffe2-6e51-5419-9caa-fffa123f88b9",
+      "display_name": "Notification Routing",
+      "responsibility": "Centralized dedup-aware notification dispatch to Telegram, Discord, Email, Slack, and Webhook channels",
+      "description": "Event-driven notification routing subsystem. Write_immutable_log is called unconditionally first, then _should_alert() checks Redis SETNX dedup (fail-open: always alert on Redis failure). If dedup passes, fires notifications: Telegram (25+ event type templates, 4096-char HTML via background thread), Discord (via requests.post, thread or inline), Email via Resend (thread, HTML), Slack (demo requests only), and custom HMAC-signed webhook (LLM firewall only). Telegram templates include alert_canary_triggered, alert_sandbox_entered, alert_sandbox_exfil, alert_dna_deviation, alert_ip_blocked, alert_timing_canary, alert_provenance_violation, alert_breach_found, alert_mirror_deep, alert_daily_summary, and 15+ module-specific templates. Events trigger notifications from 13+ subsystems (Cowrie, BGP, Campaign Correlator, Credential Propagation, Supply Chain, LLM Honeypot, LLM Firewall, AIRS, Canary Service, Sandbox, Timing Canary, Honeytoken, Breach Monitor).",
+      "owner_files": [
+        "main.py",
+        "services/"
+      ],
+      "blueprints": [],
+      "routes": [],
+      "inbound_apis": [],
+      "outbound_apis": [
+        "Telegram Bot API",
+        "Discord Webhook API",
+        "Resend API",
+        "Slack Webhook API",
+        "Custom Webhook API"
+      ],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "alert_dedup:{dedup_key}"
+        ],
+        "purpose": "Dedup via Redis SETNX (120-300s TTL, fail-open: always alert)"
+      },
+      "redis_keys": [
+        "alert_dedup:{dedup_key}"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [
+        "send_telegram_alert_bg \u2014 thread, 4096-char HTML",
+        "send_notification threads for Discord, Email, Webhook"
+      ],
+      "notification_channels": [
+        "Telegram",
+        "Discord",
+        "Email (Resend)",
+        "Slack",
+        "Webhook (HMAC-signed)"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [
+        "Telegram Bot API",
+        "Discord Webhook API",
+        "Resend API",
+        "Slack Webhook API"
+      ],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "high",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "event_driven",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "none",
+      "observability_signals": [],
+      "health_indicators": [
+        "Telegram/Discord API reachability"
+      ],
+      "metrics": [
+        "Notifications sent per hour",
+        "Dedup ratio (total events/unique alerts)",
+        "Channel delivery success rate"
+      ],
+      "logging_sources": [
+        "Debug log lines on send failure"
+      ],
+      "failure_modes": [
+        "Fire-and-forget threads: failed notifications silently dropped",
+        "No dead-letter queue (Gap 3)",
+        "Telegram 400/rate limit: message silently lost",
+        "Discord webhook non-200: silently lost",
+        "Email via Resend API failure: silently lost"
+      ],
+      "recovery_behavior": "No retry mechanism \u2014 fire-and-forget only",
+      "latency_expectation": "1-5s for notification dispatch",
+      "scalability_concerns": [
+        "Thread-per-notification under attack volume",
+        "No thread pool cap can lead to thousands of notification threads"
+      ],
+      "confidence_score": 0.97
+    },
+    {
+      "subsystem_id": "2cfc487a-952f-5325-aed6-f048528da377",
+      "display_name": "Request Lifecycle / Middleware",
+      "responsibility": "Orchestrate the 8 before_request middleware handlers, 1 route handler, and 3 after_request handlers that wrap every HTTP request",
+      "description": "Every HTTP request traverses 8 before_request middleware handlers: (1) check_xhr_for_state_change (line 960) \u2014 returns 403 if state-changing API request has no X-Requested-With and no origin gate bypass; (2) limit_request_size (line 986) \u2014 returns 413 if >16MB; (3) corpus_middleware (line 1208) \u2014 always writes to fingerprint Redis keys; (4) enforce_https (line 1212) \u2014 301 redirect if HTTP+production; (5) add_request_id (line 1225) \u2014 sets request.id = UUID4[:8]; (6) update_session_activity (line 7068) \u2014 updates ActiveSession DB, 24h idle redirect, spawns _finalize_session_dna thread on expiry; (7) honey_token_check (line 7288) \u2014 8+ branch decision tree (static, whitelisted, authenticated, sandboxed, provenance, API key honey, legitimate, sensitive, reverse canary, suspicious technique, SQL pattern); (8) check_ip_blocklist (line 8411) \u2014 403 if IP in blocklist. After_request: (9) set_security_headers (line 1177) \u2014 CSP/HSTS/XFO, (10) log_response (line 1233) \u2014 debug log, (11) track_dna_event (line 7112) \u2014 SessionEvent DB write, spawns DNA thread every 5th event. The require_auth decorator (line 7394) gates protected routes.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "xhr_origin_enforced",
+        "request_size_limited",
+        "corpus_fingerprint_collected",
+        "request_id_assigned",
+        "session_activity_updated",
+        "session_idle_expired",
+        "honey_token_checked",
+        "sandbox_diverted",
+        "api_key_honey_hit",
+        "reverse_canary_hit",
+        "provenance_violation",
+        "ip_blocked_access",
+        "sql_pattern_detected",
+        "suspicious_technique_detected",
+        "security_headers_injected",
+        "dna_event_recorded",
+        "dna_deviation_detected"
+      ],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "corpus:fp:{hash}:data",
+          "corpus:fp:{hash}:count",
+          "corpus:ja3:{ja3}",
+          "corpus:tool:{tool}",
+          "corpus:country_scores",
+          "corpus:techniques",
+          "corpus:total_entries",
+          "fingerprint:recent_events"
+        ],
+        "purpose": "Fingerprint corpus writes from corpus_middleware"
+      },
+      "redis_keys": [
+        "corpus:fp:{hash}:data",
+        "corpus:fp:{hash}:count",
+        "corpus:ja3:{ja3}",
+        "corpus:tool:{tool}",
+        "corpus:country_scores",
+        "corpus:techniques",
+        "corpus:total_entries",
+        "fingerprint:recent_events"
+      ],
+      "sqlalchemy_models": [
+        "ActiveSession",
+        "SandboxSession",
+        "HoneyTokenEvent"
+      ],
+      "database_tables": [
+        "ActiveSession",
+        "SandboxSession",
+        "HoneyTokenEvent",
+        "ImmutableLog"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [
+        "_finalize_session_dna \u2014 spawned on session expiry via update_session_activity"
+      ],
+      "background_workers": [
+        "_record_and_score_dna \u2014 spawned every 5th auth request via track_dna_event",
+        "_background_predictive \u2014 spawned on suspicious technique detection"
+      ],
+      "notification_channels": [
+        "Discord",
+        "Telegram"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "public",
+      "trust_level": "untrusted",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "both",
+      "observability_signals": [
+        "honey_token_checked",
+        "sandbox_diverted",
+        "dna_deviation_detected"
+      ],
+      "health_indicators": [
+        "Middleware execution time per request",
+        "Request size distribution"
+      ],
+      "metrics": [
+        "Requests per second",
+        "Middleware short-circuit rate",
+        "Sandbox diversion rate",
+        "IP block rate",
+        "Suspicious technique detection rate"
+      ],
+      "logging_sources": [
+        "after_request log_response (debug only)",
+        "Immutable log for divert/block events"
+      ],
+      "failure_modes": [
+        "Any middleware can short-circuit the entire request lifecycle",
+        "Thread-per-request under attack for DNA and predictive threads"
+      ],
+      "recovery_behavior": "Middleware chain is per-request; no cross-request state recovery needed",
+      "latency_expectation": "Total middleware stack: 5-50ms per request (depends on DB writes in session update)",
+      "scalability_concerns": [
+        "8 middleware handlers per request adds latency",
+        "Suspicious_technique_detected spawns thread per suspicious request",
+        "Session activity DB write per authenticated request"
+      ],
+      "confidence_score": 1.0
+    },
+    {
+      "subsystem_id": "19af2938-a4ba-5feb-bdb3-a7919e8cd5a4",
+      "display_name": "Leader Election / Engine Supervisor",
+      "responsibility": "Redis-based leader election that ensures exactly one gunicorn worker runs background engines (Cowrie, Campaign, ASN, BGP, scheduler)",
+      "description": "The _engine_supervisor daemon thread (started at import time in main.py:12254) acquires the Redis lock wraithwall:engine_leader via SET NX with 45s TTL and 15s heartbeat. Only the leader starts: APScheduler (9 jobs), cowrie watcher (daemon threads for file tail, event workers, alert worker), campaign engine (get_correlator singleton), propagation network (auto_rotate daemon), ASN engine (get_service singleton), BGP monitor (RIPE WS daemon). Unconditionally started (not leader-gated): detonate worker loop (BRPOP daemon), keep_alive ping daemon. Without Redis lock, every gunicorn worker runs all engines \u2014 N duplicates.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [
+        "leader_elected",
+        "leader_heartbeat",
+        "leader_released",
+        "leader_failover"
+      ],
+      "outbound_events": [],
+      "redis_usage": {
+        "keys": [
+          "wraithwall:engine_leader"
+        ],
+        "purpose": "Leader lock for engine supervisor (SET NX, 45s TTL, 15s heartbeat)"
+      },
+      "redis_keys": [
+        "wraithwall:engine_leader"
+      ],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [
+        "model_retrained (weekly)",
+        "mimicry_engine (4h)",
+        "breach_scan_cycle (6h)",
+        "bgp_monitor (15min)",
+        "paste_monitor (2h)",
+        "github_monitor (4h)",
+        "daily_digest (08:00 daily)",
+        "canarytokens_poll (15min)",
+        "trial_billing (hourly)"
+      ],
+      "daemon_threads": [
+        "_engine_supervisor (main.py:12254) \u2014 daemon, started at import",
+        "_watch_cowrie_log (cowrie_intelligence.py:1746) \u2014 daemon",
+        "N x _event_worker (ceil(cpu/2), max 4) \u2014 daemon",
+        "_alert_worker \u2014 daemon",
+        "auto_rotate() \u2014 daemon (only if AUTO_ROTATION)",
+        "_run_ripe_ris_thread (bgp_monitor.py:522) \u2014 daemon, asyncio WebSocket",
+        "detonate worker loop (detonate.py:434) \u2014 daemon",
+        "keep_alive ping (main.py:12263) \u2014 daemon"
+      ],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "critical",
+      "authentication_requirements": "none",
+      "authorization_model": "none",
+      "runtime_lifecycle": "persistent",
+      "startup_dependency": [
+        "Redis"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [
+        "leader_failover"
+      ],
+      "health_indicators": [
+        "Redis lock health (setnx success/fail)",
+        "Heartbeat timestamp"
+      ],
+      "metrics": [
+        "Leader uptime",
+        "Heartbeat intervals",
+        "Failover count",
+        "Engine count per worker"
+      ],
+      "logging_sources": [
+        "Debug logs on engine start/stop"
+      ],
+      "failure_modes": [
+        "Redis failure: every worker runs all engines (N duplicates)",
+        "Lock expiry before heartbeat: unnecessary failover",
+        "No lock release on process crash: standby waits for TTL expiry (45s)"
+      ],
+      "recovery_behavior": "atexit handler releases lock on graceful shutdown; standby acquires on TTL expiry",
+      "latency_expectation": "N/A (background lifecycle)",
+      "scalability_concerns": [
+        "If Redis fails, N gunicorn workers run N \u00d7 engines (N duplicates)",
+        "9 APScheduler jobs with max_instances=1: model_retrained can skip"
+      ],
+      "confidence_score": 0.95
+    },
+    {
+      "subsystem_id": "ec147bc2-178a-5150-991f-597b6c4d5184",
+      "display_name": "DNS Canary",
+      "responsibility": "Plants DNS canary hostnames in fake credentials and polls canarytokens.org for triggers",
+      "description": "Plants DNS-resolvable canary hostnames inside planted fake credentials so that when an attacker tries to use the stolen credentials, the DNS resolution triggers a canarytokens.org alert. Polls canarytokens.org for hits. Integrates with supply-chain canaries for metadata injection.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [],
+      "inbound_apis": [],
+      "outbound_apis": [
+        {
+          "name": "canarytokens.org",
+          "purpose": "Poll for DNS canary triggers"
+        }
+      ],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [
+        {
+          "event_id": "N-01",
+          "name": "dns_canary_planted"
+        },
+        {
+          "event_id": "N-02",
+          "name": "dns_canary_triggered"
+        }
+      ],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "No dedicated keys"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [],
+      "database_tables": [
+        "immutable_log"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [
+        "Telegram",
+        "Discord"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [
+        "canarytokens.org"
+      ],
+      "third_party_apis": [
+        {
+          "name": "canarytokens.org",
+          "purpose": "DNS canary trigger detection"
+        }
+      ],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "medium",
+      "authentication_requirements": "api_key",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "postgresql",
+      "observability_signals": [
+        "dns_canary_planted",
+        "dns_canary_triggered"
+      ],
+      "health_indicators": [],
+      "metrics": [],
+      "logging_sources": [
+        "main.py:1972-1991, 1994-2078"
+      ],
+      "failure_modes": [
+        "canarytokens.org unreachable",
+        "DNS resolution failed"
+      ],
+      "recovery_behavior": "Retry on next poll cycle",
+      "latency_expectation": "minutes (poll-based)",
+      "scalability_concerns": [],
+      "confidence_score": 0.88
+    },
+    {
+      "subsystem_id": "b37a2b2b-7a92-593f-84f3-02251b6b39e4",
+      "display_name": "Quantum Canary",
+      "responsibility": "Creates and maintains fake user accounts that adapt in real-time to attacker reconnaissance",
+      "description": "Plants fake user accounts in the database with realistic history (emails, records created months back). When attacker probes/queries target the fake users, the canary adapts dynamically (adapt_canary_to_query). Planted at startup and via /api/canary/plant API.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/canary/plant",
+          "methods": [
+            "POST"
+          ],
+          "description": "Plant canary (quantum_user type)"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [
+        {
+          "event_id": "Q-01",
+          "name": "quantum_canary_planted"
+        },
+        {
+          "event_id": "Q-02",
+          "name": "quantum_canary_adapted"
+        },
+        {
+          "event_id": "Q-03",
+          "name": "quantum_canary_triggered"
+        }
+      ],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "No dedicated Redis keys"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [
+        "User"
+      ],
+      "database_tables": [
+        "users"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "high",
+      "authentication_requirements": "none",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [
+        "Database",
+        "User model"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "postgresql",
+      "observability_signals": [
+        "quantum_canary_planted",
+        "quantum_canary_adapted",
+        "quantum_canary_triggered"
+      ],
+      "health_indicators": [],
+      "metrics": [],
+      "logging_sources": [
+        "main.py:4098-4172, 4175-4244"
+      ],
+      "failure_modes": [
+        "adapt_canary_to_query not called (dead code)"
+      ],
+      "recovery_behavior": "N/A",
+      "latency_expectation": "on-demand",
+      "scalability_concerns": [],
+      "confidence_score": 0.85
+    },
+    {
+      "subsystem_id": "53ed1e36-bfc1-51b7-8168-aa8894c3f207",
+      "display_name": "Reverse Canary",
+      "responsibility": "Plants beacon tokens on attacker-accessible paths to detect when attackers read planted intelligence",
+      "description": "Plants reverse canary tokens at attacker-targeted paths (/hidden/). When an attacker accesses the reverse canary URL, the system generates a detailed narrative and sends Discord alerts. Planted at startup and via /api/canary/plant API. Checked in honey_token_check() before_request middleware.",
+      "owner_files": [
+        "main.py"
+      ],
+      "blueprints": [],
+      "routes": [
+        {
+          "path": "/api/canary/plant",
+          "methods": [
+            "POST"
+          ],
+          "description": "Plant canary (reverse_canary type)"
+        }
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [
+        {
+          "event_id": "V-01",
+          "name": "reverse_canary_planted"
+        },
+        {
+          "event_id": "V-02",
+          "name": "reverse_canary_triggered"
+        }
+      ],
+      "redis_usage": {
+        "keys": [],
+        "purpose": "No dedicated Redis keys"
+      },
+      "redis_keys": [],
+      "sqlalchemy_models": [
+        "HoneyToken"
+      ],
+      "database_tables": [
+        "honey_tokens"
+      ],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [
+        "Discord"
+      ],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "medium",
+      "authentication_requirements": "none",
+      "authorization_model": "admin_only",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [
+        "Database",
+        "HoneyToken model"
+      ],
+      "shutdown_dependency": [],
+      "persistence_layer": "postgresql",
+      "observability_signals": [
+        "reverse_canary_planted",
+        "reverse_canary_triggered"
+      ],
+      "health_indicators": [],
+      "metrics": [],
+      "logging_sources": [
+        "main.py:3640-3692, 3740-3774"
+      ],
+      "failure_modes": [
+        "Middleware check misses path"
+      ],
+      "recovery_behavior": "N/A",
+      "latency_expectation": "real-time (middleware)",
+      "scalability_concerns": [],
+      "confidence_score": 0.92
+    },
+    {
+      "subsystem_id": "e7f2a3b1-c4d5-6e78-9f01-a2b3c4d5e6f7",
+      "display_name": "TTY Replay",
+      "responsibility": "Cowrie TTY session playback — serves recorded terminal sessions from Cowrie honeypot for forensic review",
+      "description": "Provides web-based playback of Cowrie TTY session logs. Registered as replay_bp with url_prefix /replay. Serves Cowrie session recordings for operator review. Uses cowrie_tty_path:{session_id} Redis key for session path lookup. Not part of the original 32-subsystem architecture; discovered during Phase 6 runtime cross-reference.",
+      "owner_files": ["replay_tty.py"],
+      "blueprints": [{"name": "replay_bp", "url_prefix": "/replay"}],
+      "routes": [
+        {"path": "/replay/", "methods": ["GET"], "description": "Replay index page"},
+        {"path": "/replay/<session_id>", "methods": ["GET"], "description": "Replay specific TTY session"}
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": [],
+      "inbound_events": [],
+      "outbound_events": [],
+      "redis_usage": {"keys": ["cowrie_tty_path:{session_id}"], "purpose": "TTY session path lookup"},
+      "redis_keys": ["cowrie_tty_path:{session_id}"],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": [],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "low",
+      "authentication_requirements": "none",
+      "authorization_model": "public",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "redis",
+      "observability_signals": [],
+      "health_indicators": [],
+      "metrics": [],
+      "logging_sources": ["replay_tty.py"],
+      "failure_modes": ["Missing TTY log file"],
+      "recovery_behavior": "404 response",
+      "latency_expectation": "on-demand",
+      "scalability_concerns": [],
+      "confidence_score": 0.8
+    },
+    {
+      "subsystem_id": "f8b4c5d6-e7f8-9a01-b2c3-d4e5f6a7b8c9",
+      "display_name": "Terminal Gateway",
+      "responsibility": "WebSocket PTY gateway — provides secure terminal access to sandbox environments for operators",
+      "description": "Provides WebSocket-based PTY (pseudo-terminal) gateway for operator access to sandbox environments. Registered as terminal_bp with routes /api/terminal/token (token issuance, auth required) and /api/terminal/config (configuration). Uses direct threading for WebSocket connections. Not part of the original 32-subsystem architecture; discovered during Phase 6 runtime cross-reference.",
+      "owner_files": ["terminal_bp.py"],
+      "blueprints": [{"name": "terminal_bp", "url_prefix": null}],
+      "routes": [
+        {"path": "/api/terminal/token", "methods": ["POST"], "description": "Issue WebSocket terminal token"},
+        {"path": "/api/terminal/config", "methods": ["GET"], "description": "Terminal configuration endpoint"}
+      ],
+      "inbound_apis": [],
+      "outbound_apis": [],
+      "websocket_usage": ["PTY gateway WebSocket"],
+      "inbound_events": [],
+      "outbound_events": [],
+      "redis_usage": {"keys": [], "purpose": "No dedicated Redis keys"},
+      "redis_keys": [],
+      "sqlalchemy_models": [],
+      "database_tables": [],
+      "apscheduler_jobs": [],
+      "daemon_threads": ["terminal WebSocket handler (direct threading.Thread)"],
+      "background_workers": [],
+      "notification_channels": [],
+      "queues": [],
+      "cache_usage": [],
+      "external_services": [],
+      "third_party_apis": [],
+      "cloud_services": [],
+      "security_boundary": "internal",
+      "trust_level": "high",
+      "authentication_requirements": "token-based",
+      "authorization_model": "authenticated_users",
+      "runtime_lifecycle": "on_demand",
+      "startup_dependency": [],
+      "shutdown_dependency": [],
+      "persistence_layer": "none",
+      "observability_signals": [],
+      "health_indicators": [],
+      "metrics": [],
+      "logging_sources": ["terminal_bp.py"],
+      "failure_modes": ["WebSocket disconnect", "PTY allocation failure"],
+      "recovery_behavior": "Client reconnect",
+      "latency_expectation": "real-time (WebSocket)",
+      "scalability_concerns": ["Thread per connection — no pool"],
+      "confidence_score": 0.75
+    }
+  ]
+}

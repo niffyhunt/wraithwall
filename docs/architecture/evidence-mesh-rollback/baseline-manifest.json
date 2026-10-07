@@ -1,0 +1,14 @@
+{
+  "created": "2026-09-04T19:59:00Z",
+  "git_head": "dd1497ce6761355bd82aef5f635b7a2f623d6f4a",
+  "purpose": "Pre-implementation baseline of modules the evidence mesh extends. Rollback target for git revert verification.",
+  "modules": {
+    "campaign_correlator.py": "f47f8ba30532f70b6d78e41894c92c36ff5f71fe2162b8170f2e77dafedb494f",
+    "behavioral_dna.py": "7a031d84ecbeb5957d1a5f7c9ff3bba86f86b781d1ee16d57f563b42b93f44e5",
+    "intelligence_layer.py": "a3e9663e3d69a9fb6f484d7189387392aa150600151e79d982a5c0bed6c08a4e",
+    "dossier_sensor.py": "a152531d387864071d5fe1278c3f9edb531497fbf721b63b35a3c337e5c688a3",
+    "dossier_contract.py": "bbc3c63dc972d256e99d33069fb25c954bfd867bfa31ab5d80c9656078b42d14",
+    "dossier_api.py": "656460fe90627718fc53580caadb257b4544d459c596a14939dd266ac86aa9d0",
+    "main.py": "1c02aa9463f00dd063a7494734b979b4a04ac53f7c6a3046b2c4daa2706ad913"
+  }
+}

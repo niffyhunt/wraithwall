@@ -1,0 +1,143 @@
+DECEPTION BAIT ANALYSIS — Phase 7 Corpus Extraction
+Generated: 2026-07-09
+Source commit: 0b8d520492767ee067c6ea33350cc7ba24a30164
+Derived from: BAIT_INVENTORY.md, DECEPTION_ARCHITECTURE_REVIEW.md, DECEPTION_PIPELINE.md
+Status: validated (design candidate catalog — no live bait secrets)
+
+================================================================================
+1. EXECUTIVE SUMMARY
+================================================================================
+Total bait artifacts cataloged: 42
+Approved: 28 (12 modified)
+Rejected: 8
+Future enhancement: 6
+
+Primary intelligence surfaces:
+  - Layer 2 credential lures (C-01..C-10): highest engagement + forensic yield
+  - Layer 4 interactive beacons (I-01, I-02, I-03): cross-server attribution bridge
+  - Layer 1 dynamic command simulation (D-01..D-06): passive recon shaping
+
+Critical gap (pre-implementation): unified deception event bus (deception:events Redis)
+correlates bait triggers across Cowrie VPS and main server.
+
+================================================================================
+2. ARCHITECTURE DOMAINS (ISOLATED)
+================================================================================
+
+PRODUCTION APPLICATION (SERVER_IP)
+  - Dashboard, APIs, Intelligence Engine, Sandbox, Campaign Engine
+  - Notification Pipeline, Immutable Log
+  - Does NOT host deception blueprint routes in production logic
+
+DECEPTION BLUEPRINT (logical domain — templates/nginx on Cowrie VPS + main canary modules)
+  - Fake Admin Portal (I-05, future)
+  - Fake phpMyAdmin (rejected on main — I-06 Grafana rejected)
+  - Fake Grafana (rejected I-06)
+  - Honey Credentials (C-01..C-10 honeyfs)
+  - Honey APIs (llm_honeypot_bp fake /v1/* endpoints)
+  - Credential Lures (credential_propagation.py)
+  - Supply Chain Beacons (supply_chain_canary.py)
+  - Reverse Canary URLs (main.py reverse_canary)
+  - Deception Telemetry (deception:events bus — proposed)
+
+COWRIE VPS (COWRIE_VPS_IP)
+  - SSH:2222, Telnet:2223
+  - HoneyFS filesystem baits
+  - Dynamic Command Simulation (D-01..D-06)
+  - Fake Internal Services (D-05)
+  - Credential Baits (C-01..C-10 paths)
+  - Beacon Files (I-01 embedded GIF)
+  - Session Telemetry → shipper → main Redis:16379
+
+TELEMETRY FLOW (validated):
+  Internet → Cowrie → Deception Blueprint → Campaign Correlation →
+  Threat Intelligence → Sandbox → Immutable Log → Notification Pipeline
+
+================================================================================
+3. TIER-1 BAITS (Composite ≥ 8.0) — ANALYSIS
+================================================================================
+
+C-06 | Credential lure SSH key used on target
+  Layer: 2 | Classification: Approved
+  Detection: credential_propagation.py token tracking
+  Attribution: links Cowrie session → lure deployment → reuse attempt
+  Viz node: cred_prop_bp | edge: cowrie_intel → cred_prop → campaign
+
+C-05 | SSH private key honeyfs/root/.ssh/id_rsa
+  Layer: 2 | Classification: Approved
+  Detection: command log (cat) + beacon if exfiltrated
+  Limitation: cannot distinguish ls vs cat content read
+  Viz node: cowrie_honeyfs | cluster: cluster_canary
+
+I-02 | Reverse canary URL accessed
+  Layer: 4 | Classification: Approved
+  Detection: HoneyToken trigger on main server HTTP
+  Cross-boundary: Cowrie file → attacker exfil → main server hit
+  Viz edge: deception_blueprint → reverse_canary → immutable_log
+
+C-03 | AWS credentials honeyfs/root/.aws/credentials
+  Layer: 2 | Classification: Approved
+  Engagement: high (cloud pivot attempts)
+  Safety: honeyfs isolated, synthetic credentials only
+
+I-01 | File beacon (1x1 GIF in honeyfs)
+  Layer: 4 | Classification: Approved
+  Detection: HTTP GET to canary endpoint when file opened off-VPS
+  Primary exfil detection when command logging insufficient
+
+C-11 | Credential used on fake API endpoint
+  Layer: 4 | Classification: Future Enhancement
+  Requires: dedicated fake API surface (not production routes)
+
+================================================================================
+4. REJECTED BAITS — RATIONALE
+================================================================================
+
+R-01, R-02, R-03: Exposed real paths on main server (/.git, /.env, /backup)
+  Risk: production exposure, legal/reputational
+  Viz: show as blocked nodes (status=rejected), never render as active
+
+P-05, P-06, P-07: Public package registries with embedded tokens
+  Risk: supply-chain legal exposure, platform ban
+
+I-06: Fake Grafana on main server
+  Risk: high false-positive, maintenance cost, production domain exposure
+
+================================================================================
+5. CORRELATION PATHS (for visualization edges)
+================================================================================
+
+Path A — Cowrie session → campaign
+  cowrie_intelligence.py → campaign_correlator.py → notification
+
+Path B — Honeyfs bait → beacon → canary
+  cowrie session → file exfil → I-01/I-02 trigger → canary_service → immutable_log
+
+Path C — Credential lure → propagation
+  cred_propagation plants lure → attacker copies → trigger → asn_intelligence enrich
+
+Path D — Supply chain beacon
+  supply_chain_canary token in honeyfs → HTTP beacon → campaign + alert
+
+================================================================================
+6. DATA CLASSIFICATION (Step 2.2)
+================================================================================
+
+Tier 1 (safe aggregate): bait counts by layer, approval status, composite scores
+Tier 2 (authenticated): bait_id, file paths, session_id, attacker_ip, HASSH
+Tier 3 (never render): credential seeds, canary signing material, lure secrets
+
+================================================================================
+7. VISUALIZATION REQUIREMENTS
+================================================================================
+
+Deception Mesh view MUST:
+  - Render Production Blueprint and Deception Blueprint as separate clusters
+  - Show Cowrie VPS as external domain node
+  - Draw telemetry edges only (not merge deception routes into production logic)
+  - Color: production=#3498db, deception=#f39c12, cowrie_vps=#2ecc71
+  - LOD: collapse bait nodes by layer (L1-L4) when count > 50
+
+Cowrie Pipeline view MUST:
+  - Show COWRIE_VPS_IP → shipper → main cowrie_intel path
+  - Overlay live health from /api/platform/health + /api/cowrie/stats
