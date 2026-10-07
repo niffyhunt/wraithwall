@@ -70,9 +70,9 @@ wraithwall serve
 | **ravenscan** | `pip install ravenscan` | Engineering intelligence CLI (`raven`) and library | PyPI 0.1.1 |
 | **canary-kit** | `pip install canary-kit` | Supply-chain canary token minting and detection | PyPI 0.1.0 |
 | **honeypot-mitre** | `pip install honeypot-mitre` | Cowrie logs → MITRE ATT&CK scoring | PyPI 0.1.0 |
-| **dml-spec** | `pip install dml-spec` | Signed deception markup language validator | PyPI 1.0.0 |
-| **wraithmesh** | `pip install packages/wraithmesh` (local) | Distributed sensor mesh / signed observations | **v2 ready** 0.2.0 (not on PyPI yet) |
-| **wraithwall-sdk** | source only | Official HTTP API client | Not published yet |
+| **dml-spec** | `pip install dml-spec` | Signed deception markup language validator | PyPI 1.1.0 |
+| **wraithmesh** | `pip install wraithmesh` | Distributed sensor mesh / signed observations | PyPI 0.2.0 |
+| **wraithwall-sdk** | `pip install wraithwall-sdk` | Official HTTP API client | PyPI 0.1.0 |
 
 Packages are independent — none imports another.
 

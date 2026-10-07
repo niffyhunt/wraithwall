@@ -51,7 +51,7 @@ from .spec import (
 )
 from .validator import DMLValidationError, DMLValidator
 
-__version__ = "0.2.0"
+__version__ = "1.1.0"
 
 __all__ = [
     "DML_VERSION",

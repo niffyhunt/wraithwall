@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dml-spec"
-version = "0.2.0"
+version = "1.1.0"
 description = "Deception Markup Language (DML) — a versioned, HMAC-signed schema for declaring honeypots, canaries and tripwires as portable documents."
 readme = "README.md"
 requires-python = ">=3.10"
