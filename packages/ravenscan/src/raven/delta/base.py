@@ -43,6 +43,10 @@ class DeltaEntry:
     after: Optional[Any] = None
     affected_files: list[str] = field(default_factory=list)
     severity: str = "info"
+    finding_id: str = ""
+    historical_state: str = ""
+    priority: str = ""
+    attack_path_ids: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -54,6 +58,10 @@ class RevisionDelta:
     scanned_at: str
     entries: list[DeltaEntry] = field(default_factory=list)
     summary: str = ""
+    change_risk: float = 0.0
+    risk_reasons: list[str] = field(default_factory=list)
+    security_summary: dict[str, int] = field(default_factory=dict)
+    score_delta: float | None = None
 
     @property
     def total_changes(self) -> int:

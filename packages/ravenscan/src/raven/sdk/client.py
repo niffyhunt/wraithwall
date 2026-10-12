@@ -30,6 +30,25 @@ import raven.reporting.scoring as scoring
 import raven.drift.analyzer as drift
 import raven.drift.tracker as tracker
 import raven.operational.inspector as ops
+from raven.security.taint import analyze_taint, build_attack_paths, dependency_reachability
+from raven.security.infrastructure import analyze_infrastructure
+from raven.security.calibration import outcome_calibration
+from raven.security.prioritization import prioritize_finding
+from raven.core.models import Severity
+
+
+def _exposure_for_finding(finding, ctx) -> str:
+    """Classify exposure only from repository evidence; otherwise unknown."""
+    route = (finding.evidence_bundle.relevant_route if finding.evidence_bundle else "")
+    text = f"{finding.evidence} {route}".lower()
+    if "public" in text or "unauthenticated" in text or "@app.route" in text:
+        return "public"
+    if "authenticated" in text or "admin" in text:
+        return "authenticated-or-admin"
+    if finding.affected_file.startswith(("cli/", "commands/")):
+        return "cli"
+    return "unknown"
+
 
 if TYPE_CHECKING:
     from raven.drift.analyzer import DriftSnapshot
@@ -62,13 +81,8 @@ class Raven:
         """Run Phase 2 — Architecture Graph analysis."""
         return phase2.analyze(self.ctx, self.config)
 
-    def security(self) -> SecurityReport:
-        """Run Phase 3 — Security Intelligence.
-
-        Uses the full Python scanner for Python files and the
-        SecurityAnalyzerRegistry for Go, JavaScript, Rust, and Java files.
-        Results are merged into a single SecurityReport.
-        """
+    def security(self, include_wraithwall: bool = False) -> SecurityReport:
+        """Run local security analysis and optional WraithWall context."""
         report = phase3.analyze(self.ctx, self.config)
         try:
             from raven.plugins.registry import registry
@@ -76,9 +90,50 @@ class Raven:
             register_builtin_analyzers()
             multi_report = registry.analyze_all_except(self.ctx, "python")
             all_findings = list(report.findings) + list(multi_report.findings)
-            return SecurityReport(findings=all_findings)
         except Exception:
-            return report
+            all_findings = list(report.findings)
+
+        findings = all_findings + list(analyze_infrastructure(self.ctx).findings)
+        for finding in findings:
+            if not finding.rule_id or finding.rule_id == finding.analyzer:
+                finding.rule_id = f"{finding.analyzer or 'plugin'}:{finding.cwe.cwe_id}"
+                finding.identity_context = finding.rule_id
+                finding.refresh_provenance()
+        merged = SecurityReport(findings=findings)
+        # Contextual prioritization is additive: repository evidence remains
+        # authoritative and WraithWall provenance is stored separately.
+        for finding in merged.findings:
+            finding.exposure = _exposure_for_finding(finding, self.ctx)
+            finding.priority, finding.priority_score, finding.priority_reasons = prioritize_finding(finding)
+        merged.taint_flows = analyze_taint(self.ctx)
+        merged.attack_paths = build_attack_paths(merged.taint_flows, merged.findings)
+        path_findings = {fid for path in merged.attack_paths for fid in path.finding_ids}
+        for finding in merged.findings:
+            if finding.finding_id in path_findings:
+                finding.attack_path_ids = [path.path_id for path in merged.attack_paths if finding.finding_id in path.finding_ids]
+                finding.priority_reasons.append("evidence-backed attack path membership")
+                finding.priority_score = min(100.0, finding.priority_score + 20.0)
+                finding.priority = "high" if finding.priority_score >= 70 else finding.priority
+        merged.dependency_reachability = dependency_reachability(self.ctx)
+        if include_wraithwall:
+            from raven.wraithwall.client import WraithWallIntelClient, WraithWallIntelError
+            try:
+                merged.intelligence_prioritization = WraithWallIntelClient().prioritize(merged.findings)
+                for context in merged.intelligence_prioritization:
+                    finding = next((item for item in merged.findings if item.finding_id == context.finding_id), None)
+                    if finding and context.contextual_priority == "active-threat-context":
+                        finding.priority_score = min(100.0, max(finding.priority_score, 85.0))
+                        finding.priority = "critical" if finding.priority_score >= 90 else "high"
+                        finding.priority_reasons.append("authorized fresh WraithWall context matched")
+                        finding.provenance = sorted(set(finding.provenance + context.provenance))
+                merged.intelligence_status = "available"
+            except WraithWallIntelError as exc:
+                merged.intelligence_status = "unavailable"
+                merged.intelligence_error = str(exc)
+            except Exception:
+                merged.intelligence_status = "unavailable"
+                merged.intelligence_error = "WraithWall intelligence unavailable"
+        return merged
 
     def drift_snapshot(self, arch: Optional[ArchitectureGraph] = None) -> DriftSnapshot:
         """Run Phase 5 — Engineering Drift measurement."""

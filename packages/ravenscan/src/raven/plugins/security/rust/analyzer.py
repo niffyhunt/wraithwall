@@ -75,6 +75,9 @@ class RustSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario=cwe_ref.url,
                             recommendation="Review this code and apply secure alternatives.",
                             confidence=Confidence.HIGH,
+                            analyzer="rust",
+                            rule_id=f"rust.{cwe_key}.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"rust:{cwe_key}:{name}:{' '.join(line.split())}",
                         ))
                 for pattern, name in _SECRET_PATTERNS:
                     if re.search(pattern, line) and "env::var" not in line and "std::env" not in line:
@@ -89,6 +92,9 @@ class RustSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario="If committed, anyone with repository access can extract this credential.",
                             recommendation="Use std::env::var() or a configuration crate like dotenvy with a gitignored .env file.",
                             confidence=Confidence.MEDIUM,
+                            analyzer="rust",
+                            rule_id=f"rust.hardcoded_secret.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"rust:hardcoded_secret:{name}:{' '.join(line.split())}",
                         ))
         return SecurityReport(findings=findings)
 

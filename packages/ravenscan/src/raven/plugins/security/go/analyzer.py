@@ -76,6 +76,9 @@ class GoSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario=cwe_ref.url,
                             recommendation="Review this code and apply secure alternatives.",
                             confidence=Confidence.HIGH,
+                            analyzer="go",
+                            rule_id=f"go.{cwe_key}.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"go:{cwe_key}:{name}:{' '.join(line.split())}",
                         ))
                 for pattern, name in _SECRET_PATTERNS:
                     if re.search(pattern, line) and "os.Getenv" not in line:
@@ -90,6 +93,9 @@ class GoSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario="If committed, anyone with repository access can extract this credential.",
                             recommendation="Use os.Getenv() or a configuration file that is gitignored.",
                             confidence=Confidence.MEDIUM,
+                            analyzer="go",
+                            rule_id=f"go.hardcoded_secret.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"go:hardcoded_secret:{name}:{' '.join(line.split())}",
                         ))
         return SecurityReport(findings=findings)
 

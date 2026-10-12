@@ -33,7 +33,7 @@ def generate(
                 category="Architecture",
                 description=f"{len(architecture.findings)} architecture findings detected.",
                 impact=_summarize_arch_impact(architecture),
-                affected_files=list({f for af in architecture.findings for f in af.affected_files})[:10],
+                affected_files=sorted({f for af in architecture.findings for f in af.affected_files})[:10],
             )
         )
 
@@ -43,7 +43,7 @@ def generate(
                 category="Security",
                 description=f"{security.total_findings} security findings ({security.critical_count} critical, {security.high_count} high).",
                 impact=_summarize_security_impact(security),
-                affected_files=list({sf.affected_file for sf in security.findings})[:10],
+                affected_files=sorted({sf.affected_file for sf in security.findings})[:10],
             )
         )
 

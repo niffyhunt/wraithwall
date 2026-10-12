@@ -276,7 +276,7 @@ def _detect_duplication(ctx: RepositoryContext, min_lines: int = 6) -> list[Dupl
 
     for h, occurrences in seen.items():
         if len(occurrences) >= 2:
-            files = list({o[0] for o in occurrences})
+            files = sorted({o[0] for o in occurrences})
             if len(files) >= 2:
                 results.append(DuplicationReport(
                     hash_value=h[:12],

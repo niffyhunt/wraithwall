@@ -174,6 +174,10 @@ def _post_process(
             finding.confidence,
             in_test_file=in_test,
         )
+        finding.analyzer = category
+        finding.rule_id = category
+        finding.identity_context = f"{category}:{finding.cwe.cwe_id}"
+        finding.refresh_provenance()
 
         if in_test:
             max_sev = Severity.LOW

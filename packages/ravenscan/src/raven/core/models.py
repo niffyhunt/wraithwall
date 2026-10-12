@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
+from hashlib import sha256
 from pathlib import Path
+import re
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
@@ -147,6 +149,61 @@ class CweReference(BaseModel):
     url: str = ""
 
 
+class EvidenceBundle(BaseModel):
+    """Structured, reproducible provenance for a security finding."""
+
+    source_file: str = ""
+    line_start: int | None = None
+    line_end: int | None = None
+    relevant_symbol: str = ""
+    relevant_route: str = ""
+    dependency: str = ""
+    analyzer: str = ""
+    cwe_id: str = ""
+    normalized_evidence: str = ""
+    confidence: Confidence = Confidence.MEDIUM
+    related_finding_ids: list[str] = Field(default_factory=list)
+
+
+def normalize_finding_evidence(*values: str) -> str:
+    """Normalize volatile locations and scanner measurements for comparison."""
+    normalized = " ".join(
+        token
+        for value in values
+        for token in re.sub(
+            r"(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\.\w+[:#]\d+", " ", value.lower()
+        ).split()
+    )
+    normalized = re.sub(r"entropy\s*[:=]?\s*[0-9]+(?:\.[0-9]+)?", "entropy", normalized)
+    normalized = re.sub(r"\b(?:at|line|lines?)\s+\d+(?:[-,]\d+)*", "location", normalized)
+    return normalized
+
+
+def stable_finding_id(
+    *,
+    analyzer: str,
+    cwe_id: str,
+    title: str,
+    description: str,
+    evidence: str,
+    rule_id: str = "",
+    identity_context: str = "",
+) -> str:
+    """Create a path/line-independent identity from normalized evidence.
+
+    The caller may provide an existing identity when loading historical
+    artifacts. Newly generated identities use the detector/CWE plus semantic
+    evidence, while volatile paths, line numbers, and measurements are removed.
+    """
+    # Description is explanatory prose and changes frequently between detector
+    # releases. Prefer a canonical rule and normalized source context. The
+    # title/evidence fallback keeps old callers deterministic while new scanner
+    # findings can remain stable across detector prose changes.
+    semantic = identity_context or normalize_finding_evidence(title, evidence)
+    normalized = normalize_finding_evidence(rule_id or analyzer, cwe_id, semantic)
+    return "rf-" + sha256(normalized.encode("utf-8")).hexdigest()[:24]
+
+
 class SecurityFinding(BaseModel):
     """A security issue mapped to CWE, with evidence and fix guidance."""
 
@@ -161,12 +218,125 @@ class SecurityFinding(BaseModel):
     recommendation: str = ""
     confidence: Confidence = Confidence.MEDIUM
     found_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    analyzer: str = ""
+    finding_id: str = ""
+    evidence_bundle: EvidenceBundle | None = None
+    historical_state: str = "unobserved"
+    first_seen: str | None = None
+    last_seen: str | None = None
+    recurrence_count: int = 0
+    resolution_count: int = 0
+    reintroduction_count: int = 0
+    related_finding_ids: list[str] = Field(default_factory=list)
+    rule_id: str = ""
+    identity_context: str = ""
+    exposure: str = "unknown"
+    priority: str = "normal"
+    priority_score: float = 0.0
+    priority_reasons: list[str] = Field(default_factory=list)
+    attack_path_ids: list[str] = Field(default_factory=list)
+    provenance: list[str] = Field(default_factory=lambda: ["repository-evidence"])
+    remediation_evidence: list[str] = Field(default_factory=list)
+    feedback_outcome: str = ""
+    accepted_risk: bool = False
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.remediation_evidence and self.recommendation:
+            self.remediation_evidence = [self.recommendation]
+        # Preserve an explicitly supplied identity when deserializing an old
+        # artifact. Fresh findings have an empty ID and receive a deterministic
+        # identity; scanner/plugin post-processing can explicitly recompute it
+        # after assigning the final analyzer category.
+        had_identity = bool(self.finding_id)
+        if not self.analyzer:
+            self.analyzer = self.cwe.cwe_id.lower()
+        if not self.rule_id:
+            self.rule_id = self.analyzer
+        self.refresh_provenance(recompute_id=not had_identity)
+
+    def refresh_provenance(self, *, recompute_id: bool = True) -> None:
+        """Synchronize identity and evidence metadata after calibration."""
+        if recompute_id or not self.finding_id:
+            self.finding_id = stable_finding_id(
+                analyzer=self.analyzer,
+                cwe_id=self.cwe.cwe_id,
+                title=self.title,
+                description=self.description,
+                evidence=self.evidence,
+                rule_id=self.rule_id,
+                identity_context=self.identity_context,
+            )
+        self.evidence_bundle = EvidenceBundle(
+            source_file=self.affected_file,
+            line_start=self.affected_lines[0] if self.affected_lines else None,
+            line_end=self.affected_lines[-1] if self.affected_lines else None,
+            analyzer=self.analyzer,
+            cwe_id=self.cwe.cwe_id,
+            normalized_evidence=normalize_finding_evidence(self.evidence),
+            confidence=self.confidence,
+            related_finding_ids=list(self.related_finding_ids),
+        )
+
+
+class TaintNode(BaseModel):
+    kind: str
+    label: str
+    file: str
+    line: int
+
+
+class TaintFlow(BaseModel):
+    flow_id: str
+    source: TaintNode
+    propagation: list[TaintNode] = Field(default_factory=list)
+    transformation: list[TaintNode] = Field(default_factory=list)
+    sink: TaintNode
+    evidence: str
+    confidence: Confidence = Confidence.MEDIUM
+
+
+class AttackPath(BaseModel):
+    path_id: str
+    steps: list[TaintNode] = Field(default_factory=list)
+    finding_ids: list[str] = Field(default_factory=list)
+    evidence: str
+    confidence: Confidence = Confidence.MEDIUM
+
+
+class DependencyReachability(BaseModel):
+    dependency: str
+    status: str
+    imported_modules: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+    confidence: Confidence = Confidence.LOW
+
+
+class IntelligencePrioritization(BaseModel):
+    finding_id: str
+    base_severity: Severity
+    contextual_priority: str = "baseline"
+    priority_score: float = 0.0
+    matched_campaigns: list[str] = Field(default_factory=list)
+    matched_techniques: list[str] = Field(default_factory=list)
+    matched_bgp_alerts: list[str] = Field(default_factory=list)
+    freshness_seconds: float | None = None
+    observed_at: str = ""
+    rationale: str = ""
+    provenance: list[str] = Field(default_factory=list)
 
 
 class SecurityReport(BaseModel):
     schema_version: str = "1"
+    prioritization_version: str = "1"
     scanned_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     findings: list[SecurityFinding] = Field(default_factory=list)
+    taint_flows: list[TaintFlow] = Field(default_factory=list)
+    attack_paths: list[AttackPath] = Field(default_factory=list)
+    dependency_reachability: list[DependencyReachability] = Field(default_factory=list)
+    intelligence_prioritization: list[IntelligencePrioritization] = Field(default_factory=list)
+    intelligence_status: str = "not-requested"
+    intelligence_error: str = ""
+    detector_calibration: dict[str, dict[str, Any]] = Field(default_factory=dict)
     total_findings: int = 0
     critical_count: int = 0
     high_count: int = 0

@@ -88,6 +88,30 @@ def calibrate_confidence(
     return Confidence.LOW
 
 
+def outcome_calibration(
+    detector: str,
+    outcomes: dict[str, dict[str, object]] | None = None,
+) -> dict[str, object]:
+    """Return advisory detector performance; never decide suppression.
+
+    With no labeled outcomes the result remains ``insufficient-data``. This
+    prevents historical sparsity from silently hiding new findings.
+    """
+    bucket = (outcomes or {}).get(detector, {})
+    confirmed = int(bucket.get("confirmed", 0) or 0)
+    false_positive = int(bucket.get("false_positive", 0) or 0)
+    labeled = confirmed + false_positive
+    return {
+        "detector": detector,
+        "status": "available" if labeled else "insufficient-data",
+        "sample_size": int(bucket.get("sample_size", 0) or 0),
+        "confirmed": confirmed,
+        "false_positive": false_positive,
+        "false_positive_rate": (false_positive / labeled) if labeled else None,
+        "advisory": True,
+    }
+
+
 def should_report(
     analyzer_name: str,
     in_test_file: bool = False,

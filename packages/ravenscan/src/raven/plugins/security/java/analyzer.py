@@ -78,6 +78,9 @@ class JavaSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario=cwe_ref.url,
                             recommendation="Refactor using secure coding practices for Java/JVM platform.",
                             confidence=Confidence.HIGH,
+                            analyzer="java",
+                            rule_id=f"java.{cwe_key}.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"java:{cwe_key}:{name}:{' '.join(line.split())}",
                         ))
                 for pattern, name in _SECRET_PATTERNS:
                     if re.search(pattern, line) and "System.getenv" not in line and "System.getProperty" not in line:
@@ -92,6 +95,9 @@ class JavaSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario="If committed, anyone with repository access can extract this credential.",
                             recommendation="Use environment variables via System.getenv() or a vault service.",
                             confidence=Confidence.MEDIUM,
+                            analyzer="java",
+                            rule_id=f"java.hardcoded_secret.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"java:hardcoded_secret:{name}:{' '.join(line.split())}",
                         ))
         return SecurityReport(findings=findings)
 

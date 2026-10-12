@@ -49,6 +49,12 @@ def write_artifact(
         from raven.reporting.renderers.markdown import render_markdown
         content = render_markdown(data)
         ext = ".md"
+    elif fmt == "sarif":
+        from raven.reporting.renderers.sarif import render_sarif
+        if not isinstance(data, SecurityReport):
+            raise ValueError("SARIF output is supported for SecurityReport artifacts only")
+        content = render_sarif(data)
+        ext = ".sarif.json"
     else:
         content = render_json(data)
         ext = ".json"

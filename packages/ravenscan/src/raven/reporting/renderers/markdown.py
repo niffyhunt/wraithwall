@@ -160,6 +160,22 @@ def _render_security(s: SecurityReport) -> str:
                     lines.append(f"\n**Exploitation Scenario:** {f.exploitation_scenario}")
                 if f.recommendation:
                     lines.append(f"\n**Recommendation:** {f.recommendation}")
+                if f.finding_id:
+                    lines.append(f"**Finding ID:** `{f.finding_id}` | **State:** {f.historical_state}")
+                if f.evidence_bundle:
+                    lines.append(f"**Analyzer:** {f.evidence_bundle.analyzer}")
+    if s.taint_flows:
+        lines.append("\n## Proven Taint Flows")
+        for flow in s.taint_flows:
+            lines.append(f"- `{flow.flow_id}`: {flow.evidence} ({flow.confidence.value})")
+    if s.attack_paths:
+        lines.append("\n## Evidence-Backed Attack Paths")
+        for path in s.attack_paths:
+            lines.append(f"- `{path.path_id}`: {path.evidence} ({path.confidence.value})")
+    if s.dependency_reachability:
+        lines.append("\n## Dependency Reachability")
+        for item in s.dependency_reachability:
+            lines.append(f"- `{item.dependency}` — **{item.status}** ({item.confidence.value})")
     return "\n".join(lines)
 
 

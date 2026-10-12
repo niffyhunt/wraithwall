@@ -68,8 +68,8 @@ class RavenConfig:
     def __post_init__(self) -> None:
         self.path = Path(self.path)
         self.output_dir = Path(self.output_dir)
-        if self.format not in ("json", "markdown"):
-            raise ValueError(f"format must be 'json' or 'markdown', got '{self.format}'")
+        if self.format not in ("json", "markdown", "sarif"):
+            raise ValueError(f"format must be 'json', 'markdown', or 'sarif', got '{self.format}'")
         if self.fail_under is not None and not (0 <= self.fail_under <= 100):
             raise ValueError(f"fail_under must be between 0 and 100, got {self.fail_under}")
 

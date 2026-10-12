@@ -1,0 +1,46 @@
+{
+  "created_at": "<TS>",
+  "decisions": [
+    {
+      "decision": "phases=1,2,3,7,9 format=markdown",
+      "input_fingerprint": "ba24fe8fda99cf2b",
+      "phase": "config",
+      "reason": "startup configuration from CLI flags and operator preferences"
+    },
+    {
+      "decision": "language=javascript",
+      "input_fingerprint": "86237208cbb4d73e",
+      "phase": "repository",
+      "reason": "primary language detected from repository content"
+    },
+    {
+      "decision": "modules=1",
+      "input_fingerprint": "22fe9b0f7a7c0aeb",
+      "phase": "architecture",
+      "reason": "import graph derived from parsed sources"
+    },
+    {
+      "decision": "analyzers=go+java+javascript+python+rust",
+      "input_fingerprint": "57a24468c30b8e90",
+      "phase": "security_plugins",
+      "reason": "registry analyzers for non-primary languages; primary scanner owns its language"
+    },
+    {
+      "decision": "weighted-risk-model",
+      "input_fingerprint": "526eb1802e17e260",
+      "phase": "scoring",
+      "reason": "deterministic scoring from profile, architecture, and security inputs"
+    },
+    {
+      "decision": "format=markdown",
+      "input_fingerprint": "5e1b9022723b8509",
+      "phase": "report",
+      "reason": "artifact format from CLI configuration"
+    }
+  ],
+  "schema": "decision_trace/1",
+  "versions": {
+    "ruleset": "1.0",
+    "template": "1.0"
+  }
+}

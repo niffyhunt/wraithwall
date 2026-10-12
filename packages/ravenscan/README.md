@@ -2,36 +2,101 @@
 
 [![PyPI](https://img.shields.io/pypi/v/ravenscan)](https://pypi.org/project/ravenscan/)
 [![Python](https://img.shields.io/pypi/pyversions/ravenscan)](https://pypi.org/project/ravenscan/)
-[![License](https://img.shields.io/pypi/l/ravenscan)](LICENSE)
+[![License](https://img.shields.io/pypi/l/ravenscan)](https://github.com/niffyhunt/wraithwall/blob/main/packages/ravenscan/LICENSE)
 
-**Raven** is an open-source engineering intelligence agent. It learns a software project over time, detects architectural and security change, correlates it across revisions, and produces evidence-backed intelligence reports. Every report explains *why* something matters, not just *what* changed.
+Raven learns how a codebase is put together, watches it change, and tells you
+what changed and **why it matters** — as plain JSON and Markdown, on your own
+machine. No account, no cloud upload, no telemetry.
+
+Point it at a repository and it produces five artifacts: a repository profile,
+an architecture graph, a security report, a risk score, and a daily-style
+summary. Run it again later and it tells you what got better, what got worse,
+and what it learned in between.
 
 > Evidence first. Engineering second. Opinion last.
 
 ## Install
 
 ```bash
-pip install .
+pip install ravenscan
 ```
 
-## Quick Start
+## Quick start
 
 ```bash
-raven init           # scaffold .raven directory
-raven scan .         # run full analysis
-raven score .        # compute risk score
-raven report         # render existing artifacts
-raven doctor         # environment sanity check
-raven version        # show version info
+raven scan .          # analyze the repository → .raven/ artifacts
+raven score .         # risk score with grade (A–F)
+raven diff            # what changed since the previous scan
+raven report          # re-render existing artifacts
+raven score --fail-under 70   # CI gate: exit 1 below threshold
 ```
 
-## SDK Usage
+Every command supports `--format json` and `--format markdown`.
+
+## What you get
+
+Artifacts are written to `.raven/` in the scanned repository:
+
+| Artifact | Contents |
+|----------|----------|
+| `RepositoryProfile` | Languages, frameworks, dependencies, structure, CI/CD and container setup |
+| `ArchitectureGraph` | Components and how they connect, with evidence for every edge |
+| `SecurityReport` | Findings with severity, explainable priority, and attack-path membership |
+| `RiskScore` | Overall score /100, letter grade, per-category breakdown |
+| `DailyReport` | What changed, why it matters, and concrete action items |
+
+JSON is canonical — Markdown is rendered *from* the JSON model, never
+assembled separately, so machine and human outputs can never disagree.
+
+## Memory that stays trustworthy (new in 0.2)
+
+Raven remembers what it learns between runs, under your control:
+
+```bash
+raven memory list       # everything Raven has learned about this project
+raven memory delete ... # correct or remove a record
+raven memory export ... # take your data with you
+raven memory wipe       # start clean
+```
+
+Every write passes a single gate that rejects secrets and credentials, keeps
+records scoped to the repository they came from, and logs an append-only audit
+trail. Scan output can never quietly write to memory.
+
+Also new in 0.2: **run summaries** (a since-last-run narrative in every
+report), **run-vs-run changes** (new / resolved / recurring findings and score
+delta), **decision traces** (which analyzers ran and which ruleset version
+applied), and **project preferences** (`raven prefs set format json` — set
+once, applied everywhere).
+
+## Consistency you can prove
+
+Same repository in, same bytes out — Raven ships with a golden evaluation
+harness that scans fixture repositories twice and asserts byte-identical
+output. Releases don't quietly change your reports, and `raven diff` between
+versions shows exactly what moved and why (version-drift detection).
+
+## CI integration
+
+| Exit code | Meaning |
+|-----------|---------|
+| 0 | Clean, or score above threshold |
+| 1 | Score below `--fail-under` |
+| 2 | Execution error |
+| 3 | Configuration error |
+
+```yaml
+# GitHub Actions example
+- run: pip install ravenscan
+- run: raven scan . && raven score --fail-under 70
+```
+
+## Python SDK
 
 ```python
-from ravenscan import scan, Raven
+from raven import Raven
 from raven.core.config import RavenConfig
 
-profile = scan(".")
 client = Raven(RavenConfig(path="."))
 
 profile = client.scan()          # RepositoryProfile
@@ -43,91 +108,54 @@ daily = client.daily_report()    # DailyReport
 print(f"Score: {risk.overall}/100 — Grade {risk.grade}")
 ```
 
-## Output
+See [docs/SDK_REFERENCE.md](https://github.com/niffyhunt/wraithwall/blob/main/packages/ravenscan/docs/SDK_REFERENCE.md)
+for the full typed API.
 
-All commands support `--format json` and `--format markdown` (default).
+## Optional: connected mode
 
-Artifacts are written to `.raven/`:
-- `RepositoryProfile.{json,md}`
-- `ArchitectureGraph.{json,md}`
-- `SecurityReport.{json,md}`
-- `RiskScore.{json,md}`
-- `DailyReport.{json,md}`
-
-JSON is canonical — Markdown is rendered *from* the JSON model, never independently.
-
-## Exit Codes (CI Integration)
-
-| Code | Meaning |
-|------|---------|
-| 0 | Clean — no findings or score above threshold |
-| 1 | Score below `--fail-under` threshold |
-| 2 | Execution error |
-| 3 | Configuration error |
+If you use [WraithWall](https://wraithwall.online), Raven can talk to it with
+your own API key (scope `raven:use`):
 
 ```bash
-raven score --fail-under 70   # CI gate: exit 1 if score < 70
+raven wraith campaigns --api-key KEY --api-secret SECRET
+raven wraith whoami    --api-key KEY --api-secret SECRET
+raven wraith submit .  --api-key KEY --api-secret SECRET
 ```
 
-## WraithWall Connected Mode (remote)
+Requests use HTTPS, timestamp/nonce HMAC with replay protection, and
+public-key-only bearer transport — the secret is never sent as a header or URL
+value. This is entirely optional; Raven is fully useful offline.
 
-Raven now supports connected mode with live WraithWall even from outside the server:
+## What Raven is not
 
-```bash
-# anyone with a raven:use API key can use this before open source
-raven wraith campaigns --api-key YOURKEY --api-secret YOURSECRET
-raven wraith whoami --api-key ... --api-secret ...
-raven wraith submit . --api-key ... --api-secret ...
-```
-
-- Defaults to https://wraithwall.online
-- Public reads for campaigns/bgp (no key needed)
-- Write/submit and whoami require key with `raven:use` scope (create in WraithWall UI)
-- Works from laptop, CI, anywhere.
-
-## What Raven Is Not
-
-Raven is a **local CLI/SDK analyzer** for repositories you point it at. It does **not**:
-
-| Limitation | Detail |
-|------------|--------|
-| **Live website integration (new)** | `raven wraith` subcommands now connect to live WraithWall at https://wraithwall.online using API keys (raven:use scope). Campaigns, BGP alerts (public), whoami, submit-scan supported remotely. |
-| **No runtime telemetry** | Raven analyzes static source trees and git history — not Redis keys, honeypot sessions, BGP feeds, or APScheduler state. |
-| **No WraithWall operator console** | Phase 8 live architecture visualization (`/console#/architecture`) is a separate corpus-driven system in the main Flask app (`architecture_viz.py`), not Raven output. |
-| **No deception mesh modeling** | Cowrie pipelines, canary propagation, sandbox flows, and campaign correlation are documented in `docs/architecture/` and rendered by `scripts/generate_wraithwall_diagrams.py` — Raven does not ingest those runtime graphs. |
-| **No autonomous alerting** | Raven writes local `.raven/` artifacts only. It does not send Telegram, Discord, or email notifications. |
-| **No multi-repo fleet view** | One `raven scan` per working tree. No cross-deployment correlation across VPS hosts. |
-| **No guaranteed supply-chain audit** | Security plugins cover common languages; unknown frameworks, generated bundles, and vendored binaries may be skipped. |
-
-### WraithWall vs Raven
-
-| Capability | WraithWall (production) | Raven (CLI) |
-|------------|-------------------------|-------------|
-| Architecture diagrams on website | Yes — `/#architecture` scroll gallery + authenticated console | No — local `.raven/ArchitectureGraph.md` only |
-| Source of truth | `docs/architecture/*.json` (Phase 8 corpus) | Repository static analysis |
-| Live honeypot / deception data | Yes | No |
-| CI risk gate | Via custom integration | `raven score --fail-under` |
-
-To regenerate WraithWall publication diagrams from the validated corpus:
-
-```bash
-python3 scripts/generate_wraithwall_diagrams.py
-# → static/img/architecture/*.svg + *.png
-```
-
-To deploy Cowrie without config-mount regressions:
-
-```bash
-chmod +x cowrie-analyzer/scripts/deploy-cowrie.sh
-cowrie-analyzer/scripts/deploy-cowrie.sh
-```
+- **Not a runtime monitor.** It analyzes source trees and git history — not
+  live servers, databases, or network traffic.
+- **Not an alerting service.** It writes local files; it never sends email,
+  chat, or phone notifications on its own.
+- **Not a fleet scanner.** One `raven scan` per repository; no cross-machine
+  correlation.
+- **Not a replacement for dedicated rule engines.** Security plugins cover
+  common languages and common mistakes; exotic frameworks and vendored
+  binaries may be skipped. Treat Raven's report as a prioritized briefing,
+  not an exhaustive audit.
+- **Not a SaaS.** Nothing leaves your machine unless you run an explicit
+  `raven wraith` command with your own credentials.
 
 ## Development
 
 ```bash
-pip install ".[all]"
-pytest
+git clone https://github.com/niffyhunt/wraithwall.git
+cd wraithwall/packages/ravenscan
+pip install -e ".[all]" pytest
+pytest tests/ -q
 ```
+
+Contributions welcome — see
+[CONTRIBUTING.md](https://github.com/niffyhunt/wraithwall/blob/main/packages/ravenscan/CONTRIBUTING.md).
+Security reports:
+[SECURITY.md](https://github.com/niffyhunt/wraithwall/blob/main/packages/ravenscan/SECURITY.md).
+Release history:
+[CHANGELOG.md](https://github.com/niffyhunt/wraithwall/blob/main/packages/ravenscan/CHANGELOG.md).
 
 ## License
 

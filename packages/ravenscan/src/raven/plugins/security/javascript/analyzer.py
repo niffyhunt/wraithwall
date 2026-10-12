@@ -82,6 +82,9 @@ class JavaScriptSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario=cwe_ref.url,
                             recommendation="Apply secure coding practices for JavaScript/Node.js.",
                             confidence=Confidence.HIGH,
+                            analyzer="javascript",
+                            rule_id=f"javascript.{cwe_key}.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"javascript:{cwe_key}:{name}:{' '.join(line.split())}",
                         ))
                 for pattern, name in _SECRET_PATTERNS:
                     if re.search(pattern, line) and "process.env" not in line and "import.meta.env" not in line:
@@ -96,6 +99,9 @@ class JavaScriptSecurityAnalyzer(AbstractSecurityAnalyzer):
                             exploitation_scenario="If committed, anyone with repository access can extract this credential.",
                             recommendation="Use process.env.VAR_NAME or a .env file (gitignored) with dotenv.",
                             confidence=Confidence.MEDIUM,
+                            analyzer="javascript",
+                            rule_id=f"javascript.hardcoded_secret.{name.lower().replace(' ', '_').replace('/', '_')}",
+                            identity_context=f"javascript:hardcoded_secret:{name}:{' '.join(line.split())}",
                         ))
         return SecurityReport(findings=findings)
 

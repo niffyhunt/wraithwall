@@ -101,20 +101,57 @@ def compare_security(
         return []
     entries: list[DeltaEntry] = []
 
-    prev_findings = {f"{f['title']}:{f['affected_file']}": f for f in prev_sec.get("findings", [])}
-    curr_findings = {f"{f['title']}:{f['affected_file']}": f for f in curr_sec.get("findings", [])}
+    prev_findings = {f.get("finding_id") or f"{f['title']}:{f['affected_file']}": f for f in prev_sec.get("findings", [])}
+    curr_findings = {f.get("finding_id") or f"{f['title']}:{f['affected_file']}": f for f in curr_sec.get("findings", [])}
 
     for key, f in curr_findings.items():
+        cwe_id = f.get("cwe", {}).get("cwe_id", "")
+        current_state = f.get("historical_state", "new")
+        common = {
+            "confidence": 0.85,
+            "severity": f.get("severity", "info"),
+            "affected_files": [f.get("affected_file", "")],
+            "finding_id": f.get("finding_id", ""),
+            "historical_state": current_state,
+            "priority": f.get("priority", ""),
+            "attack_path_ids": f.get("attack_path_ids", []),
+        }
         if key not in prev_findings:
-            cwe_id = f.get("cwe", {}).get("cwe_id", "")
             entries.append(DeltaEntry(
                 category=DeltaCategory.SECURITY,
                 change_type=ChangeType.ADDED,
                 entity=f["title"],
                 description=f"New security finding: {f['title']} ({cwe_id})",
-                confidence=0.85,
+                **common,
+            ))
+            continue
+
+        previous = prev_findings[key]
+        if current_state == "reintroduced":
+            entries.append(DeltaEntry(
+                category=DeltaCategory.SECURITY,
+                change_type=ChangeType.ADDED,
+                entity=f["title"],
+                description=f"Reintroduced security finding: {f['title']} ({cwe_id})",
+                **common,
+            ))
+        elif (
+            previous.get("severity") != f.get("severity")
+            or previous.get("evidence") != f.get("evidence")
+            or previous.get("affected_file") != f.get("affected_file")
+        ):
+            entries.append(DeltaEntry(
+                category=DeltaCategory.SECURITY,
+                change_type=ChangeType.MODIFIED,
+                entity=f["title"],
+                description=f"Changed security finding: {f['title']} ({cwe_id})",
+                confidence=0.80,
                 severity=f.get("severity", "info"),
                 affected_files=[f.get("affected_file", "")],
+                finding_id=f.get("finding_id", ""),
+                historical_state=current_state,
+                priority=f.get("priority", ""),
+                attack_path_ids=f.get("attack_path_ids", []),
             ))
 
     for key, f in prev_findings.items():
@@ -378,6 +415,37 @@ def build_delta(
 
     total = len(entries)
     high_conf = sum(1 for e in entries if e.confidence >= 0.8)
+    risk_reasons: list[str] = []
+    risk = 0.0
+    weights = {
+        DeltaCategory.SECURITY: 4.0,
+        DeltaCategory.ROUTES: 2.5,
+        DeltaCategory.DEPENDENCIES: 2.0,
+        DeltaCategory.IMPORTS: 1.5,
+        DeltaCategory.ARCHITECTURE: 1.0,
+        DeltaCategory.SYMBOLS: 1.0,
+        DeltaCategory.CONFIG: 1.5,
+        DeltaCategory.EVOLUTION: 0.5,
+    }
+    for entry in entries:
+        contribution = weights.get(entry.category, 0.5) * entry.confidence
+        if entry.severity in ("critical", "high"):
+            contribution *= 1.5
+        risk += contribution
+        if entry.category in (DeltaCategory.SECURITY, DeltaCategory.ROUTES, DeltaCategory.DEPENDENCIES):
+            risk_reasons.append(entry.description)
+    change_risk = min(100.0, round(risk, 2))
+    score_delta = None
+    if prev_score and curr_score:
+        score_delta = round(float(curr_score.get("overall", 0)) - float(prev_score.get("overall", 0)), 2)
+    security_entries = [e for e in entries if e.category == DeltaCategory.SECURITY]
+    security_summary = {
+        "new": sum(1 for e in security_entries if e.change_type == ChangeType.ADDED and e.historical_state not in ("reintroduced",)),
+        "regressions": sum(1 for e in security_entries if e.historical_state == "reintroduced"),
+        "resolved": sum(1 for e in security_entries if e.change_type == ChangeType.REMOVED),
+        "changed": sum(1 for e in security_entries if e.change_type == ChangeType.MODIFIED),
+        "high_risk": sum(1 for e in security_entries if e.severity in ("critical", "high")),
+    }
     summary = f"{total} changes detected ({high_conf} high-confidence) between {base_ref} and {head_ref}"
 
     return RevisionDelta(
@@ -386,4 +454,8 @@ def build_delta(
         scanned_at=now,
         entries=sorted(entries, key=lambda e: e.confidence, reverse=True),
         summary=summary,
+        change_risk=change_risk,
+        risk_reasons=risk_reasons[:10],
+        security_summary=security_summary,
+        score_delta=score_delta,
     )
