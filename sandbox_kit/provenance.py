@@ -461,6 +461,18 @@ WAIVER_REGISTER: list[dict] = [
         "owner": "niffyhunt",
         "expires": "2026-12-31",
     },
+    {
+        "id": "CVE-2026-19445",
+        "reason": "CPython ssl use-after-free via sni_callback, published 2026-09-30 — after the pinned python:3.12-slim digest was resolved (2026-09-13). Re-pinning to a fixed CPython is scheduled for the next digest review. The sandbox's synthetic workload runs no TLS server and never assigns an sni_callback, so the vulnerable path is unreachable; images are digest-pinned (H10), publish nothing, and egress is deny-by-default.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
+    {
+        "id": "CVE-2026-19553",
+        "reason": "CPython ssl hostname-verification flaw, published 2026-09-30 — after the pinned python:3.12-slim digest was resolved (2026-09-13). Re-pinning to a fixed CPython is scheduled for the next digest review. The sandbox's synthetic workload performs no TLS client hostname verification, so the vulnerable path is unreachable; images are digest-pinned (H10), publish nothing, and egress is deny-by-default.",
+        "owner": "niffyhunt",
+        "expires": "2026-12-31",
+    },
 ]
 
 
